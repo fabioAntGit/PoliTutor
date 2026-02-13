@@ -1,0 +1,1 @@
+print("Projeto a correr corretamente!")
