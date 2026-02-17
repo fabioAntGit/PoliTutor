@@ -1,0 +1,7 @@
+services:
+  rag:
+    build: ./rag
+    working_dir: /app
+    volumes:
+      - ./rag:/app
+    command: python src/pipeline.py
