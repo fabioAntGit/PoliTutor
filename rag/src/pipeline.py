@@ -6,32 +6,29 @@ from collections import defaultdict
 from unstructured.partition.pdf import partition_pdf
 from unstructured.staging.base import convert_to_dict
 
-AULA_PATTERN = re.compile(r"Aula\s+\d+", re.IGNORECASE)
-
-# Lista de keywords para descartar
-KEYWORDS_TO_EXCLUDE = [
-    "Ricardo Santos", 
-    "rjs@estg.ipp.pt", 
-    "P. PORTO", 
-    "— P2PORTO",
+# Lista de keywords para remover
+KEYWORDS_TO_EXCLUDE = [ 
     "ESCOLA",
     "SUPERIOR",
     "DE TECNOLOGIA",
-    "PARADIGMAS DE PROGRAMAÇÃO 2023/2024",
     "E GESTÃO",
 ]
 
 def process_all_pdfs():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     raw_path = os.path.normpath(os.path.join(base_dir, "..", "data", "raw"))
+    ed_path = os.path.join(raw_path, "ED")
+
     output_dir = os.path.join(raw_path, "processed_json")
     output_dirBefore = os.path.join(raw_path, "processedBefore_json")
-    output_image_dir = os.path.join(raw_path, "processed_images")
 
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(output_dirBefore, exist_ok=True)
-    os.makedirs(output_image_dir, exist_ok=True)
-    pdf_files = glob.glob(os.path.join(raw_path, "*.pdf"))
+
+    pdf_files = glob.glob(
+        os.path.join(ed_path, "**", "*.pdf"),
+        recursive=True
+    )
     
     if not pdf_files:
         print(f"Nenhum PDF encontrado em: {raw_path}")
@@ -39,6 +36,7 @@ def process_all_pdfs():
 
     for pdf_path in pdf_files:
         file_name = os.path.basename(pdf_path)
+        source_type = extract_source_type(pdf_path)
         print(f"A processar e filtrar: {file_name}...")
 
         try:
@@ -50,30 +48,26 @@ def process_all_pdfs():
                 extract_image_block_types=["Image", "Table"],
                 extract_images_in_pdf=True,
                 extract_image_block_to_payload=False,
-                image_output_dir_path=output_image_dir,
                 chunking_strategy=None,
                 include_orig_elements=False,
             )
 
             dict_elements = convert_to_dict(elements)
             
-            # --- LÓGICA DE FILTRAGEM ---
+            # Filtragem
             filtered_elements = []
             for el in dict_elements:
-                # Filtrar por tipo (Remover Footers)
+
+                # Filtrar por tipo
                 if el.get("type") == "Footer":
                     continue
                 
                 text_content = el.get("text", "")
 
-                # Filtro de Keywords (Exatas/Parciais)
+                # Filtro de Keywords
                 if any(key.lower() in text_content.lower() for key in KEYWORDS_TO_EXCLUDE):
                     continue
-
-                if AULA_PATTERN.fullmatch(text_content) or AULA_PATTERN.search(text_content):
-                    continue
                 
-                # Se passar os filtros, adicionamos à lista final
                 filtered_elements.append(el)
             
             output_filenameBefore = f"{os.path.splitext(file_name)[0]}Before.json"
@@ -82,9 +76,8 @@ def process_all_pdfs():
             with open(output_pathBefore, "w", encoding="utf-8") as f:
                 json.dump(filtered_elements, f, indent=4, ensure_ascii=False)
 
-            grouped_pages = group_elements_by_page(filtered_elements, source_filename=file_name)
+            grouped_pages = group_elements_by_page(filtered_elements, source_filename=file_name, source_type=source_type)
             
-            # Guardar ficheiro limpo
             output_filename = f"{os.path.splitext(file_name)[0]}.json"
             output_path = os.path.join(output_dir, output_filename)
             
@@ -100,6 +93,14 @@ def extract_course_from_filename(filename: str) -> str:
     stem = os.path.splitext(filename)[0]  # "2024.ED.Aula01"
     parts = stem.split(".")
     return parts[1] if len(parts) > 1 else ""
+
+def extract_source_type(pdf_path):
+    parts = pdf_path.lower().split(os.sep)
+    if "apontamentos" in parts:
+        return "apontamentos"
+    if "slides" in parts:
+        return "slides"
+    return "unknown"
 
 def get_top_left(el):
     md = el.get("metadata", {})
@@ -150,7 +151,7 @@ def extract_tables_html(page_elements):
 
     return tables
 
-def group_elements_by_page(elements, source_filename=None):
+def group_elements_by_page(elements, source_filename=None, source_type=None):
     pages = defaultdict(list)
     for el in elements:
         page = el.get("metadata", {}).get("page_number", -1)
@@ -176,6 +177,7 @@ def group_elements_by_page(elements, source_filename=None):
             "metadata": {
                 "filename": source_filename,
                 "course": cadeira,
+                "source": source_type,
                 "page_number": page,
                 "filetype": base_md.get("filetype"),
             },
