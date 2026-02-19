@@ -12,10 +12,7 @@ OUTPUT_DIR_BEFORE = os.getenv("OUTPUT_DIR_BEFORE", os.path.join(RAW_DATA_PATH, "
 
 # Keywords used to exclude elements whose text contains them
 KEYWORDS_TO_EXCLUDE = [
-    "ESCOLA",
-    "SUPERIOR",
-    "DE TECNOLOGIA",
-    "E GESTÃO",
+    "Ricardo Santos",
 ]
 
 # Settings passed directly to unstructured's partition_pdf
@@ -24,7 +21,7 @@ PDF_PROCESSING_CONFIG = {
     "infer_table_structure": True,
     "extract_image_block_types": ["Image", "Table"],
     "extract_images_in_pdf": True,
-    "extract_image_block_to_payload": False,
+    "extract_image_block_to_payload": True,
     "chunking_strategy": None,
     "include_orig_elements": False,
 }
@@ -47,3 +44,11 @@ SOURCE_TYPE_MAPPING = {
     "slides": "slides",
 }
 DEFAULT_SOURCE_TYPE = "unknown"
+
+# Chunking settings
+CHUNKING_CONFIG = {
+    "chunk_size": 2000,
+    "chunk_overlap": 200,
+    "min_chunk_length": 50,
+}
+OUTPUT_DIR_CHUNKS = os.getenv("OUTPUT_DIR_CHUNKS", os.path.join(RAW_DATA_PATH, "chunked_json"))

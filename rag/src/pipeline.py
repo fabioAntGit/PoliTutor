@@ -9,6 +9,7 @@ from config import (
     OUTPUT_DIR,
     OUTPUT_DIR_BEFORE,
     KEYWORDS_TO_EXCLUDE,
+    OUTPUT_DIR_CHUNKS,
 )
 from utils import extract_source_type
 from pdf_extractor import (
@@ -17,6 +18,7 @@ from pdf_extractor import (
     group_elements_by_page,
     save_json,
 )
+from chunker import chunk_document, save_chunks
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
@@ -60,9 +62,16 @@ def process_all_pdfs() -> None:
             output_path = os.path.join(OUTPUT_DIR, f"{file_stem}.json")
             save_json(grouped_pages, output_path)
 
+            # Chunk pages into embedding-ready format
+            chunks = chunk_document(grouped_pages)
+            chunks_path = os.path.join(OUTPUT_DIR_CHUNKS, f"{file_stem}.json")
+            save_chunks(chunks, chunks_path)
+
             logging.info(
-                f"Done: {output_path} saved "
-                f"({len(grouped_pages)} pages, {n_filtered} elements filtered out)."
+                f"Done: {file_stem} — "
+                f"{len(grouped_pages)} pages, "
+                f"{len(chunks)} chunks, "
+                f"{n_filtered} elements filtered out."
             )
 
         except Exception as e:

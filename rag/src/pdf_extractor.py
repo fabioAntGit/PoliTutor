@@ -36,17 +36,23 @@ def filter_elements(elements: list, keywords_to_exclude: list) -> list:
         filtered.append(el)
     return filtered
 
-def build_page_content(page_elements: list) -> str:
+def build_page_content(page_elements: list) -> tuple[str, list[str]]:
     """
-    Builds the text for a page preserving the original element order.
-    Tables are represented inline as HTML to maintain context and structure.
-    Elements in ELEMENT_TYPES_TO_SKIP_IN_TEXT (e.g. images) are discarded.
+    Builds the text and image list for a page preserving the original element order.
+    Tables are represented inline as HTML.
+    Images are returned as a list of base64 strings, extracted from the payload.
     """
     lines = []
+    images_b64 = []
+
     for el in page_elements:
         el_type = el.get("type")
 
-        if el_type in ELEMENT_TYPES_TO_SKIP_IN_TEXT:
+        if el_type == "Image":
+            md = el.get("metadata") or {}
+            b64 = md.get("image_base64")
+            if b64:
+                images_b64.append(b64)
             continue
 
         if el_type == "Table":
@@ -55,18 +61,17 @@ def build_page_content(page_elements: list) -> str:
             if html:
                 lines.append(html)
             else:
-                # Fallback to plain text if no HTML is available
                 txt = (el.get("text") or "").strip()
                 if txt:
                     lines.append(f"<pre>{txt}</pre>")
         else:
             txt = (el.get("text") or "").strip()
-            if txt:
+            if len(txt) >= 3:
                 txt = replace_unicode_quotes(txt)
                 txt = clean(txt, extra_whitespace=True, bullets=True)
                 lines.append(txt)
 
-    return "\n\n".join(lines).strip()
+    return "\n\n".join(lines).strip(), images_b64
 
 def group_elements_by_page(elements: list, source_filename: str = None, source_type: str = None) -> list:
     """
@@ -85,9 +90,9 @@ def group_elements_by_page(elements: list, source_filename: str = None, source_t
     for page in sorted(pages.keys()):
         page_elements = pages[page]
         base_md = page_elements[0].get("metadata") or {} if page_elements else {}
-        page_text = build_page_content(page_elements)
+        page_text, images = build_page_content(page_elements)
 
-        if not page_text:
+        if not page_text and not images:
             continue
 
         grouped.append({
@@ -99,6 +104,7 @@ def group_elements_by_page(elements: list, source_filename: str = None, source_t
                 "filetype": base_md.get("filetype"),
             },
             "text": page_text,
+            "images": images,
         })
     return grouped
 
