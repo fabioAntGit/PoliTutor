@@ -1,10 +1,15 @@
+"""
+Utilities for extracting metadata from filenames and file paths.
+"""
 import os
 from config import SOURCE_TYPE_MAPPING, DEFAULT_SOURCE_TYPE
 
 def extract_course_from_filename(filename: str) -> str:
     """
-    Extrai o código do curso a partir do nome do ficheiro.
-    Ex: "2024.ED.Aula01.pdf" -> "ED"
+    Extracts the course code from the filename.
+    Assumes the format: <year>.<course>.<rest>.pdf
+    Example: "2024.ED.Aula01.pdf" -> "ED"
+    Returns an empty string if the format is not recognised.
     """
     stem = os.path.splitext(filename)[0]
     parts = stem.split(".")
@@ -12,7 +17,9 @@ def extract_course_from_filename(filename: str) -> str:
 
 def extract_source_type(pdf_path: str) -> str:
     """
-    Determina o tipo de source com base na pasta em que o PDF se encontra.
+    Determines the source type based on the folder names in the PDF path.
+    Example: ".../slides/file.pdf" -> "slides"
+    Returns DEFAULT_SOURCE_TYPE if no known folder is found.
     """
     parts = pdf_path.lower().split(os.sep)
     for source_key, source_value in SOURCE_TYPE_MAPPING.items():

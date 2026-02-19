@@ -1,17 +1,16 @@
 """
-Configs para o processamento de PDFs
+Configuration settings
 """
 import os
-from pathlib import Path
 
-# Caminhos e diretorios
+# Paths and directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RAW_DATA_PATH = os.getenv("RAW_DATA_PATH", os.path.normpath(os.path.join(BASE_DIR, "..", "data", "raw")))
 COURSE_PATH = os.getenv("COURSE_PATH", os.path.join(RAW_DATA_PATH, "ED"))
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", os.path.join(RAW_DATA_PATH, "processed_json"))
 OUTPUT_DIR_BEFORE = os.getenv("OUTPUT_DIR_BEFORE", os.path.join(RAW_DATA_PATH, "processedBefore_json"))
 
-# Keywords para filtrar/excluir
+# Keywords used to exclude elements whose text contains them
 KEYWORDS_TO_EXCLUDE = [
     "ESCOLA",
     "SUPERIOR",
@@ -19,10 +18,9 @@ KEYWORDS_TO_EXCLUDE = [
     "E GESTÃO",
 ]
 
-# Configurações de processamento do PDF
+# Settings passed directly to unstructured's partition_pdf
 PDF_PROCESSING_CONFIG = {
     "strategy": "hi_res",
-    # "languages": ["por", "eng"],
     "infer_table_structure": True,
     "extract_image_block_types": ["Image", "Table"],
     "extract_images_in_pdf": True,
@@ -31,19 +29,19 @@ PDF_PROCESSING_CONFIG = {
     "include_orig_elements": False,
 }
 
-# Tipos de elementos a filtrar
+# Element types removed before any processing (e.g. headers/footers)
 ELEMENT_TYPES_TO_EXCLUDE = [
     "Footer",
     "Header",
 ]
 
-# Tipos de elementos a ignorar na construção do texto
+# Element types ignored when building the final page text
+# Tables are included inline as HTML; images are discarded
 ELEMENT_TYPES_TO_SKIP_IN_TEXT = [
     "Image",
-    "Table",
 ]
 
-# Tipos de source válidos
+# Mapping between folder name and source type
 SOURCE_TYPE_MAPPING = {
     "apontamentos": "apontamentos",
     "slides": "slides",
