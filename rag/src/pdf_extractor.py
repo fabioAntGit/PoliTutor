@@ -23,17 +23,24 @@ def extract_elements_from_pdf(pdf_path: str) -> list:
 
 def filter_elements(elements: list, keywords_to_exclude: list) -> list:
     """
-    Removes elements whose type is in ELEMENT_TYPES_TO_EXCLUDE
-    or whose text contains any of the keywords to exclude.
+    Removes elements by type (e.g., Headers/Footers) and 
+    sanitizes text by replacing sensitive keywords instead of deleting 
+    the entire element to preserve context.
     """
     filtered = []
     for el in elements:
         if el.get("type") in ELEMENT_TYPES_TO_EXCLUDE:
             continue
+
         text_content = el.get("text") or ""
-        if any(keyword.lower() in text_content.lower() for keyword in keywords_to_exclude):
-            continue
+        
+        for keyword in keywords_to_exclude:
+            if keyword.lower() in text_content.lower():
+                text_content = text_content.replace(keyword, "[REMOVED]")
+
+        el["text"] = text_content
         filtered.append(el)
+
     return filtered
 
 def build_page_content(page_elements: list) -> tuple[str, list[str]]:
@@ -66,10 +73,10 @@ def build_page_content(page_elements: list) -> tuple[str, list[str]]:
                     lines.append(f"<pre>{txt}</pre>")
         else:
             txt = (el.get("text") or "").strip()
-            if len(txt) >= 3:
-                txt = replace_unicode_quotes(txt)
-                txt = clean(txt, extra_whitespace=True, bullets=True)
-                lines.append(txt)
+
+            txt = replace_unicode_quotes(txt)
+            txt = clean(txt, extra_whitespace=True, bullets=True)
+            lines.append(txt)
 
     return "\n\n".join(lines).strip(), images_b64
 
