@@ -67,7 +67,6 @@ def process_single_pdf(pdf_path: Path) -> bool:
         grouped_pages = group_elements_by_page(
             filtered_elements,
             source_filename=file_name,
-            source_type=source_type,
         )
         processed_output = Path(OUTPUT_DIR) / f"{file_stem}.json"
         save_json(grouped_pages, str(processed_output))

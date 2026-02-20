@@ -1,53 +1,62 @@
 """
-Extraction and transformation of PDF elements into page-structured JSON.
+PDF Element Extraction and Transformation.
+Converts raw PDF partitions into structured, cleaned page-based JSON data.
 """
-import os
+
 import json
+import logging
+import re
 from collections import defaultdict
+from pathlib import Path
+from typing import List, Dict, Any, Tuple
+
 from unstructured.cleaners.core import clean, replace_unicode_quotes
 from unstructured.partition.pdf import partition_pdf
 from unstructured.staging.base import convert_to_dict
+
 from config import (
     PDF_PROCESSING_CONFIG,
     ELEMENT_TYPES_TO_EXCLUDE,
-    ELEMENT_TYPES_TO_SKIP_IN_TEXT,
 )
 from utils import extract_metadata_from_filename
 
-def extract_elements_from_pdf(pdf_path: str) -> list:
+logger = logging.getLogger(__name__)
+
+def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     """
-    Runs partition_pdf on the given file and returns the elements as a list of dicts.
+    Partitions a PDF into structured elements using the Unstructured library.
     """
+    logger.info(f"Starting partitioning for: {pdf_path}")
     elements = partition_pdf(filename=pdf_path, **PDF_PROCESSING_CONFIG)
     return convert_to_dict(elements)
 
-def filter_elements(elements: list, keywords_to_exclude: list) -> list:
+def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[str]) -> List[Dict[str, Any]]:
     """
-    Removes elements by type (e.g., Headers/Footers) and 
-    sanitizes text by replacing sensitive keywords instead of deleting 
-    the entire element to preserve context.
+    Filters elements by type and sanitizes text content by removing sensitive keywords.
     """
+    if not keywords_to_exclude:
+        return [el for el in elements if el.get("type") not in ELEMENT_TYPES_TO_EXCLUDE]
+
+    # Pre-compile regex for faster keyword replacement
+    pattern = re.compile("|".join(map(re.escape, keywords_to_exclude)), re.IGNORECASE)
+    
     filtered = []
     for el in elements:
         if el.get("type") in ELEMENT_TYPES_TO_EXCLUDE:
             continue
 
         text_content = el.get("text") or ""
+        if text_content:
+            # Replace keywords with a single space " "
+            el["text"] = pattern.sub(" ", text_content)
         
-        for keyword in keywords_to_exclude:
-            if keyword.lower() in text_content.lower():
-                text_content = text_content.replace(keyword, " ")
-
-        el["text"] = text_content
         filtered.append(el)
-
     return filtered
 
-def build_page_content(page_elements: list) -> tuple[str, list[str]]:
+def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
     """
-    Builds the text and image list for a page preserving the original element order.
-    Tables are represented inline as HTML.
-    Images are returned as a list of base64 strings, extracted from the payload.
+    Consolidates text elements and extracts base64 images from a single page.
+    Tables are preserved as HTML for better LLM reasoning.
     """
     lines = []
     images_b64 = []
@@ -55,52 +64,57 @@ def build_page_content(page_elements: list) -> tuple[str, list[str]]:
     for el in page_elements:
         el_type = el.get("type")
 
+        # Handle Images
         if el_type == "Image":
-            md = el.get("metadata") or {}
-            b64 = md.get("image_base64")
+            metadata = el.get("metadata") or {}
+            b64 = metadata.get("image_base64")
             if b64:
                 images_b64.append(b64)
+                metadata["image_base64"] = None 
             continue
 
+        # Handle Tables
         if el_type == "Table":
-            md = el.get("metadata") or {}
-            html = md.get("text_as_html") or md.get("html")
+            metadata = el.get("metadata") or {}
+            html = metadata.get("text_as_html") or metadata.get("html")
             if html:
                 lines.append(html)
             else:
                 txt = (el.get("text") or "").strip()
                 if txt:
                     lines.append(f"<pre>{txt}</pre>")
-        else:
-            txt = (el.get("text") or "").strip()
+            continue
 
+        # Handle General Text
+        txt = (el.get("text") or "").strip()
+        if txt:
             txt = replace_unicode_quotes(txt)
             txt = clean(txt, extra_whitespace=True, bullets=True)
             lines.append(txt)
 
     return "\n\n".join(lines).strip(), images_b64
 
-def group_elements_by_page(elements: list, source_filename: str = None, source_type: str = None) -> list:
+def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str) -> List[Dict[str, Any]]:
     """
-    Groups elements by page number and builds one object per page
-    containing metadata and text (with tables inline).
-    Pages with no content are skipped.
+    Groups filtered elements by page and attaches global document metadata.
     """
     pages = defaultdict(list)
     for el in elements:
-        page_number = el.get("metadata", {}).get("page_number", -1)
+        page_number = el.get("metadata", {}).get("page_number", 1)
         pages[page_number].append(el)
 
-    _, course_code = extract_metadata_from_filename(source_filename or "")
+    # Extract metadata
+    source_type, course_code = extract_metadata_from_filename(source_filename)
 
     grouped = []
     for page in sorted(pages.keys()):
         page_elements = pages[page]
-        base_md = page_elements[0].get("metadata") or {} if page_elements else {}
         page_text, images = build_page_content(page_elements)
 
         if not page_text and not images:
             continue
+
+        first_el_md = page_elements[0].get("metadata") or {} if page_elements else {}
 
         grouped.append({
             "metadata": {
@@ -108,18 +122,18 @@ def group_elements_by_page(elements: list, source_filename: str = None, source_t
                 "course": course_code,
                 "source": source_type,
                 "page_number": page,
-                "filetype": base_md.get("filetype"),
+                "filetype": first_el_md.get("filetype"),
             },
             "text": page_text,
             "images": images,
         })
     return grouped
 
-def save_json(data: object, output_path: str) -> None:
+def save_json(data: Any, output_path: str) -> None:
     """
-    Serializes `data` to JSON and writes it to the given path,
-    creating any intermediate directories if needed.
+    Saves the structured data to a JSON file.
     """
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
