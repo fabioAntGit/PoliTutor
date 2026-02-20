@@ -36,7 +36,7 @@ def filter_elements(elements: list, keywords_to_exclude: list) -> list:
         
         for keyword in keywords_to_exclude:
             if keyword.lower() in text_content.lower():
-                text_content = text_content.replace(keyword, "[REMOVED]")
+                text_content = text_content.replace(keyword, " ")
 
         el["text"] = text_content
         filtered.append(el)

@@ -1,54 +1,63 @@
 """
 Configuration settings
 """
+
 import os
+from pathlib import Path
 
-# Paths and directories
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-RAW_DATA_PATH = os.getenv("RAW_DATA_PATH", os.path.normpath(os.path.join(BASE_DIR, "..", "data", "raw")))
-COURSE_PATH = os.getenv("COURSE_PATH", os.path.join(RAW_DATA_PATH, "ED"))
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", os.path.join(RAW_DATA_PATH, "processed_json"))
-OUTPUT_DIR_BEFORE = os.getenv("OUTPUT_DIR_BEFORE", os.path.join(RAW_DATA_PATH, "processedBefore_json"))
+# --- 1. Path Management ---
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 
-# Keywords used to exclude elements whose text contains them
-KEYWORDS_TO_EXCLUDE = [
-    "Ricardo Santos",
-]
+# Root path for raw data
+RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
 
-# Settings passed directly to unstructured's partition_pdf
-PDF_PROCESSING_CONFIG = {
-    "strategy": "hi_res",
-    "infer_table_structure": True,
-    "extract_image_block_types": ["Image", "Table"],
-    "extract_images_in_pdf": True,
-    "extract_image_block_to_payload": True,
-    "chunking_strategy": None,
-    "include_orig_elements": False,
-}
+# Course-specific source and output directories
+COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
+OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", RAW_DATA_PATH / "processed_json"))
+OUTPUT_DIR_BEFORE = Path(os.getenv("OUTPUT_DIR_BEFORE", RAW_DATA_PATH / "processedBefore_json"))
+OUTPUT_DIR_CHUNKS = Path(os.getenv("OUTPUT_DIR_CHUNKS", RAW_DATA_PATH / "chunked_json"))
 
-# Element types removed before any processing (e.g. headers/footers)
-ELEMENT_TYPES_TO_EXCLUDE = [
-    "Footer",
-    "Header",
-]
-
-# Element types ignored when building the final page text
-# Tables are included inline as HTML; images are discarded
-ELEMENT_TYPES_TO_SKIP_IN_TEXT = [
-    "Image",
-]
-
-# Mapping between folder name and source type
+# --- 2. Source Metadata Mapping ---
+# Maps directory keywords to source type identifiers
 SOURCE_TYPE_MAPPING = {
     "apontamentos": "apontamentos",
     "slides": "slides",
 }
 DEFAULT_SOURCE_TYPE = "unknown"
 
-# Chunking settings
+# --- 3. Extraction & Filtering Settings ---
+# Keywords to discard
+KEYWORDS_TO_EXCLUDE = [
+    "Ricardo Santos",
+    "rjs@estg.ipp.pt",
+    "Escola Superior de Tecnologia e Gestão Instituto Politécnico do Porto",
+]
+
+# Unstructured element types to completely remove from the pipeline
+ELEMENT_TYPES_TO_EXCLUDE = [
+    "Footer",
+    "Header",
+]
+
+# Elements that exist but should not be rendered as plain text
+ELEMENT_TYPES_TO_SKIP_IN_TEXT = [
+    "Image",
+]
+
+# --- 4. Unstructured Partitioning Configuration ---
+PDF_PROCESSING_CONFIG = {
+    "strategy": "hi_res",
+    "infer_table_structure": True,
+    "extract_image_block_types": ["Image", "Table"],
+    "extract_images_in_pdf": True,
+    "extract_image_block_to_payload": True,
+    "chunking_strategy": None, 
+    "include_orig_elements": False,
+}
+
+# --- 5. Text Chunking Configuration ---
 CHUNKING_CONFIG = {
     "chunk_size": 2000,
     "chunk_overlap": 200,
-    "min_chunk_length": 50,
 }
-OUTPUT_DIR_CHUNKS = os.getenv("OUTPUT_DIR_CHUNKS", os.path.join(RAW_DATA_PATH, "chunked_json"))

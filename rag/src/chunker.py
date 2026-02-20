@@ -47,8 +47,6 @@ def chunk_page(page: dict, splitter: RecursiveCharacterTextSplitter) -> list[dic
     splits = splitter.split_text(text) if text else []
     chunks = []
     for i, split in enumerate(splits):
-        if len(split.strip()) < CHUNKING_CONFIG["min_chunk_length"]:
-            continue
         chunk = {
             "text": split,
             "metadata": {**metadata, "chunk_index": i, "total_chunks": len(splits)},
