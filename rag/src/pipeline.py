@@ -4,7 +4,7 @@ Main Pipeline.
 
 import logging
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 # Internal imports
 from config import (
@@ -50,6 +50,10 @@ def process_single_pdf(pdf_path: Path) -> bool:
     """
     file_name = pdf_path.name   
     file_stem = pdf_path.stem       
+
+    if pdf_path.stat().st_size == 0:
+        logging.warning(f"Skipping empty file: {file_name}")
+        return False
     
     try:
         # Metadata Extraction
@@ -66,6 +70,8 @@ def process_single_pdf(pdf_path: Path) -> bool:
         grouped_pages = group_elements_by_page(
             filtered_elements,
             source_filename=file_name,
+            source_type=source_type,
+            course_code=course_code,
         )
         processed_output = Path(OUTPUT_DIR) / f"{file_stem}.json"
         save_json(grouped_pages, str(processed_output))

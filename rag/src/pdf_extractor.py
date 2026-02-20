@@ -3,11 +3,9 @@ PDF Element Extraction and Transformation.
 Converts raw PDF partitions into structured, cleaned page-based JSON data.
 """
 
-import json
 import logging
 import re
 from collections import defaultdict
-from pathlib import Path
 from typing import List, Dict, Any, Tuple
 
 from unstructured.cleaners.core import clean, replace_unicode_quotes
@@ -45,10 +43,9 @@ def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[st
             continue
 
         text_content = el.get("text") or ""
-        if text_content:
-            # Replace keywords with a single space " "
-            el["text"] = pattern.sub(" ", text_content)
-        
+        if text_content and pattern.search(text_content):
+            el = {**el, "text": pattern.sub("[REDACTED]", text_content)}
+
         filtered.append(el)
     return filtered
 
@@ -69,7 +66,6 @@ def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[s
             b64 = metadata.get("image_base64")
             if b64:
                 images_b64.append(b64)
-                metadata["image_base64"] = None 
             continue
 
         # Handle Tables
@@ -93,7 +89,7 @@ def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[s
 
     return "\n\n".join(lines).strip(), images_b64
 
-def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str) -> List[Dict[str, Any]]:
+def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str, ) -> List[Dict[str, Any]]:
     """
     Groups filtered elements by page and attaches global document metadata.
     """
@@ -101,10 +97,7 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str)
     for el in elements:
         page_number = el.get("metadata", {}).get("page_number", 1)
         pages[page_number].append(el)
-
-    # Extract metadata
-    source_type, course_code = extract_metadata_from_filename(source_filename)
-
+        
     grouped = []
     for page in sorted(pages.keys()):
         page_elements = pages[page]
@@ -113,7 +106,7 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str)
         if not page_text and not images:
             continue
 
-        first_el_md = page_elements[0].get("metadata") or {} if page_elements else {}
+        first_el_md = page_elements[0].get("metadata") or {}
 
         grouped.append({
             "metadata": {

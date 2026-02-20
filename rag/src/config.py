@@ -32,11 +32,6 @@ ELEMENT_TYPES_TO_EXCLUDE = [
     "Header",
 ]
 
-# Elements that exist but should not be rendered as plain text
-ELEMENT_TYPES_TO_SKIP_IN_TEXT = [
-    "Image",
-]
-
 # --- Unstructured Partitioning Configuration ---
 PDF_PROCESSING_CONFIG = {
     "strategy": "hi_res",
@@ -50,6 +45,6 @@ PDF_PROCESSING_CONFIG = {
 
 # --- Chunking Configuration ---
 CHUNKING_CONFIG = {
-    "chunk_size": 2000,
+    "chunk_size": 1800,
     "chunk_overlap": 200,
 }

@@ -25,6 +25,7 @@ def build_splitter() -> RecursiveCharacterTextSplitter:
 def chunk_page(page: Dict[str, Any], splitter: RecursiveCharacterTextSplitter) -> List[Dict[str, Any]]:
     """
     Chunks a single page while preserving multimodal context.
+    Images are attached only to the first chunk to avoid duplication.
     """
     text = page.get("text", "").strip()
     images = page.get("images", [])
@@ -33,36 +34,17 @@ def chunk_page(page: Dict[str, Any], splitter: RecursiveCharacterTextSplitter) -
     if not text and not images:
         return []
 
-    # Page fits in a single chunk
-    if len(text) <= CHUNKING_CONFIG["chunk_size"]:
-        return [{
-            "text": text,
-            "images": images,
-            "metadata": {
-                **metadata, 
-                "chunk_index": 0, 
-                "total_chunks": 1,
-            },
-        }]
-
-    # Split required
-    splits = splitter.split_text(text)
-    chunks = []
+    splits = splitter.split_text(text) if text else [""]
     total_splits = len(splits)
 
-    for i, split in enumerate(splits):
-        chunk = {
+    return [
+        {
             "text": split,
-            "images": images,
-            "metadata": {
-                **metadata,
-                "chunk_index": i,
-                "total_chunks": total_splits,
-            },
+            "images": images if i == 0 else [],
+            "metadata": {**metadata, "chunk_index": i, "total_chunks": total_splits},
         }
-        chunks.append(chunk)
-        
-    return chunks
+        for i, split in enumerate(splits)
+    ]
 
 def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """

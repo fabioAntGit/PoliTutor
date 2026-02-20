@@ -37,9 +37,14 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
     stem = Path(filename).stem
     parts = stem.split(".")
 
-    if len(parts) >= 2:
-        source_type = parts[0].lower()
-        course_code = parts[1].lower()
-        return source_type, course_code
+    if len(parts) < 2:
+        logger.warning(
+            f"Filename '{filename}' does not follow the expected format "
+            f"'<source_type>.<course_code>.<description>.pdf'. "
+            f"Falling back to ('unknown', 'unknown')."
+        )
+        return "unknown", "unknown"
 
-    return "unknown", "unknown"
+    source_type = parts[0].lower()
+    course_code = parts[1].lower()
+    return source_type, course_code
