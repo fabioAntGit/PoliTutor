@@ -1,3 +1,4 @@
 langchain-community
 langchain-text-splitters
 unstructured[all-docs]
+python-dotenv
