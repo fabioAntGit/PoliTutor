@@ -14,7 +14,7 @@ from config import (
     KEYWORDS_TO_EXCLUDE,
     OUTPUT_DIR_CHUNKS,
 )
-from utils import extract_source_type
+from utils import extract_metadata_from_filename
 from pdf_extractor import (
     extract_elements_from_pdf,
     filter_elements,
@@ -49,21 +49,20 @@ def process_single_pdf(pdf_path: Path) -> bool:
     Returns:
         bool: True if processing was successful, False otherwise.
     """
-    file_name = pdf_path.name        # e.g., "2024.ED.Aula01.pdf"
-    file_stem = pdf_path.stem        # e.g., "2024.ED.Aula01"
+    file_name = pdf_path.name   
+    file_stem = pdf_path.stem       
     
     try:
-        # 1. Source Identification
-        source_type = extract_source_type(str(pdf_path))
-        logging.info(f"Processing: {file_name} (Source: {source_type})")
+        # 1. Metadata Extraction
+        source_type, course_code = extract_metadata_from_filename(file_name)
+        logging.info(f"Processing: {file_name} | Course: {course_code} | Type: {source_type}")
 
-        # 2. Raw Extraction (Stage: Before)
+        # 2. Raw Extraction
         elements = extract_elements_from_pdf(str(pdf_path))
         raw_output = Path(OUTPUT_DIR_BEFORE) / f"{file_stem}_raw.json"
         save_json(elements, str(raw_output))
 
-        # 3. Filtering & Grouping (Stage: Processed)
-        # Removes headers/footers and organizes content by page
+        # 3. Filtering & Grouping
         filtered_elements = filter_elements(elements, KEYWORDS_TO_EXCLUDE)
         grouped_pages = group_elements_by_page(
             filtered_elements,
@@ -73,7 +72,7 @@ def process_single_pdf(pdf_path: Path) -> bool:
         processed_output = Path(OUTPUT_DIR) / f"{file_stem}.json"
         save_json(grouped_pages, str(processed_output))
 
-        # 4. Chunking (Stage: Chunks)
+        # 4. Chunking
         chunks = chunk_document(grouped_pages)
         chunks_output = Path(OUTPUT_DIR_CHUNKS) / f"{file_stem}_chunks.json"
         save_chunks(chunks, str(chunks_output))

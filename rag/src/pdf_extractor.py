@@ -12,7 +12,7 @@ from config import (
     ELEMENT_TYPES_TO_EXCLUDE,
     ELEMENT_TYPES_TO_SKIP_IN_TEXT,
 )
-from utils import extract_course_from_filename
+from utils import extract_metadata_from_filename
 
 def extract_elements_from_pdf(pdf_path: str) -> list:
     """
@@ -91,7 +91,7 @@ def group_elements_by_page(elements: list, source_filename: str = None, source_t
         page_number = el.get("metadata", {}).get("page_number", -1)
         pages[page_number].append(el)
 
-    course_code = extract_course_from_filename(source_filename or "")
+    _, course_code = extract_metadata_from_filename(source_filename or "")
 
     grouped = []
     for page in sorted(pages.keys()):

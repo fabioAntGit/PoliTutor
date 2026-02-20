@@ -5,7 +5,7 @@ Configuration settings
 import os
 from pathlib import Path
 
-# --- 1. Path Management ---
+# --- Path Management ---
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 
@@ -18,15 +18,7 @@ OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", RAW_DATA_PATH / "processed_json"))
 OUTPUT_DIR_BEFORE = Path(os.getenv("OUTPUT_DIR_BEFORE", RAW_DATA_PATH / "processedBefore_json"))
 OUTPUT_DIR_CHUNKS = Path(os.getenv("OUTPUT_DIR_CHUNKS", RAW_DATA_PATH / "chunked_json"))
 
-# --- 2. Source Metadata Mapping ---
-# Maps directory keywords to source type identifiers
-SOURCE_TYPE_MAPPING = {
-    "apontamentos": "apontamentos",
-    "slides": "slides",
-}
-DEFAULT_SOURCE_TYPE = "unknown"
-
-# --- 3. Extraction & Filtering Settings ---
+# --- Extraction & Filtering Settings ---
 # Keywords to discard
 KEYWORDS_TO_EXCLUDE = [
     "Ricardo Santos",
@@ -45,7 +37,7 @@ ELEMENT_TYPES_TO_SKIP_IN_TEXT = [
     "Image",
 ]
 
-# --- 4. Unstructured Partitioning Configuration ---
+# --- Unstructured Partitioning Configuration ---
 PDF_PROCESSING_CONFIG = {
     "strategy": "hi_res",
     "infer_table_structure": True,
@@ -56,7 +48,7 @@ PDF_PROCESSING_CONFIG = {
     "include_orig_elements": False,
 }
 
-# --- 5. Text Chunking Configuration ---
+# --- Text Chunking Configuration ---
 CHUNKING_CONFIG = {
     "chunk_size": 2000,
     "chunk_overlap": 200,
