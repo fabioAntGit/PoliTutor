@@ -5,11 +5,12 @@ Converts raw PDF partitions into structured, cleaned page-based JSON data.
 
 import logging
 import re
+import os
 from collections import defaultdict
 from typing import List, Dict, Any, Tuple
 
 from unstructured.cleaners.core import clean, replace_unicode_quotes
-from unstructured.partition.pdf import partition_pdf
+from unstructured.partition.api import partition_via_api
 from unstructured.staging.base import convert_to_dict
 
 from config import (
@@ -25,7 +26,11 @@ def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     Partitions a PDF into structured elements using the Unstructured library.
     """
     logger.info(f"Starting partitioning for: {pdf_path}")
-    elements = partition_pdf(filename=pdf_path, **PDF_PROCESSING_CONFIG)
+    elements = partition_via_api(
+        filename=pdf_path,
+        api_key=os.getenv("UNSTRUCTURED_API_KEY"),
+        **PDF_PROCESSING_CONFIG
+    )
     return convert_to_dict(elements)
 
 def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[str]) -> List[Dict[str, Any]]:
@@ -44,7 +49,7 @@ def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[st
 
         text_content = el.get("text") or ""
         if text_content and pattern.search(text_content):
-            el = {**el, "text": pattern.sub("[REDACTED]", text_content)}
+            el = {**el, "text": re.sub(r'\s+', ' ', pattern.sub("", text_content)).strip()}
 
         filtered.append(el)
     return filtered
@@ -78,6 +83,12 @@ def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[s
                 txt = (el.get("text") or "").strip()
                 if txt:
                     lines.append(f"<pre>{txt}</pre>")
+            continue
+
+        if el_type == "CodeSnippet":
+            code = (el.get("text") or "").strip()
+            if code:
+                lines.append(f"```\n{code}\n```")
             continue
 
         # Handle General Text
