@@ -37,7 +37,6 @@ def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[st
     if not keywords_to_exclude:
         return [el for el in elements if el.get("type") not in ELEMENT_TYPES_TO_EXCLUDE]
 
-    # Pre-compile regex for faster keyword replacement
     pattern = re.compile("|".join(map(re.escape, keywords_to_exclude)), re.IGNORECASE)
     
     filtered = []
@@ -128,12 +127,3 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str)
             "images": images,
         })
     return grouped
-
-def save_json(data: Any, output_path: str) -> None:
-    """
-    Saves the structured data to a JSON file.
-    """
-    path = Path(output_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)

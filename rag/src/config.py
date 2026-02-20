@@ -48,7 +48,7 @@ PDF_PROCESSING_CONFIG = {
     "include_orig_elements": False,
 }
 
-# --- Text Chunking Configuration ---
+# --- Chunking Configuration ---
 CHUNKING_CONFIG = {
     "chunk_size": 2000,
     "chunk_overlap": 200,

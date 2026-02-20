@@ -14,14 +14,13 @@ from config import (
     KEYWORDS_TO_EXCLUDE,
     OUTPUT_DIR_CHUNKS,
 )
-from utils import extract_metadata_from_filename
+from utils import extract_metadata_from_filename, save_json
 from pdf_extractor import (
     extract_elements_from_pdf,
     filter_elements,
     group_elements_by_page,
-    save_json,
 )
-from chunker import chunk_document, save_chunks
+from chunker import chunk_document
 
 # Logging Configuration
 logging.basicConfig(
@@ -53,16 +52,16 @@ def process_single_pdf(pdf_path: Path) -> bool:
     file_stem = pdf_path.stem       
     
     try:
-        # 1. Metadata Extraction
+        # Metadata Extraction
         source_type, course_code = extract_metadata_from_filename(file_name)
         logging.info(f"Processing: {file_name} | Course: {course_code} | Type: {source_type}")
 
-        # 2. Raw Extraction
+        # Raw Extraction
         elements = extract_elements_from_pdf(str(pdf_path))
         raw_output = Path(OUTPUT_DIR_BEFORE) / f"{file_stem}_raw.json"
         save_json(elements, str(raw_output))
 
-        # 3. Filtering & Grouping
+        # Filtering & Grouping
         filtered_elements = filter_elements(elements, KEYWORDS_TO_EXCLUDE)
         grouped_pages = group_elements_by_page(
             filtered_elements,
@@ -71,10 +70,10 @@ def process_single_pdf(pdf_path: Path) -> bool:
         processed_output = Path(OUTPUT_DIR) / f"{file_stem}.json"
         save_json(grouped_pages, str(processed_output))
 
-        # 4. Chunking
+        # Chunking
         chunks = chunk_document(grouped_pages)
         chunks_output = Path(OUTPUT_DIR_CHUNKS) / f"{file_stem}_chunks.json"
-        save_chunks(chunks, str(chunks_output))
+        save_json(chunks, str(chunks_output))
 
         logging.info(f"✓ Successfully processed {file_stem}: {len(chunks)} chunks generated.")
         return True
