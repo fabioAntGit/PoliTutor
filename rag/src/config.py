@@ -1,49 +1,59 @@
 """
 Configuration settings
 """
+
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 
-# Paths and directories
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-RAW_DATA_PATH = os.getenv("RAW_DATA_PATH", os.path.normpath(os.path.join(BASE_DIR, "..", "data", "raw")))
-COURSE_PATH = os.getenv("COURSE_PATH", os.path.join(RAW_DATA_PATH, "ED"))
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", os.path.join(RAW_DATA_PATH, "processed_json"))
-OUTPUT_DIR_BEFORE = os.getenv("OUTPUT_DIR_BEFORE", os.path.join(RAW_DATA_PATH, "processedBefore_json"))
+load_dotenv()
 
-# Keywords used to exclude elements whose text contains them
+# --- Path Management ---
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
+
+# Root path for raw data
+RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
+
+# Course-specific source and output directories
+COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
+OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", RAW_DATA_PATH / "processed_json"))
+OUTPUT_DIR_BEFORE = Path(os.getenv("OUTPUT_DIR_BEFORE", RAW_DATA_PATH / "processedBefore_json"))
+OUTPUT_DIR_CHUNKS = Path(os.getenv("OUTPUT_DIR_CHUNKS", RAW_DATA_PATH / "chunked_json"))
+
+# --- Extraction & Filtering Settings ---
+# Keywords to discard
 KEYWORDS_TO_EXCLUDE = [
-    "ESCOLA",
-    "SUPERIOR",
-    "DE TECNOLOGIA",
-    "E GESTÃO",
+    "Ricardo Santos",
+    "rjs@estg.ipp.pt",
+    "Escola Superior de Tecnologia e Gestão Instituto Politécnico do Porto",
 ]
 
-# Settings passed directly to unstructured's partition_pdf
-PDF_PROCESSING_CONFIG = {
-    "strategy": "hi_res",
-    "infer_table_structure": True,
-    "extract_image_block_types": ["Image", "Table"],
-    "extract_images_in_pdf": True,
-    "extract_image_block_to_payload": False,
-    "chunking_strategy": None,
-    "include_orig_elements": False,
-}
-
-# Element types removed before any processing (e.g. headers/footers)
+# Unstructured element types to completely remove from the pipeline
 ELEMENT_TYPES_TO_EXCLUDE = [
     "Footer",
     "Header",
+    "FigureCaption",
+    "UncategorizedText"
 ]
 
-# Element types ignored when building the final page text
-# Tables are included inline as HTML; images are discarded
-ELEMENT_TYPES_TO_SKIP_IN_TEXT = [
-    "Image",
-]
-
-# Mapping between folder name and source type
-SOURCE_TYPE_MAPPING = {
-    "apontamentos": "apontamentos",
-    "slides": "slides",
+# --- Unstructured Partitioning Configuration ---
+PDF_PROCESSING_CONFIG = {
+    "strategy": "hi_res",
+    "languages": ["por", "eng"],
+    "infer_table_structure": True,
+    "extract_image_block_types": ["Image"],
+    "extract_image_block_to_payload": True,
+    "chunking_strategy": None, 
 }
-DEFAULT_SOURCE_TYPE = "unknown"
+
+# --- Chunking Configuration ---
+CHUNKING_CONFIG_APONTAMENTOS = {
+    "chunk_size": 800,
+    "chunk_overlap": 100,
+}
+
+CHUNKING_CONFIG_SLIDES = {
+    "chunk_size": 400,
+    "chunk_overlap": 50,
+}

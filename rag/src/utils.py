@@ -1,28 +1,50 @@
 """
-Utilities for extracting metadata from filenames and file paths.
+Utilities for file management and metadata extraction.
 """
-import os
-from config import SOURCE_TYPE_MAPPING, DEFAULT_SOURCE_TYPE
 
-def extract_course_from_filename(filename: str) -> str:
+import json
+import logging
+from pathlib import Path
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+def save_json(data: Any, output_path: str | Path) -> None:
     """
-    Extracts the course code from the filename.
-    Assumes the format: <year>.<course>.<rest>.pdf
-    Example: "2024.ED.Aula01.pdf" -> "ED"
-    Returns an empty string if the format is not recognised.
+    Serializes data to JSON and saves it to the specified path.
+    Creates parent directories automatically.
     """
-    stem = os.path.splitext(filename)[0]
+    path = Path(output_path)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save JSON to {path}: {str(e)}")
+        raise
+
+def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
+    """
+    Extracts source_type and course_code from the filename.
+    
+    Expected format: <source_type>.<course_code>.<description>.pdf
+    Example: "Apontamentos.ED.CAP1.pdf" -> ("apontamentos", "ed")
+    
+    Returns:
+        tuple: (source_type, course_code) in lowercase. 
+               Returns ("unknown", "unknown") if format is invalid.
+    """
+    stem = Path(filename).stem
     parts = stem.split(".")
-    return parts[1] if len(parts) > 1 else ""
 
-def extract_source_type(pdf_path: str) -> str:
-    """
-    Determines the source type based on the folder names in the PDF path.
-    Example: ".../slides/file.pdf" -> "slides"
-    Returns DEFAULT_SOURCE_TYPE if no known folder is found.
-    """
-    parts = pdf_path.lower().split(os.sep)
-    for source_key, source_value in SOURCE_TYPE_MAPPING.items():
-        if source_key in parts:
-            return source_value
-    return DEFAULT_SOURCE_TYPE
+    if len(parts) < 2:
+        logger.warning(
+            f"Filename '{filename}' does not follow the expected format "
+            f"'<source_type>.<course_code>.<description>.pdf'. "
+            f"Falling back to ('unknown', 'unknown')."
+        )
+        return "unknown", "unknown"
+
+    source_type = parts[0].lower()
+    course_code = parts[1].lower()
+    return source_type, course_code
