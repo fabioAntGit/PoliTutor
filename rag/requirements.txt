@@ -1,4 +1,6 @@
 langchain-community
 langchain-text-splitters
-unstructured[all-docs]
+langchain-huggingface
+unstructured[pdf, pptx]
 python-dotenv
+chromadb

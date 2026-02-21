@@ -6,10 +6,10 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
 
 # --- Path Management ---
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR.parent / ".env")
 DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 
 # Root path for raw data
