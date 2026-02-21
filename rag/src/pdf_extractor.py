@@ -28,7 +28,7 @@ def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     logger.info(f"Starting partitioning for: {pdf_path}")
     elements = partition_via_api(
         filename=pdf_path,
-        api_url="https://api.unstructuredapp.io/general/v0/general",
+        api_url=os.getenv("UNSTRUCTURED_API_URL"),
         api_key=os.getenv("UNSTRUCTURED_API_KEY"),
         **PDF_PROCESSING_CONFIG
     )

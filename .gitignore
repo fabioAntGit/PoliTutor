@@ -17,6 +17,7 @@ venv/
 # Variáveis de ambiente
 *.env
 .env.*
+rag/.env
 
 # OS
 .DS_Store

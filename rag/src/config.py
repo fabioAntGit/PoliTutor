@@ -4,7 +4,7 @@ Configuration settings
 
 import os
 from pathlib import Path
-from dotenv import 
+from dotenv import load_dotenv
 
 load_dotenv()
 
