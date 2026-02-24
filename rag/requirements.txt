@@ -4,3 +4,5 @@ langchain-huggingface
 unstructured
 python-dotenv
 chromadb
+sentence-transformers
+renumics-spotlight

@@ -71,8 +71,6 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "source": base_metadata["source"],
                 "filetype": base_metadata["filetype"],
                 "pages": page_numbers,
-                "chunk_index": i,
-                "total_chunks": len(splits),
             }
         })
     

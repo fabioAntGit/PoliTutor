@@ -57,3 +57,6 @@ CHUNKING_CONFIG_SLIDES = {
     "chunk_size": 400,
     "chunk_overlap": 50,
 }
+
+# --- Embedding Configuration ---
+EMBEDDING_MODEL = "intfloat/multilingual-e5-large"

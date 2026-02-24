@@ -21,6 +21,7 @@ from pdf_extractor import (
     group_elements_by_page,
 )
 from chunker import chunk_document
+from embedding import embed_from_chunks
 
 # Logging Configuration
 logging.basicConfig(
@@ -81,11 +82,11 @@ def process_single_pdf(pdf_path: Path) -> bool:
         chunks_output = Path(OUTPUT_DIR_CHUNKS) / f"{file_stem}_chunks.json"
         save_json(chunks, str(chunks_output))
 
-        logging.info(f"✓ Successfully processed {file_stem}: {len(chunks)} chunks generated.")
+        logging.info(f"Successfully processed {file_stem}: {len(chunks)} chunks generated.")
         return True
 
     except Exception as e:
-        logging.error(f"✗ Failed to process {file_name}: {str(e)}", exc_info=True)
+        logging.error(f"Failed to process {file_name}: {str(e)}", exc_info=True)
         return False
 
 def run_pipeline() -> None:
@@ -107,6 +108,9 @@ def run_pipeline() -> None:
     for pdf_path in pdf_files:
         if process_single_pdf(pdf_path):
             success_count += 1
+
+    # Embedding
+    embed_from_chunks()
 
     logging.info(
         f"Pipeline finished. Status: {success_count}/{len(pdf_files)} files processed successfully."
