@@ -2,27 +2,12 @@
 Utilities for file management and metadata extraction.
 """
 
-import json
+import re
 import logging
 from pathlib import Path
-from typing import Any
 from config import VALID_SOURCE_TYPES
 
 logger = logging.getLogger(__name__)
-
-def save_json(data: Any, output_path: str | Path) -> None:
-    """
-    Serializes data to JSON and saves it to the specified path.
-    Creates parent directories automatically.
-    """
-    path = Path(output_path)
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        logger.error(f"Failed to save JSON to {path}: {str(e)}")
-        raise
 
 def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
     """

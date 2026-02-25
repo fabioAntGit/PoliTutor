@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-
 # --- Path Management ---
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR.parent / ".env")
@@ -17,9 +16,6 @@ RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
 
 # Course-specific source and output directories
 COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
-OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", RAW_DATA_PATH / "processed_json"))
-OUTPUT_DIR_BEFORE = Path(os.getenv("OUTPUT_DIR_BEFORE", RAW_DATA_PATH / "processedBefore_json"))
-OUTPUT_DIR_CHUNKS = Path(os.getenv("OUTPUT_DIR_CHUNKS", RAW_DATA_PATH / "chunked_json"))
 
 # --- Extraction & Filtering Settings ---
 # Keywords to discard
@@ -65,3 +61,4 @@ CHUNKING_CONFIG_SLIDES = {
 
 # --- Embedding Configuration ---
 EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs4"
