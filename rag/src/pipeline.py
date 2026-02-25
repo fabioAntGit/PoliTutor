@@ -1,116 +1,91 @@
 """
-Main Pipeline.
+Main Pipeline Orchestrator.
+Discovers, processes, and embeds PDF documents into the RAG system.
 """
 
 import logging
 from pathlib import Path
 from typing import List
 
-# Internal imports
-from config import (
-    COURSE_PATH,
-    OUTPUT_DIR,
-    OUTPUT_DIR_BEFORE,
-    KEYWORDS_TO_EXCLUDE,
-    OUTPUT_DIR_CHUNKS,
-)
-from utils import extract_metadata_from_filename, save_json
-from pdf_extractor import (
-    extract_elements_from_pdf,
-    filter_elements,
-    group_elements_by_page,
-)
+from config import COURSE_PATH, KEYWORDS_TO_EXCLUDE
+from utils import extract_metadata_from_filename
+from pdf_extractor import extract_elements_from_pdf, filter_elements, group_elements_by_page
 from chunker import chunk_document
+from embedding import embed_chunks
 
-# Logging Configuration
 logging.basicConfig(
-    level=logging.INFO, 
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
-
-def ensure_environment() -> None:
-    """
-    Initializes the required directory structure.
-    Ensures all output folders exist before processing starts.
-    """
-    directories = [OUTPUT_DIR, OUTPUT_DIR_BEFORE, OUTPUT_DIR_CHUNKS]
-    for dir_path in directories:
-        Path(dir_path).mkdir(parents=True, exist_ok=True)
+logger = logging.getLogger(__name__)
 
 def process_single_pdf(pdf_path: Path) -> bool:
     """
-    Orchestrates the processing pipeline for a single PDF file.
-    
-    Args:
-        pdf_path (Path): Path object pointing to the source PDF.
-        
-    Returns:
-        bool: True if processing was successful, False otherwise.
+    Orchestrates the full pipeline for a single PDF.
+    From extraction to vector database embedding.
     """
-    file_name = pdf_path.name   
-    file_stem = pdf_path.stem       
+    file_name = pdf_path.name
 
     if pdf_path.stat().st_size == 0:
-        logging.warning(f"Skipping empty file: {file_name}")
+        logger.warning(f"Skipping empty file: {file_name}")
+        return False
+
+    # Metadata Extraction & Validation
+    try:
+        source_type, course_code = extract_metadata_from_filename(file_name)
+    except ValueError as e:
+        logger.error(f"Validation failed for '{file_name}': {e}")
         return False
     
+    # Document Processing
     try:
-        # Metadata Extraction
-        source_type, course_code = extract_metadata_from_filename(file_name)
-        logging.info(f"Processing: {file_name} | Course: {course_code} | Type: {source_type}")
+        logger.info(f"--- Processing: {file_name} ---")
 
-        # Raw Extraction
         elements = extract_elements_from_pdf(str(pdf_path))
-        raw_output = Path(OUTPUT_DIR_BEFORE) / f"{file_stem}_raw.json"
-        save_json(elements, str(raw_output))
 
-        # Filtering & Grouping
         filtered_elements = filter_elements(elements, KEYWORDS_TO_EXCLUDE)
+
+        # Group by page with context
         grouped_pages = group_elements_by_page(
             filtered_elements,
             source_filename=file_name,
             source_type=source_type,
             course_code=course_code,
         )
-        processed_output = Path(OUTPUT_DIR) / f"{file_stem}.json"
-        save_json(grouped_pages, str(processed_output))
 
-        # Chunking
+        # Segment into chunks
         chunks = chunk_document(grouped_pages)
-        chunks_output = Path(OUTPUT_DIR_CHUNKS) / f"{file_stem}_chunks.json"
-        save_json(chunks, str(chunks_output))
 
-        logging.info(f"✓ Successfully processed {file_stem}: {len(chunks)} chunks generated.")
+        # Embedding and Vector Storage
+        embed_chunks(chunks, file_stem=pdf_path.stem)
+
+        logger.info(f"DONE: '{file_name}' ({len(chunks)} chunks embedded).")
         return True
 
     except Exception as e:
-        logging.error(f"✗ Failed to process {file_name}: {str(e)}", exc_info=True)
+        logger.error(f"Critical error processing '{file_name}': {e}", exc_info=True)
         return False
 
 def run_pipeline() -> None:
     """
-    Main entry point for the pipeline.
-    Discovers all PDFs in COURSE_PATH and triggers individual processing.
+    Main entry point. Scans COURSE_PATH for PDFs and processes them.
     """
-    ensure_environment()
-    
-    pdf_files: List[Path] = list(Path(COURSE_PATH).rglob("*.pdf"))
+    search_path = Path(COURSE_PATH)
+    pdf_files: List[Path] = list(search_path.rglob("*.pdf"))
 
     if not pdf_files:
-        logging.warning(f"No PDF files found in directory: {COURSE_PATH}")
+        logger.warning(f"No PDF files found in target directory: {search_path}")
         return
 
-    logging.info(f"Pipeline started. Found {len(pdf_files)} files to process.")
-    
+    logger.info(f"Pipeline started. Found {len(pdf_files)} file(s) in {search_path.name}")
+
     success_count = 0
     for pdf_path in pdf_files:
         if process_single_pdf(pdf_path):
             success_count += 1
 
-    logging.info(
-        f"Pipeline finished. Status: {success_count}/{len(pdf_files)} files processed successfully."
-    )
+    logger.info(f"Pipeline finished. Successfully processed {success_count}/{len(pdf_files)} files.")
 
 if __name__ == "__main__":
     run_pipeline()

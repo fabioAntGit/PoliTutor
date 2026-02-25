@@ -1,6 +1,6 @@
 """
 PDF Element Extraction and Transformation.
-Converts raw PDF partitions into structured, cleaned page-based JSON data.
+Converts raw PDF partitions into structured, cleaned page-based data.
 """
 
 import logging
@@ -17,118 +17,110 @@ from config import (
     PDF_PROCESSING_CONFIG,
     ELEMENT_TYPES_TO_EXCLUDE,
 )
-from utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
 
 def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     """
-    Partitions a PDF into structured elements using the Unstructured library.
+    Partitions a PDF into structured elements via Unstructured API.
     """
-    logger.info(f"Starting partitioning for: {pdf_path}")
-    elements = partition_via_api(
-        filename=pdf_path,
-        api_url=os.getenv("UNSTRUCTURED_API_URL"),
-        api_key=os.getenv("UNSTRUCTURED_API_KEY"),
-        **PDF_PROCESSING_CONFIG
-    )
-    return convert_to_dict(elements)
+    logger.info(f"Sending PDF to Unstructured API: {pdf_path}")
+
+    try:
+        elements = partition_via_api(
+            filename=pdf_path,
+            api_url=os.getenv("UNSTRUCTURED_API_URL"),
+            api_key=os.getenv("UNSTRUCTURED_API_KEY"),
+            **PDF_PROCESSING_CONFIG
+        )
+        return convert_to_dict(elements)
+    except Exception as e:
+        logger.error(f"API Partitioning failed for {pdf_path}: {e}")
+        raise
 
 def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[str]) -> List[Dict[str, Any]]:
     """
     Filters elements by type and sanitizes text content by removing sensitive keywords.
     """
+    elements = [el for el in elements if el.get("type") not in ELEMENT_TYPES_TO_EXCLUDE]
+
     if not keywords_to_exclude:
-        return [el for el in elements if el.get("type") not in ELEMENT_TYPES_TO_EXCLUDE]
+        return elements
 
     pattern = re.compile("|".join(map(re.escape, keywords_to_exclude)), re.IGNORECASE)
     
-    filtered = []
     for el in elements:
-        if el.get("type") in ELEMENT_TYPES_TO_EXCLUDE:
-            continue
-
-        text_content = el.get("text") or ""
+        text_content = el.get("text")
         if text_content and pattern.search(text_content):
-            el = {**el, "text": re.sub(r'\s+', ' ', pattern.sub("", text_content)).strip()}
+            cleaned_text = pattern.sub("", text_content)
+            el["text"] = re.sub(r'\s+', ' ', cleaned_text).strip()
 
-        filtered.append(el)
-    return filtered
+    return elements
 
 def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
     """
-    Consolidates text elements and extracts base64 images from a single page.
-    Tables are preserved as HTML for better LLM reasoning.
+    Consolidates text elements and extracts images. 
+    Maintains semantic markers for tables and code.
     """
     lines = []
     images_b64 = []
 
     for el in page_elements:
         el_type = el.get("type")
+        metadata = el.get("metadata") or {}
 
-        # Handle Images
         if el_type == "Image":
-            metadata = el.get("metadata") or {}
-            b64 = metadata.get("image_base64")
-            if b64:
+            if b64 := metadata.get("image_base64"):
                 images_b64.append(b64)
             continue
 
-        # Handle Tables
         if el_type == "Table":
-            metadata = el.get("metadata") or {}
             html = metadata.get("text_as_html") or metadata.get("html")
-            if html:
-                lines.append(html)
-            else:
-                txt = (el.get("text") or "").strip()
-                if txt:
-                    lines.append(f"<pre>{txt}</pre>")
+            lines.append(html if html else f"\n[TABLE DATA]\n{el.get('text', '')}\n[END TABLE]\n")
             continue
 
         if el_type == "CodeSnippet":
-            code = (el.get("text") or "").strip()
-            if code:
+            if code := el.get("text", "").strip():
                 lines.append(f"```\n{code}\n```")
             continue
 
-        # Handle General Text
-        txt = (el.get("text") or "").strip()
-        if txt:
+        if txt := el.get("text", "").strip():
             txt = replace_unicode_quotes(txt)
             txt = clean(txt, extra_whitespace=True, bullets=True)
             lines.append(txt)
 
     return "\n\n".join(lines).strip(), images_b64
 
-def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str, ) -> List[Dict[str, Any]]:
+def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str) -> List[Dict[str, Any]]:
     """
-    Groups filtered elements by page and attaches global document metadata.
+    Groups elements into a page-centric structure with consistent metadata.
     """
-    pages = defaultdict(list)
+    pages_map = defaultdict(list)
     for el in elements:
-        page_number = el.get("metadata", {}).get("page_number", 1)
-        pages[page_number].append(el)
+        page_num = int(el.get("metadata", {}).get("page_number", 1))
+        pages_map[page_num].append(el)
         
-    grouped = []
-    for page in sorted(pages.keys()):
-        page_elements = pages[page]
+    grouped_data = []
+    for page_num in sorted(pages_map.keys()):
+        page_elements = pages_map[page_num]
         page_text, images = build_page_content(page_elements)
 
         if not page_text and not images:
             continue
 
-        first_el_md = page_elements[0].get("metadata") or {}
+        filetype = page_elements[0].get("metadata", {}).get("filetype")
 
-        grouped.append({
+        grouped_data.append({
             "metadata": {
                 "filename": source_filename,
                 "course": course_code,
                 "source": source_type,
-                "page_number": page,
-                "filetype": first_el_md.get("filetype"),
+                "page_number": page_num,
+                "filetype": filetype,
             },
             "text": page_text,
             "images": images,
         })
-    return grouped
+
+    logger.info(f"Grouped {len(grouped_data)} pages for {source_filename}")
+    return grouped_data

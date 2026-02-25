@@ -1,50 +1,47 @@
 """
-Utilities for file management and metadata extraction.
+File management and metadata extraction utilities.
+
+This module provides functions to parse and validate PDF filenames following 
+the internal convention: <source_type>.<course_code>.<description>.pdf.
 """
 
-import json
+import re
 import logging
 from pathlib import Path
-from typing import Any
+from config import VALID_SOURCE_TYPES
 
 logger = logging.getLogger(__name__)
 
-def save_json(data: Any, output_path: str | Path) -> None:
-    """
-    Serializes data to JSON and saves it to the specified path.
-    Creates parent directories automatically.
-    """
-    path = Path(output_path)
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        logger.error(f"Failed to save JSON to {path}: {str(e)}")
-        raise
+COURSE_CODE_PATTERN = re.compile(r'^[a-z]+$')
 
 def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
     """
-    Extracts source_type and course_code from the filename.
-    
+    Extracts source_type and course_code from a PDF filename.
+
     Expected format: <source_type>.<course_code>.<description>.pdf
-    Example: "Apontamentos.ED.CAP1.pdf" -> ("apontamentos", "ed")
-    
-    Returns:
-        tuple: (source_type, course_code) in lowercase. 
-               Returns ("unknown", "unknown") if format is invalid.
+    Example: "Slides.ED.CAP1.pdf" -> ("slides", "ed")
     """
     stem = Path(filename).stem
     parts = stem.split(".")
 
     if len(parts) < 2:
-        logger.warning(
+        raise ValueError(
             f"Filename '{filename}' does not follow the expected format "
-            f"'<source_type>.<course_code>.<description>.pdf'. "
-            f"Falling back to ('unknown', 'unknown')."
+            f"'<source_type>.<course_code>.<description>.pdf'."
         )
-        return "unknown", "unknown"
 
     source_type = parts[0].lower()
     course_code = parts[1].lower()
+
+    if source_type not in VALID_SOURCE_TYPES:
+        logger.warning(
+            f"Unknown source_type '{source_type}' in '{filename}'. "
+            f"Expected one of: {VALID_SOURCE_TYPES}."
+        )
+
+    if not COURSE_CODE_PATTERN.match(course_code):
+        raise ValueError(
+            f"course_code '{course_code}' in '{filename}' contains invalid characters."
+        )
+
     return source_type, course_code
