@@ -1,5 +1,5 @@
 """
-Configuration settings
+Configuration settings for the RAG pipeline.
 """
 
 import os
@@ -9,16 +9,15 @@ from dotenv import load_dotenv
 # --- Path Management ---
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR.parent / ".env")
-DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 
-# Root path for raw data
+# Default paths
+DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
 
-# Course-specific source and output directories
+# Specific course directory
 COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
 
 # --- Extraction & Filtering Settings ---
-# Keywords to discard
 KEYWORDS_TO_EXCLUDE = [
     "Ricardo Santos",
     "rjs@estg.ipp.pt",
@@ -26,17 +25,13 @@ KEYWORDS_TO_EXCLUDE = [
     "ESTRUTURAS DE DADOS 2024/2025",
 ]
 
-# Unstructured element types to completely remove from the pipeline
+# Unstructured elements to ignore
 ELEMENT_TYPES_TO_EXCLUDE = [
     "Footer",
     "Header",
     "FigureCaption",
     "UncategorizedText"
 ]
-
-# Valid source types extracted from filenames (e.g. "Slides.ED.CAP1.pdf" -> "slides")
-# Add new source types here as new document categories are introduced.
-VALID_SOURCE_TYPES = {"apontamentos", "slides"}
 
 # --- Unstructured Partitioning Configuration ---
 PDF_PROCESSING_CONFIG = {
@@ -48,16 +43,23 @@ PDF_PROCESSING_CONFIG = {
     "chunking_strategy": None, 
 }
 
-# --- Chunking Configuration ---
-CHUNKING_CONFIG_APONTAMENTOS = {
-    "chunk_size": 800,
-    "chunk_overlap": 100,
+# --- Chunking & Source Mapping ---
+CHUNKING_STRATEGIES = {
+    "apontamentos": {
+        "chunk_size": 800,
+        "chunk_overlap": 100,
+    },
+    "slides": {
+        "chunk_size": 400,
+        "chunk_overlap": 50,
+    },
+    "default": {
+        "chunk_size": 500,
+        "chunk_overlap": 50,
+    }
 }
 
-CHUNKING_CONFIG_SLIDES = {
-    "chunk_size": 400,
-    "chunk_overlap": 50,
-}
+VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
 # --- Embedding Configuration ---
 EMBEDDING_MODEL = "intfloat/multilingual-e5-large"

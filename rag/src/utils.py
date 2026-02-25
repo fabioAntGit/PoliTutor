@@ -1,5 +1,11 @@
 """
-Utilities for file management and metadata extraction.
+File management and metadata extraction utilities.
+
+This module provides functions to parse and validate PDF filenames following 
+the internal convention: <source_type>.<course_code>.<description>.pdf.
+
+Dependencies:
+    - config.VALID_SOURCE_TYPES: List of allowed source categories.
 """
 
 import re
@@ -9,29 +15,27 @@ from config import VALID_SOURCE_TYPES
 
 logger = logging.getLogger(__name__)
 
+COURSE_CODE_PATTERN = re.compile(r'^[a-z0-9]+$')
+
 def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
     """
     Extracts source_type and course_code from a PDF filename.
 
     Expected format: <source_type>.<course_code>.<description>.pdf
-    Example: "Apontamentos.ED.CAP1.pdf" -> ("apontamentos", "ed")
+    Example: "Slides.ED.CAP1.pdf" -> ("slides", "ed")
 
-    The source_type is validated against VALID_SOURCE_TYPES (defined in config.py).
-    The course_code must contain only alphanumeric characters.
+    The source_type is validated against VALID_SOURCE_TYPES.
+    The course_code must be alphanumeric (a-z, 0-9).
 
     Args:
-        filename: The PDF filename to parse (e.g. "Slides.ED.CAP1.pdf").
+        filename: The PDF filename (or path) to parse.
 
     Returns:
-        A tuple (source_type, course_code), both normalized to lowercase.
+        A tuple (source_type, course_code) in lowercase.
 
     Raises:
-        ValueError: If the filename has fewer than 2 dot-separated parts,
-                    or if the course_code contains invalid characters.
-
-    Warns:
-        If source_type is not present in VALID_SOURCE_TYPES, a warning is
-        logged but processing continues to avoid blocking unknown types.
+        ValueError: If the filename format is invalid or if the 
+                    course_code contains illegal characters.
     """
     stem = Path(filename).stem
     parts = stem.split(".")
@@ -51,7 +55,7 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
             f"Expected one of: {VALID_SOURCE_TYPES}."
         )
 
-    if not re.match(r'^[a-z0-9]+$', course_code):
+    if not COURSE_CODE_PATTERN.match(course_code):
         raise ValueError(
             f"course_code '{course_code}' in '{filename}' contains invalid characters."
         )
