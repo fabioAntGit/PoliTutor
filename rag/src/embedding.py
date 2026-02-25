@@ -14,7 +14,7 @@ from config import EMBEDDING_MODEL, CHROMA_COLLECTION_NAME
 logger = logging.getLogger(__name__)
 
 # Cache the embedder instance to avoid reloading the model multiple times
-_embedder_cache: Optional[HuggingFaceEmbeddings] = None
+_embedder: Optional[HuggingFaceEmbeddings] = None
 
 def connect_chromadb() -> chromadb.Collection:
     """Connects to ChromaDB Cloud and returns the specified collection."""
