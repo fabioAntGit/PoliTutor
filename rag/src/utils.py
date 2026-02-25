@@ -3,9 +3,6 @@ File management and metadata extraction utilities.
 
 This module provides functions to parse and validate PDF filenames following 
 the internal convention: <source_type>.<course_code>.<description>.pdf.
-
-Dependencies:
-    - config.VALID_SOURCE_TYPES: List of allowed source categories.
 """
 
 import re
@@ -15,7 +12,7 @@ from config import VALID_SOURCE_TYPES
 
 logger = logging.getLogger(__name__)
 
-COURSE_CODE_PATTERN = re.compile(r'^[a-z0-9]+$')
+COURSE_CODE_PATTERN = re.compile(r'^[a-z]+$')
 
 def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
     """
@@ -23,19 +20,6 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
 
     Expected format: <source_type>.<course_code>.<description>.pdf
     Example: "Slides.ED.CAP1.pdf" -> ("slides", "ed")
-
-    The source_type is validated against VALID_SOURCE_TYPES.
-    The course_code must be alphanumeric (a-z, 0-9).
-
-    Args:
-        filename: The PDF filename (or path) to parse.
-
-    Returns:
-        A tuple (source_type, course_code) in lowercase.
-
-    Raises:
-        ValueError: If the filename format is invalid or if the 
-                    course_code contains illegal characters.
     """
     stem = Path(filename).stem
     parts = stem.split(".")

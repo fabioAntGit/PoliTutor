@@ -34,15 +34,16 @@ def get_embedder() -> HuggingFaceEmbeddings:
     Returns a singleton instance of the embedding model.
     Loads it only once per session.
     """
-    global _embedder_cache
-    if _embedder_cache is None:
+    global _embedder
+    
+    if _embedder is None:
         logger.info(f"Loading embedding model into memory: {EMBEDDING_MODEL}")
-        _embedder_cache = HuggingFaceEmbeddings(
+        _embedder = HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL,
             model_kwargs={"device": "cpu"},
             encode_kwargs={"normalize_embeddings": True}
         )
-    return _embedder_cache
+    return _embedder
 
 def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
     """
