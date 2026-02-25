@@ -27,6 +27,7 @@ KEYWORDS_TO_EXCLUDE = [
     "Ricardo Santos",
     "rjs@estg.ipp.pt",
     "Escola Superior de Tecnologia e Gestão Instituto Politécnico do Porto",
+    "ESTRUTURAS DE DADOS 2024/2025",
 ]
 
 # Unstructured element types to completely remove from the pipeline
@@ -36,6 +37,10 @@ ELEMENT_TYPES_TO_EXCLUDE = [
     "FigureCaption",
     "UncategorizedText"
 ]
+
+# Valid source types extracted from filenames (e.g. "Slides.ED.CAP1.pdf" -> "slides")
+# Add new source types here as new document categories are introduced.
+VALID_SOURCE_TYPES = {"apontamentos", "slides"}
 
 # --- Unstructured Partitioning Configuration ---
 PDF_PROCESSING_CONFIG = {

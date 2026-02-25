@@ -17,7 +17,6 @@ from config import (
     PDF_PROCESSING_CONFIG,
     ELEMENT_TYPES_TO_EXCLUDE,
 )
-from utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
 
