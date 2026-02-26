@@ -91,7 +91,7 @@ def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[s
 
     return "\n\n".join(lines).strip(), images_b64
 
-def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str) -> List[Dict[str, Any]]:
+def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str, skip_pages: int = 0,) -> List[Dict[str, Any]]:
     """
     Groups elements into a page-centric structure with consistent metadata.
     """
@@ -99,9 +99,11 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str,
     for el in elements:
         page_num = int(el.get("metadata", {}).get("page_number", 1))
         pages_map[page_num].append(el)
-        
+
     grouped_data = []
     for page_num in sorted(pages_map.keys()):
+        if skip_pages and page_num <= skip_pages:
+            continue
         page_elements = pages_map[page_num]
         page_text, images = build_page_content(page_elements)
 

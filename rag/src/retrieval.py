@@ -1,6 +1,5 @@
 import logging
 from typing import Dict, Any
-
 from config import TOP_K_RESULTS
 from embedding import get_embedder, connect_chromadb
 

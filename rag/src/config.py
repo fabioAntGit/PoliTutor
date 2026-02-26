@@ -66,4 +66,18 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
 CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
 # --- Retrieval ---
-TOP_K_RESULTS: int = 20
+TOP_K_RESULTS: int = 5
+
+# --- Benchmark ---
+BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
+BENCHMARK_PROMPT = (
+    "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
+    "Your task is to create a Q&A pair based on the following context. "
+    "You MUST base your question and answer SOLELY on the provided context. "
+    "Do NOT use any prior memory, or information outside of the given context. "
+    "The Q&A pair should be answerable using only the text provided. "
+    "The content is from page {page_number} of {filename} "
+    "Reply ONLY with raw JSON, no markdown, no code blocks, no extra text. "
+    'Use this exact format: {{"filename": "...", "page": "...", "question": "...", "answer": "..."}}'
+    "\n\nContext:\n{context}"
+)
