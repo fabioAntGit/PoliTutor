@@ -76,7 +76,7 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         clean_text = page_marker_pattern.sub('', split).strip()
 
         # Skip very small chunks
-        if len(clean_text) <= 5:
+        if len(clean_text) <= 100:
             continue
         
         # Collect images from all pages involved in this chunk

@@ -23,7 +23,15 @@ def connect_chromadb() -> chromadb.Collection:
         tenant=os.getenv("CHROMA_TENANT"),
         database=os.getenv("CHROMA_DATABASE"),
     )
-    collection = client.get_or_create_collection(name=CHROMA_COLLECTION_NAME)
+    collection = client.get_or_create_collection(
+        name=CHROMA_COLLECTION_NAME,
+        metadata={
+            "hnsw:space": "cosine",
+            "hnsw:M": 32,
+            "hnsw:construction_ef": 200,
+            "hnsw:search_ef": 100,
+        }
+    )
     
     db_name = os.getenv('CHROMA_DATABASE')
     logger.info(f"Connected to ChromaDB Cloud | Database: {db_name}")

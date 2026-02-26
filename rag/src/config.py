@@ -46,16 +46,16 @@ PDF_PROCESSING_CONFIG = {
 # --- Chunking & Source Mapping ---
 CHUNKING_STRATEGIES = {
     "apontamentos": {
-        "chunk_size": 800,
-        "chunk_overlap": 100,
+        "chunk_size": 1000,
+        "chunk_overlap": 150,
     },
     "slides": {
-        "chunk_size": 400,
-        "chunk_overlap": 50,
+        "chunk_size": 600,
+        "chunk_overlap": 100,
     },
     "default": {
-        "chunk_size": 500,
-        "chunk_overlap": 50,
+        "chunk_size": 700,
+        "chunk_overlap": 100,
     }
 }
 
@@ -63,8 +63,7 @@ VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
 # --- Embedding Configuration ---
 EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs4"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
 # --- Retrieval ---
-
-TOP_K_RESULTS: int = 5
+TOP_K_RESULTS: int = 20
