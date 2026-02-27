@@ -157,7 +157,11 @@ def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> di
     
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        execute_retrieval_benchmark(Path(sys.argv[1]))
+        arg = sys.argv[1]
+        if arg == "--generate":
+            generate_benchmark_dataset()
+        else:
+            execute_retrieval_benchmark(Path(arg))
     else:
         json_files = list(Path(BENCHMARK_OUTPUT_DIR).rglob("BenchmarkQA-*.json"))
         for json_file in json_files:
