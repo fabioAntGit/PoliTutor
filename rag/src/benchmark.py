@@ -9,11 +9,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from ranx import Qrels, Run, evaluate
 from config import BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE
-from embedding import connect_chromadb, get_embedder
 from pdf_extractor import extract_elements_from_pdf, filter_elements, group_elements_by_page
-from retrieval import query_collection
 from utils import extract_metadata_from_filename
-from reranker import rerank
+from retrieval import retrieve
 
 logging.basicConfig(
     level=logging.INFO,
@@ -115,9 +113,6 @@ def execute_retrieval_benchmark(benchmark_file: Path):
     pdf_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
     _, course_code = extract_metadata_from_filename(f"{pdf_stem}.pdf")
 
-    collection = connect_chromadb()
-    embedder = get_embedder()
-
     logger.info(f"Evaluating: {benchmark_file.name} | Course: {course_code}")
 
     qrels_dict = {}
@@ -130,9 +125,7 @@ def execute_retrieval_benchmark(benchmark_file: Path):
         q_id = f"{pdf_stem}_q{i}"
         qrels_dict[q_id] = {f"{expected_file}_p{expected_page}": 1}
 
-        results = query_collection(collection, embedder, question, course_code)
-
-        results = rerank(question, results)
+        results = retrieve(course_code, question)
 
         ids = results.get("ids", [[]])[0]
         distances = results.get("distances", [[]])[0]

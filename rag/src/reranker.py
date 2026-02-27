@@ -17,8 +17,9 @@ _reranker: CrossEncoder | None = None
 def get_reranker() -> CrossEncoder:
     """Returns a singleton instance of the cross-encoder model."""
     global _reranker
+    
     if _reranker is None:
-        logger.info(f"Loading reranker model: {RERANKER_MODEL}")
+        logger.info("Loading reranker model: %s", RERANKER_MODEL)
         _reranker = CrossEncoder(RERANKER_MODEL)
     return _reranker
 
@@ -50,7 +51,7 @@ def rerank(query: str, results: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     top_candidates = candidates[:RERANKER_TOP_K]
-    logger.info(f"Reranker: {len(ids)} candidates → top {RERANKER_TOP_K}")
+    logger.info("Reranker: %d candidates → top %d", len(ids), RERANKER_TOP_K)
 
     if not top_candidates:
         return {
