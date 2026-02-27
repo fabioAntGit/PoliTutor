@@ -66,7 +66,11 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
 CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
 # --- Retrieval ---
-TOP_K_RESULTS: int = 5
+TOP_K_RESULTS: int = 20
+
+# --- Reranker ---
+RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+RERANKER_TOP_K: int = 5
 
 # --- Benchmark ---
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"

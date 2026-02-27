@@ -3,6 +3,7 @@ import os
 import sys
 import uuid
 import requests
+import logging
 
 from pathlib import Path
 from dotenv import load_dotenv
@@ -12,6 +13,14 @@ from embedding import connect_chromadb, get_embedder
 from pdf_extractor import extract_elements_from_pdf, filter_elements, group_elements_by_page
 from retrieval import query_collection
 from utils import extract_metadata_from_filename
+from reranker import rerank
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -26,7 +35,7 @@ def create_qa(context: str, page_number: int, filename: str) -> dict:
     url = os.getenv("IAEDU_API_ENDPOINT")
     
     files = {
-        "channel_id": (None, os.getenv("IAEDU_API_CANAL")),
+        "channel_id": (None, os.getenv("IAEDU_API_CHANNEL")),
         "thread_id": (None, thread_id),
         "user_info": (None, "{}"),
         "message": (None, prompt),
@@ -37,7 +46,9 @@ def create_qa(context: str, page_number: int, filename: str) -> dict:
     }
     
     response = requests.post(url, files=files, headers=headers)
-    response.raise_for_status()
+
+    if not response.ok:
+        logger.error(f"IAEdu API error {response.status_code}: {response.text}")
     
     for line in response.iter_lines():
         if line:
@@ -93,7 +104,7 @@ def generate_benchmark_dataset():
             output_file = BENCHMARK_OUTPUT_DIR / f"BenchmarkQA-{pdf_path.stem}.json"
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(all_qa, f, ensure_ascii=False, indent=2)
-            print(f"Saved {len(all_qa)} Q&A pairs -> {output_file.name}")
+            logger.info(f"Saved {len(all_qa)} Q&A pairs to {output_file.name}")
             all_qa = []
 
 def execute_retrieval_benchmark(benchmark_file: Path):
@@ -107,9 +118,7 @@ def execute_retrieval_benchmark(benchmark_file: Path):
     collection = connect_chromadb()
     embedder = get_embedder()
 
-    print(f"\n{'='*60}")
-    print(f"Evaluating: {benchmark_file.name} | Course: {course_code}")
-    print(f"{'='*60}")
+    logger.info(f"Evaluating: {benchmark_file.name} | Course: {course_code}")
 
     qrels_dict = {}
     run_dict = {}
@@ -118,25 +127,36 @@ def execute_retrieval_benchmark(benchmark_file: Path):
         question = qa.get("question", "")
         expected_page = str(qa.get("page", "0"))
         expected_file = str(qa.get("filename", ""))
-        q_id = f"q{i}"
+        q_id = f"{pdf_stem}_q{i}"
         qrels_dict[q_id] = {f"{expected_file}_p{expected_page}": 1}
 
         results = query_collection(collection, embedder, question, course_code)
+
+        results = rerank(question, results)
 
         ids = results.get("ids", [[]])[0]
         distances = results.get("distances", [[]])[0]
         metadatas = results.get("metadatas", [[]])[0]
         documents = results.get("documents", [[]])[0]
+
+        if "scores" in results and len(results["scores"]) > 0:
+            scores = results["scores"][0]
+        else:
+            scores = [1.0 / (d + 1e-5) for d in distances]
     
         run_dict[q_id] = {}
-        for doc_id, distance, metadata, document in zip(ids, distances, metadatas, documents):
-            pages = json.loads(metadata.get('pages', []))
+
+        for doc_id, distance, metadata, document, score in zip(ids, distances, metadatas, documents, scores):
+            pages_str = metadata.get('pages', '[]')
+            pages = json.loads(pages_str) if isinstance(pages_str, str) else pages_str
+
             filename = metadata.get('filename', 'Unknown')
-            score = float(1 - distance)
-            
+
             for p in pages:
                 page_key = f"{filename}_p{str(p)}"
-                run_dict[q_id][page_key] = max(score, run_dict[q_id].get(page_key, 0))
+                
+                current_score = run_dict[q_id].get(page_key, float('-inf'))
+                run_dict[q_id][page_key] = max(score, current_score)
 
     evaluate_benchmark_retrieval_metrics(qrels_dict, run_dict)
 
@@ -149,9 +169,9 @@ def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> di
 
     metrics = evaluate(qrels, run, ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"])
 
-    print(f"\n{'='*60}")
+    logger.info("Retrieval metrics:")
     for metric, value in metrics.items():
-        print(f"{metric}: {value:.4f}")
+        logger.info(f"  {metric}: {value:.4f}")
 
     return metrics
     

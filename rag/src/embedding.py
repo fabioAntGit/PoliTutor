@@ -5,7 +5,7 @@ Handles vector generation and storage in ChromaDB Cloud.
 
 import os
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 import chromadb
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -13,17 +13,29 @@ from config import EMBEDDING_MODEL, CHROMA_COLLECTION_NAME
 
 logger = logging.getLogger(__name__)
 
-# Cache the embedder instance to avoid reloading the model multiple times
-_embedder: Optional[HuggingFaceEmbeddings] = None
+# Singleton pattern to avoid reloading multiple times
+_embedder: HuggingFaceEmbeddings | None = None
+_chroma_client: Any = None 
 
 def connect_chromadb() -> chromadb.Collection:
     """Connects to ChromaDB Cloud and returns the specified collection."""
+    global _chroma_client
+
+    if _chroma_client is None:
+        _chroma_client = chromadb.CloudClient(
+            api_key=os.getenv("CHROMA_API_KEY"),
+            tenant=os.getenv("CHROMA_TENANT"),
+            database=os.getenv("CHROMA_DATABASE"),
+        )
+        logger.info(f"Connected to ChromaDB Cloud | Database: {os.getenv('CHROMA_DATABASE')}")
+
     client = chromadb.CloudClient(
         api_key=os.getenv("CHROMA_API_KEY"),
         tenant=os.getenv("CHROMA_TENANT"),
         database=os.getenv("CHROMA_DATABASE"),
     )
-    collection = client.get_or_create_collection(
+
+    return _chroma_client.get_or_create_collection(
         name=CHROMA_COLLECTION_NAME,
         metadata={
             "hnsw:space": "cosine",
@@ -32,10 +44,6 @@ def connect_chromadb() -> chromadb.Collection:
             "hnsw:search_ef": 100,
         }
     )
-    
-    db_name = os.getenv('CHROMA_DATABASE')
-    logger.info(f"Connected to ChromaDB Cloud | Database: {db_name}")
-    return collection
 
 def get_embedder() -> HuggingFaceEmbeddings:
     """

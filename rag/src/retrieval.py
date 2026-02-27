@@ -1,9 +1,14 @@
+"""
+Interactive Retrieval CLI.
+Queries ChromaDB using the embedding model and reranks results via cross-encoder.
+"""
+
 import logging
 from typing import Dict, Any
 from config import TOP_K_RESULTS
 from embedding import get_embedder, connect_chromadb
+from reranker import rerank
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 EXIT_COMMANDS = {'exit', 'quit', 'q'}
@@ -34,6 +39,7 @@ def run_query_loop(collection, embedder, course_unit: str) -> None:
             continue
 
         results = query_collection(collection, embedder, query, course_unit)
+        results = rerank(query, results)
         display_results(results, course_unit)
 
 def query_collection(collection, embedder, query: str, course_unit: str) -> Dict[str, Any]:
