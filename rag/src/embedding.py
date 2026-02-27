@@ -9,7 +9,7 @@ import logging
 from typing import List, Dict, Any
 
 from langchain_huggingface import HuggingFaceEmbeddings
-from config import EMBEDDING_MODEL
+from config import EMBEDDING_MODEL, EMBEDDING_DEVICE, EMBEDDING_NORMALIZE
 from database import get_collection
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ def get_embedder() -> HuggingFaceEmbeddings:
         logger.info("Loading embedding model into memory: %s", EMBEDDING_MODEL)
         _embedder = HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL,
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True},
+            model_kwargs={"device": EMBEDDING_DEVICE},
+            encode_kwargs={"normalize_embeddings": EMBEDDING_NORMALIZE},
         )
 
     return _embedder

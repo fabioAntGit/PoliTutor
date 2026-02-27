@@ -43,6 +43,9 @@ PDF_PROCESSING_CONFIG = {
     "chunking_strategy": None, 
 }
 
+# --- Chroma DB Collection
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
+
 # --- Chunking & Source Mapping ---
 CHUNKING_STRATEGIES = {
     "apontamentos": {
@@ -59,11 +62,14 @@ CHUNKING_STRATEGIES = {
     }
 }
 
+CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
+
 VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
 # --- Embedding Configuration ---
 EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
+EMBEDDING_DEVICE = "cpu"
+EMBEDDING_NORMALIZE = True
 
 # --- Retrieval ---
 TOP_K_RESULTS: int = 20

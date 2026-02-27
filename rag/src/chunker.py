@@ -8,7 +8,7 @@ import re
 from typing import List, Dict, Any
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from config import CHUNKING_STRATEGIES
+from config import CHUNKING_STRATEGIES, CHUNK_SEPARATORS
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def build_splitter(source: str) -> RecursiveCharacterTextSplitter:
     return RecursiveCharacterTextSplitter(
         chunk_size=config["chunk_size"],
         chunk_overlap=config["chunk_overlap"],
-        separators=["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""],
+        separators=CHUNK_SEPARATORS,
     )
 
 def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
