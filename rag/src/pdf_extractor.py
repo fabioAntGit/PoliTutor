@@ -24,7 +24,7 @@ def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     """
     Partitions a PDF into structured elements via Unstructured API.
     """
-    logger.info(f"Sending PDF to Unstructured API: {pdf_path}")
+    logger.info("Sending PDF to Unstructured API: %s", pdf_path)
 
     try:
         elements = partition_via_api(
@@ -35,7 +35,7 @@ def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
         )
         return convert_to_dict(elements)
     except Exception as e:
-        logger.error(f"API Partitioning failed for {pdf_path}: {e}")
+        logger.error("API Partitioning failed for %s: %s", pdf_path, e)
         raise
 
 def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[str]) -> List[Dict[str, Any]]:
@@ -124,5 +124,5 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str,
             "images": images,
         })
 
-    logger.info(f"Grouped {len(grouped_data)} pages for {source_filename}")
+    logger.info("Grouped %d pages for %s", len(grouped_data), source_filename)
     return grouped_data

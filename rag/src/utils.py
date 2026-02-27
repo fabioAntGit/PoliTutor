@@ -35,8 +35,8 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
 
     if source_type not in VALID_SOURCE_TYPES:
         logger.warning(
-            f"Unknown source_type '{source_type}' in '{filename}'. "
-            f"Expected one of: {VALID_SOURCE_TYPES}."
+            "Unknown source_type '%s' in '%s'. Expected one of: %s.",
+            source_type, filename, VALID_SOURCE_TYPES
         )
 
     if not COURSE_CODE_PATTERN.match(course_code):

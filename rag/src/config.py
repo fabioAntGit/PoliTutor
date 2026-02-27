@@ -46,6 +46,12 @@ PDF_PROCESSING_CONFIG = {
 # --- Chroma DB Collection
 CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
+# --- ChromaDB HNSW Index ---
+CHROMA_HNSW_SPACE = "cosine"
+CHROMA_HNSW_M = 32
+CHROMA_HNSW_CONSTRUCTION_EF = 200
+CHROMA_HNSW_SEARCH_EF = 100
+
 # --- Chunking & Source Mapping ---
 CHUNKING_STRATEGIES = {
     "apontamentos": {
@@ -62,6 +68,7 @@ CHUNKING_STRATEGIES = {
     }
 }
 
+CHUNK_MIN_LENGTH = 100
 CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
 
 VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
@@ -80,6 +87,8 @@ RERANKER_TOP_K: int = 5
 
 # --- Benchmark ---
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
+BENCHMARK_MIN_CONTEXT_LENGTH = 200
+BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"]
 BENCHMARK_PROMPT = (
     "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
     "Your task is to create a Q&A pair based on the following context. "

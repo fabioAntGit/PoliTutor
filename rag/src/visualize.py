@@ -30,7 +30,7 @@ def visualize():
     if results.get("embeddings") is not None:
         df["embedding"] = [np.array(e) for e in results["embeddings"]]
 
-    logger.info(f"Displaying {len(df)} documents in Spotlight.")
+    logger.info("Displaying %d documents in Spotlight.", len(df))
     spotlight.show(df, embed=["embedding"])
 
 if __name__ == "__main__":

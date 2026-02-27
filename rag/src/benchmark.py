@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 from dotenv import load_dotenv
 from ranx import Qrels, Run, evaluate
-from config import BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE
+from config import BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE, BENCHMARK_MIN_CONTEXT_LENGTH, BENCHMARK_EVAL_METRICS
 from pdf_extractor import extract_elements_from_pdf, filter_elements, group_elements_by_page
 from utils import extract_metadata_from_filename
 from retrieval import retrieve
@@ -90,7 +90,7 @@ def generate_benchmark_dataset():
             page_number = page["metadata"]["page_number"]
             context = page["text"].strip()
 
-            if len(context) < 200:
+            if len(context) < BENCHMARK_MIN_CONTEXT_LENGTH:
                 continue
 
             qa = create_qa(context, page_number, file_name)
@@ -102,7 +102,7 @@ def generate_benchmark_dataset():
             output_file = BENCHMARK_OUTPUT_DIR / f"BenchmarkQA-{pdf_path.stem}.json"
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(all_qa, f, ensure_ascii=False, indent=2)
-            logger.info(f"Saved {len(all_qa)} Q&A pairs to {output_file.name}")
+            logger.info("Saved %d Q&A pairs to %s", len(all_qa), output_file.name)
             all_qa = []
 
 def execute_retrieval_benchmark(benchmark_file: Path):
@@ -113,7 +113,7 @@ def execute_retrieval_benchmark(benchmark_file: Path):
     pdf_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
     _, course_code = extract_metadata_from_filename(f"{pdf_stem}.pdf")
 
-    logger.info(f"Evaluating: {benchmark_file.name} | Course: {course_code}")
+    logger.info("Evaluating: %s | Course: %s", benchmark_file.name, course_code)
 
     qrels_dict = {}
     run_dict = {}
@@ -160,11 +160,11 @@ def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> di
     qrels = Qrels(qrels_dict)
     run = Run(run_dict)
 
-    metrics = evaluate(qrels, run, ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"])
+    metrics = evaluate(qrels, run, BENCHMARK_EVAL_METRICS)
 
     logger.info("Retrieval metrics:")
     for metric, value in metrics.items():
-        logger.info(f"  {metric}: {value:.4f}")
+        logger.info("  %s: %.4f", metric, value)
 
     return metrics
     

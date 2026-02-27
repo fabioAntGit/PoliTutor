@@ -10,7 +10,7 @@ import logging
 from typing import Any
 
 import chromadb
-from config import CHROMA_COLLECTION_NAME
+from config import CHROMA_COLLECTION_NAME, CHROMA_HNSW_SPACE, CHROMA_HNSW_M, CHROMA_HNSW_CONSTRUCTION_EF, CHROMA_HNSW_SEARCH_EF
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,9 @@ def get_collection() -> chromadb.Collection:
     return client.get_or_create_collection(
         name=CHROMA_COLLECTION_NAME,
         metadata={
-            "hnsw:space": "cosine",
-            "hnsw:M": 32,
-            "hnsw:construction_ef": 200,
-            "hnsw:search_ef": 100,
+            "hnsw:space":           CHROMA_HNSW_SPACE,
+            "hnsw:M":               CHROMA_HNSW_M,
+            "hnsw:construction_ef": CHROMA_HNSW_CONSTRUCTION_EF,
+            "hnsw:search_ef":       CHROMA_HNSW_SEARCH_EF,
         }
     )

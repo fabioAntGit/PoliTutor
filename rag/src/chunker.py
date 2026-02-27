@@ -8,7 +8,7 @@ import re
 from typing import List, Dict, Any
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from config import CHUNKING_STRATEGIES, CHUNK_SEPARATORS
+from config import CHUNKING_STRATEGIES, CHUNK_SEPARATORS, CHUNK_MIN_LENGTH
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         clean_text = page_marker_pattern.sub('', split).strip()
 
         # Skip very small chunks
-        if len(clean_text) <= 100:
+        if len(clean_text) <= CHUNK_MIN_LENGTH:
             continue
         
         # Collect images from all pages involved in this chunk

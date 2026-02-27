@@ -28,19 +28,19 @@ def process_single_pdf(pdf_path: Path) -> bool:
     file_name = pdf_path.name
 
     if pdf_path.stat().st_size == 0:
-        logger.warning(f"Skipping empty file: {file_name}")
+        logger.warning("Skipping empty file: %s", file_name)
         return False
 
     # Metadata Extraction & Validation
     try:
         source_type, course_code = extract_metadata_from_filename(file_name)
     except ValueError as e:
-        logger.error(f"Validation failed for '{file_name}': {e}")
+        logger.error("Validation failed for '%s': %s", file_name, e)
         return False
     
     # Document Processing
     try:
-        logger.info(f"--- Processing: {file_name} ---")
+        logger.info("--- Processing: %s ---", file_name)
 
         elements = extract_elements_from_pdf(str(pdf_path))
 
@@ -60,11 +60,11 @@ def process_single_pdf(pdf_path: Path) -> bool:
         # Embedding and Vector Storage
         embed_chunks(chunks, file_stem=pdf_path.stem)
 
-        logger.info(f"DONE: '{file_name}' ({len(chunks)} chunks embedded).")
+        logger.info("DONE: '%s' (%d chunks embedded).", file_name, len(chunks))
         return True
 
     except Exception as e:
-        logger.error(f"Critical error processing '{file_name}': {e}", exc_info=True)
+        logger.error("Critical error processing '%s': %s", file_name, e, exc_info=True)
         return False
 
 def run_pipeline() -> None:
@@ -75,17 +75,17 @@ def run_pipeline() -> None:
     pdf_files: List[Path] = list(search_path.rglob("*.pdf"))
 
     if not pdf_files:
-        logger.warning(f"No PDF files found in target directory: {search_path}")
+        logger.warning("No PDF files found in target directory: %s", search_path)
         return
 
-    logger.info(f"Pipeline started. Found {len(pdf_files)} file(s) in {search_path.name}")
+    logger.info("Pipeline started. Found %d file(s) in %s", len(pdf_files), search_path.name)
 
     success_count = 0
     for pdf_path in pdf_files:
         if process_single_pdf(pdf_path):
             success_count += 1
 
-    logger.info(f"Pipeline finished. Successfully processed {success_count}/{len(pdf_files)} files.")
+    logger.info("Pipeline finished. Successfully processed %d/%d files.", success_count, len(pdf_files))
 
 if __name__ == "__main__":
     run_pipeline()
