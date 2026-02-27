@@ -1,48 +1,35 @@
 """
-Embedding and Vector Database Service.
-Handles vector generation and storage in ChromaDB Cloud.
+Embedding Service.
+
+Handles the loading of the HuggingFace embedding model and the generation
+and upsert of embeddings into ChromaDB via the database module.
 """
 
-import os
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
-import chromadb
 from langchain_huggingface import HuggingFaceEmbeddings
-from config import EMBEDDING_MODEL, CHROMA_COLLECTION_NAME
+from config import EMBEDDING_MODEL, EMBEDDING_DEVICE, EMBEDDING_NORMALIZE
+from database import get_collection
 
 logger = logging.getLogger(__name__)
 
-# Cache the embedder instance to avoid reloading the model multiple times
-_embedder_cache: Optional[HuggingFaceEmbeddings] = None
-
-def connect_chromadb() -> chromadb.Collection:
-    """Connects to ChromaDB Cloud and returns the specified collection."""
-    client = chromadb.CloudClient(
-        api_key=os.getenv("CHROMA_API_KEY"),
-        tenant=os.getenv("CHROMA_TENANT"),
-        database=os.getenv("CHROMA_DATABASE"),
-    )
-    collection = client.get_or_create_collection(name=CHROMA_COLLECTION_NAME)
-    
-    db_name = os.getenv('CHROMA_DATABASE')
-    logger.info(f"Connected to ChromaDB Cloud | Database: {db_name}")
-    return collection
+_embedder: HuggingFaceEmbeddings | None = None
 
 def get_embedder() -> HuggingFaceEmbeddings:
     """
-    Returns a singleton instance of the embedding model.
-    Loads it only once per session.
+    Returns a singleton instance of the HuggingFace embedding model.
     """
     global _embedder
     
     if _embedder is None:
-        logger.info(f"Loading embedding model into memory: {EMBEDDING_MODEL}")
+        logger.info("Loading embedding model into memory: %s", EMBEDDING_MODEL)
         _embedder = HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL,
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True}
+            model_kwargs={"device": EMBEDDING_DEVICE},
+            encode_kwargs={"normalize_embeddings": EMBEDDING_NORMALIZE},
         )
+
     return _embedder
 
 def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
@@ -52,15 +39,13 @@ def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
     valid_chunks = [c for c in chunks if c["text"].strip()]
 
     if not valid_chunks:
-        logger.warning(f"No valid text found for '{file_stem}'. Skipping.")
+        logger.warning("No valid text found for '%s'. Skipping.", file_stem)
         return
 
     embedder = get_embedder()
-    collection = connect_chromadb()
+    collection = get_collection()
 
     texts = [c["text"] for c in valid_chunks]
-
-    # Unique IDs: filename + index
     ids = [f"{file_stem}_{i}" for i in range(len(valid_chunks))]
 
     metadatas = []
@@ -82,8 +67,8 @@ def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
             embeddings=embeddings,
             metadatas=metadatas,
         )
-        logger.info(f"Successfully upserted {len(texts)} chunks for '{file_stem}'.")
+        logger.info("Successfully upserted %d chunks for '%s'.", len(texts), file_stem)
 
     except Exception as e:
-        logger.error(f"Failed to upsert embeddings for '{file_stem}': {e}")
+        logger.error("Failed to upsert embeddings for '%s': %s", file_stem, e)
         raise

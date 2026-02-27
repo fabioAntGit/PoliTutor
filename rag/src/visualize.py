@@ -6,7 +6,7 @@ import logging
 import pandas as pd
 import numpy as np
 from renumics import spotlight
-from embedding import connect_chromadb
+from database import get_collection
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ def visualize():
     """
     Fetches data from ChromaDB and launches the Spotlight UI.
     """
-    collection = connect_chromadb()
+    collection = get_collection()
     
     results = collection.get(include=["documents", "embeddings", "metadatas"])    
 
@@ -30,7 +30,7 @@ def visualize():
     if results.get("embeddings") is not None:
         df["embedding"] = [np.array(e) for e in results["embeddings"]]
 
-    logger.info(f"Displaying {len(df)} documents in Spotlight.")
+    logger.info("Displaying %d documents in Spotlight.", len(df))
     spotlight.show(df, embed=["embedding"])
 
 if __name__ == "__main__":

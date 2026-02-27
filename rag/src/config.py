@@ -43,24 +43,60 @@ PDF_PROCESSING_CONFIG = {
     "chunking_strategy": None, 
 }
 
+# --- Chroma DB Collection
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
+
+# --- ChromaDB HNSW Index ---
+CHROMA_HNSW_SPACE = "cosine"
+CHROMA_HNSW_M = 32
+CHROMA_HNSW_CONSTRUCTION_EF = 200
+CHROMA_HNSW_SEARCH_EF = 100
+
 # --- Chunking & Source Mapping ---
 CHUNKING_STRATEGIES = {
     "apontamentos": {
-        "chunk_size": 800,
-        "chunk_overlap": 100,
+        "chunk_size": 1000,
+        "chunk_overlap": 150,
     },
     "slides": {
-        "chunk_size": 400,
-        "chunk_overlap": 50,
+        "chunk_size": 600,
+        "chunk_overlap": 100,
     },
     "default": {
-        "chunk_size": 500,
-        "chunk_overlap": 50,
+        "chunk_size": 700,
+        "chunk_overlap": 100,
     }
 }
+
+CHUNK_MIN_LENGTH = 100
+CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
 
 VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
 # --- Embedding Configuration ---
 EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs4"
+EMBEDDING_DEVICE = "cpu"
+EMBEDDING_NORMALIZE = True
+
+# --- Retrieval ---
+TOP_K_RESULTS: int = 20
+
+# --- Reranker ---
+RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+RERANKER_TOP_K: int = 5
+
+# --- Benchmark ---
+BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
+BENCHMARK_MIN_CONTEXT_LENGTH = 200
+BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"]
+BENCHMARK_PROMPT = (
+    "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
+    "Your task is to create a Q&A pair based on the following context. "
+    "You MUST base your question and answer SOLELY on the provided context. "
+    "Do NOT use any prior memory, or information outside of the given context. "
+    "The Q&A pair should be answerable using only the text provided. "
+    "The content is from page {page_number} of {filename} "
+    "Reply ONLY with raw JSON, no markdown, no code blocks, no extra text. "
+    'Use this exact format: {{"filename": "...", "page": "...", "question": "...", "answer": "..."}}'
+    "\n\nContext:\n{context}"
+)

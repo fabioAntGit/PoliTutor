@@ -24,7 +24,7 @@ def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     """
     Partitions a PDF into structured elements via Unstructured API.
     """
-    logger.info(f"Sending PDF to Unstructured API: {pdf_path}")
+    logger.info("Sending PDF to Unstructured API: %s", pdf_path)
 
     try:
         elements = partition_via_api(
@@ -35,7 +35,7 @@ def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
         )
         return convert_to_dict(elements)
     except Exception as e:
-        logger.error(f"API Partitioning failed for {pdf_path}: {e}")
+        logger.error("API Partitioning failed for %s: %s", pdf_path, e)
         raise
 
 def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[str]) -> List[Dict[str, Any]]:
@@ -91,7 +91,7 @@ def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[s
 
     return "\n\n".join(lines).strip(), images_b64
 
-def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str) -> List[Dict[str, Any]]:
+def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str, skip_pages: int = 0,) -> List[Dict[str, Any]]:
     """
     Groups elements into a page-centric structure with consistent metadata.
     """
@@ -99,9 +99,11 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str,
     for el in elements:
         page_num = int(el.get("metadata", {}).get("page_number", 1))
         pages_map[page_num].append(el)
-        
+
     grouped_data = []
     for page_num in sorted(pages_map.keys()):
+        if skip_pages and page_num <= skip_pages:
+            continue
         page_elements = pages_map[page_num]
         page_text, images = build_page_content(page_elements)
 
@@ -122,5 +124,5 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str,
             "images": images,
         })
 
-    logger.info(f"Grouped {len(grouped_data)} pages for {source_filename}")
+    logger.info("Grouped %d pages for %s", len(grouped_data), source_filename)
     return grouped_data
