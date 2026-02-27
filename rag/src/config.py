@@ -48,7 +48,7 @@ FILE_PROCESSING_CONFIG = {
 }
 
 # --- Chroma DB Collection
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs-TESTFILES"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
 # --- ChromaDB HNSW Index ---
 CHROMA_HNSW_SPACE = "cosine"
