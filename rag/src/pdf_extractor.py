@@ -1,6 +1,6 @@
 """
-PDF Element Extraction and Transformation.
-Converts raw PDF partitions into structured, cleaned page-based data.
+Document Element Extraction and Transformation.
+Converts raw files partitions into structured, cleaned page-based data.
 """
 
 import logging
@@ -14,28 +14,28 @@ from unstructured.partition.api import partition_via_api
 from unstructured.staging.base import convert_to_dict
 
 from config import (
-    PDF_PROCESSING_CONFIG,
+    FILE_PROCESSING_CONFIG,
     ELEMENT_TYPES_TO_EXCLUDE,
 )
 
 logger = logging.getLogger(__name__)
 
-def extract_elements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
+def extract_elements_from_file(file_path: str) -> List[Dict[str, Any]]:
     """
-    Partitions a PDF into structured elements via Unstructured API.
+    Partitions a file into structured elements via Unstructured API.
     """
-    logger.info("Sending PDF to Unstructured API: %s", pdf_path)
+    logger.info("Sending File to Unstructured API: %s", file_path)
 
     try:
         elements = partition_via_api(
-            filename=pdf_path,
+            filename=file_path,
             api_url=os.getenv("UNSTRUCTURED_API_URL"),
             api_key=os.getenv("UNSTRUCTURED_API_KEY"),
-            **PDF_PROCESSING_CONFIG
+            **FILE_PROCESSING_CONFIG
         )
         return convert_to_dict(elements)
     except Exception as e:
-        logger.error("API Partitioning failed for %s: %s", pdf_path, e)
+        logger.error("API Partitioning failed for %s: %s", file_path, e)
         raise
 
 def filter_elements(elements: List[Dict[str, Any]], keywords_to_exclude: List[str]) -> List[Dict[str, Any]]:

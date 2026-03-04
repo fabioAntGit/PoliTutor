@@ -33,14 +33,18 @@ ELEMENT_TYPES_TO_EXCLUDE = [
     "UncategorizedText"
 ]
 
+# --- File Discovery ---
+SUPPORTED_EXTENSIONS = ["*.pdf", "*.pptx", "*.md"]
+
 # --- Unstructured Partitioning Configuration ---
-PDF_PROCESSING_CONFIG = {
+FILE_PROCESSING_CONFIG = {
     "strategy": "hi_res",
     "languages": ["por", "eng"],
     "infer_table_structure": True,
     "extract_image_block_types": ["Image"],
     "extract_image_block_to_payload": True,
     "chunking_strategy": None, 
+    "skip_infer_table_types": ["md"],
 }
 
 # --- Chroma DB Collection

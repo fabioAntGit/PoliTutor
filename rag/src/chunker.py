@@ -63,12 +63,22 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     page_marker_pattern = re.compile(r'\[PAGE:(\d+)\]')
     
     for split in splits:
-        # Extract all page numbers present in this chunk
-        page_numbers = [int(p) for p in page_marker_pattern.findall(split)]
-        
-        # If no marker is found, the chunk belongs to the previous page(s)
-        if page_numbers:
-            last_pages = page_numbers
+        page_numbers_found = [int(p) for p in page_marker_pattern.findall(split)]
+
+        if page_numbers_found:
+            first_marker = page_marker_pattern.search(split)
+            content_before_marker = split[:first_marker.start()].strip()
+
+            if content_before_marker and last_pages:
+                # Chunk spans from previous page into new page(s)
+                page_numbers = list(dict.fromkeys(
+                    last_pages + [p for p in page_numbers_found if p not in last_pages]
+                ))
+            else:
+                page_numbers = list(dict.fromkeys(page_numbers_found))
+            
+            # Track only the last page seen for the next iteration
+            last_pages = [page_numbers_found[-1]]
         else:
             page_numbers = last_pages
         
