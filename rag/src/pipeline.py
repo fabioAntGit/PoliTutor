@@ -52,6 +52,7 @@ def process_single_pdf(pdf_path: Path) -> bool:
             source_filename=file_name,
             source_type=source_type,
             course_code=course_code,
+            save_images=True
         )
 
         # Segment into chunks

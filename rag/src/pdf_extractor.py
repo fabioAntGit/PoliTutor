@@ -3,6 +3,7 @@ PDF Element Extraction and Transformation.
 Converts raw PDF partitions into structured, cleaned page-based data.
 """
 
+import hashlib
 import logging
 import re
 import os
@@ -12,6 +13,7 @@ from typing import List, Dict, Any, Tuple
 from unstructured.cleaners.core import clean, replace_unicode_quotes
 from unstructured.partition.api import partition_via_api
 from unstructured.staging.base import convert_to_dict
+from utils import save_image
 
 from config import (
     PDF_PROCESSING_CONFIG,
@@ -91,7 +93,7 @@ def build_page_content(page_elements: List[Dict[str, Any]]) -> Tuple[str, List[s
 
     return "\n\n".join(lines).strip(), images_b64
 
-def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str, skip_pages: int = 0,) -> List[Dict[str, Any]]:
+def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str, source_type: str, course_code: str, skip_pages: int = 0, save_images: bool = False,) -> List[Dict[str, Any]]:
     """
     Groups elements into a page-centric structure with consistent metadata.
     """
@@ -101,15 +103,26 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str,
         pages_map[page_num].append(el)
 
     grouped_data = []
+    seen_images = set()
     for page_num in sorted(pages_map.keys()):
         if skip_pages and page_num <= skip_pages:
             continue
         page_elements = pages_map[page_num]
-        page_text, images = build_page_content(page_elements)
+        page_text, images_b64  = build_page_content(page_elements)
 
-        if not page_text and not images:
+        if not page_text and not images_b64 :
             continue
-
+        
+        image_paths = []
+        if save_images:
+            for idx, b64 in enumerate(images_b64):
+                img_hash = hashlib.md5(b64.encode()).hexdigest()
+                if img_hash in seen_images:
+                    continue
+                seen_images.add(img_hash)
+                path = save_image(b64, source_filename, page_num, idx)
+                image_paths.append(path)
+        
         filetype = page_elements[0].get("metadata", {}).get("filetype")
 
         grouped_data.append({
@@ -121,7 +134,7 @@ def group_elements_by_page(elements: List[Dict[str, Any]], source_filename: str,
                 "filetype": filetype,
             },
             "text": page_text,
-            "images": images,
+            "image_paths": image_paths,
         })
 
     logger.info("Grouped %d pages for %s", len(grouped_data), source_filename)

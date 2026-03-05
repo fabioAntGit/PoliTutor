@@ -145,11 +145,9 @@ def execute_retrieval_benchmark(benchmark_file: Path):
 
             filename = metadata.get('filename', 'Unknown')
 
-            for p in pages:
-                page_key = f"{filename}_p{str(p)}"
-                
-                current_score = run_dict[q_id].get(page_key, float('-inf'))
-                run_dict[q_id][page_key] = max(score, current_score)
+            page_key = f"{filename}_p{str(pages[0])}"
+            current_score = run_dict[q_id].get(page_key, float('-inf'))
+            run_dict[q_id][page_key] = max(score, current_score)
 
     evaluate_benchmark_retrieval_metrics(qrels_dict, run_dict)
 
@@ -164,7 +162,7 @@ def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> di
 
     logger.info("Retrieval metrics:")
     for metric, value in metrics.items():
-        logger.info("  %s: %.4f", metric, value)
+        logger.info(f"  {metric}: {value:.4f}")
 
     return metrics
     
