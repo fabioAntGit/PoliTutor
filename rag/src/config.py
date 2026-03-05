@@ -45,7 +45,7 @@ PDF_PROCESSING_CONFIG = {
 }
 
 # --- Chroma DB Collection
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs5"
 
 # --- ChromaDB HNSW Index ---
 CHROMA_HNSW_SPACE = "cosine"
@@ -93,8 +93,9 @@ IMAGE_EMBEDDING_PROMPT = (
 )
 
 # --- OpenRouter Image API ---
-OPENROUTER_MODEL = "google/gemini-2.0-flash-001"
-MAX_IMAGE_API_CALLS = 1  # Limite para testes (None = sem limite)
+OPENROUTER_MODEL = "google/gemini-2.5-flash-lite"
+MAX_IMAGE_API_CALLS = None  # Limite para testes (None = sem limite)
+IMAGE_API_DELAY = 1.5
 
 # --- Retrieval ---
 TOP_K_RESULTS: int = 20

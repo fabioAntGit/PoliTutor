@@ -11,7 +11,8 @@ import base64
 import logging
 import os
 import requests
-from config import EMBEDDING_MODEL, IMAGE_EMBEDDING_PROMPT, OPENROUTER_MODEL, MAX_IMAGE_API_CALLS
+import time
+from config import EMBEDDING_MODEL, IMAGE_EMBEDDING_PROMPT, OPENROUTER_MODEL, MAX_IMAGE_API_CALLS, EMBEDDING_DEVICE, EMBEDDING_NORMALIZE, IMAGE_API_DELAY
 from typing import List, Dict, Any
 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -114,37 +115,54 @@ def image_resume(image_path: str, context: str) -> dict | None:
         return None
 
     try:
+        if IMAGE_API_DELAY > 0:
+            time.sleep(IMAGE_API_DELAY)
+
         with open(image_path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("utf-8")
 
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_KEY')}"},
-            json={
-                "model": OPENROUTER_MODEL,
-                "messages": [{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": IMAGE_EMBEDDING_PROMPT.format(context=context)},
-                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
-                    ],
-                }],
-                "max_tokens": 500,
-                "temperature": 0.2,
-            },
-            timeout=(10, 180),
-        )
-        _image_api_calls += 1
+        max_retries = 3
+        retry_delay = 5
 
-        if not response.ok:
-            logger.warning("OpenRouter returned %d for '%s': %s", response.status_code, image_path, response.text[:200])
-            return None
+        for attempt in range(max_retries):
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_KEY')}"},
+                json={
+                    "model": OPENROUTER_MODEL,
+                    "messages": [{
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": IMAGE_EMBEDDING_PROMPT.format(context=context)},
+                            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
+                        ],
+                    }],
+                    "max_tokens": 500,
+                    "temperature": 0.2,
+                },
+                timeout=(10, 180),
+            )
 
-        content = response.json()["choices"][0]["message"]["content"]
-        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
+            if response.status_code == 429:
+                logger.warning("Rate limited (429) for '%s'. Retrying in %ds (Attempt %d/%d)...", image_path, retry_delay, attempt + 1, max_retries)
+                time.sleep(retry_delay)
+                retry_delay *= 2
+                continue
 
-        result = json.loads(content)
-        return result
+            _image_api_calls += 1
+
+            if not response.ok:
+                logger.warning("OpenRouter returned %d for '%s': %s", response.status_code, image_path, response.text[:200])
+                return None
+
+            content = response.json()["choices"][0]["message"]["content"]
+            content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
+
+            result = json.loads(content)
+            return result
+        
+        logger.error("Max retries reached for '%s' due to rate limiting.", image_path)
+        return None
 
     except Exception as e:
         logger.error("Image API error for '%s': %s", image_path, e)
