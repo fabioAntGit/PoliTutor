@@ -1,8 +1,8 @@
 """
 File management and metadata extraction utilities.
 
-This module provides functions to parse and validate PDF filenames following 
-the internal convention: <source_type>.<course_code>.<description>.pdf.
+This module provides functions to parse and validate filenames following 
+the internal convention: <source_type>.<course_code>.<description>.[pdf,pptx,md...].
 """
 
 import re
@@ -18,10 +18,10 @@ COURSE_CODE_PATTERN = re.compile(r'^[a-z]+$')
 
 def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
     """
-    Extracts source_type and course_code from a PDF filename.
+    Extracts source_type and course_code from a filename.
 
-    Expected format: <source_type>.<course_code>.<description>.pdf
-    Example: "Slides.ED.CAP1.pdf" -> ("slides", "ed")
+    Expected format: <source_type>.<course_code>.<description>.[pdf,pptx,md...]
+    Example: "Slides.ED.CAP1.[pdf,pptx,md...]" -> ("slides", "ed")
     """
     stem = Path(filename).stem
     parts = stem.split(".")
@@ -29,7 +29,7 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
     if len(parts) < 2:
         raise ValueError(
             f"Filename '{filename}' does not follow the expected format "
-            f"'<source_type>.<course_code>.<description>.pdf'."
+            f"'<source_type>.<course_code>.<description>.[pdf,pptx,md...]'."
         )
 
     source_type = parts[0].lower()

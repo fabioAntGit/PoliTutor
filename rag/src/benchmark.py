@@ -8,8 +8,8 @@ import logging
 from pathlib import Path
 from dotenv import load_dotenv
 from ranx import Qrels, Run, evaluate
-from config import BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE, BENCHMARK_MIN_CONTEXT_LENGTH, BENCHMARK_EVAL_METRICS
-from pdf_extractor import extract_elements_from_pdf, filter_elements, group_elements_by_page
+from config import BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE, BENCHMARK_MIN_CONTEXT_LENGTH, BENCHMARK_EVAL_METRICS, SUPPORTED_EXTENSIONS
+from pdf_extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from utils import extract_metadata_from_filename
 from retrieval import retrieve
 
@@ -63,20 +63,20 @@ def create_qa(context: str, page_number: int, filename: str) -> dict:
 
 def generate_benchmark_dataset():
     """
-    Generates BenchmarkQA JSON files from all PDF files found in COURSE_PATH.
+    Generates BenchmarkQA JSON files from all files found in COURSE_PATH.
     """
-    pdf_files = list(Path(COURSE_PATH).rglob("*.pdf"))
+    docs = [f for ext in SUPPORTED_EXTENSIONS for f in Path(COURSE_PATH).rglob(ext)]
     all_qa = []
 
-    for pdf_path in pdf_files:
-        file_name = pdf_path.name
+    for file_path in docs:
+        file_name = file_path.name
 
         try:
             source_type, course_code = extract_metadata_from_filename(file_name)
         except ValueError:
             continue
 
-        elements = extract_elements_from_pdf(str(pdf_path))
+        elements = extract_elements_from_file(str(file_path))
         filtered_elements = filter_elements(elements, KEYWORDS_TO_EXCLUDE)
         grouped_pages = group_elements_by_page(
             filtered_elements,
@@ -99,7 +99,7 @@ def generate_benchmark_dataset():
 
         if all_qa:
             BENCHMARK_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-            output_file = BENCHMARK_OUTPUT_DIR / f"BenchmarkQA-{pdf_path.stem}.json"
+            output_file = BENCHMARK_OUTPUT_DIR / f"BenchmarkQA-{file_path.name}.json"
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(all_qa, f, ensure_ascii=False, indent=2)
             logger.info("Saved %d Q&A pairs to %s", len(all_qa), output_file.name)
@@ -110,8 +110,8 @@ def execute_retrieval_benchmark(benchmark_file: Path):
     with open(benchmark_file, encoding="utf-8") as f:
         qa_pairs = json.load(f)
 
-    pdf_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
-    _, course_code = extract_metadata_from_filename(f"{pdf_stem}.pdf")
+    file_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
+    _, course_code = extract_metadata_from_filename(file_stem)
 
     logger.info("Evaluating: %s | Course: %s", benchmark_file.name, course_code)
 
@@ -122,7 +122,7 @@ def execute_retrieval_benchmark(benchmark_file: Path):
         question = qa.get("question", "")
         expected_page = str(qa.get("page", "0"))
         expected_file = str(qa.get("filename", ""))
-        q_id = f"{pdf_stem}_q{i}"
+        q_id = f"{file_stem}_q{i}"
         qrels_dict[q_id] = {f"{expected_file}_p{expected_page}": 1}
 
         results = retrieve(course_code, question)
