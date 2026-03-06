@@ -7,8 +7,10 @@ the internal convention: <source_type>.<course_code>.<description>.[pdf,pptx,md.
 
 import re
 import logging
+import base64
 from pathlib import Path
 from config import VALID_SOURCE_TYPES
+from config import IMAGES_OUTPUT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +37,8 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
 
     if source_type not in VALID_SOURCE_TYPES:
         logger.warning(
-            "Unknown source_type '%s' in '%s'. Expected one of: %s.",
-            source_type, filename, VALID_SOURCE_TYPES
+            f"Unknown source_type '{source_type}' in '{filename}'. "
+            f"Expected one of: {VALID_SOURCE_TYPES}."
         )
 
     if not COURSE_CODE_PATTERN.match(course_code):
@@ -45,3 +47,20 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str]:
         )
 
     return source_type, course_code
+
+def save_image(image_b64: str, source_filename: str, page_num: int, img_index: int) -> str:
+    """Saves a base64 image to disk and returns its path."""
+    try:
+        source_type, course_code = extract_metadata_from_filename(source_filename)
+    except ValueError:
+        course_code = "unknown"
+        source_type = "unknown"
+
+    image_dir = IMAGES_OUTPUT_DIR / course_code / source_type / source_filename.replace(".pdf", "")
+    image_dir.mkdir(parents=True, exist_ok=True)
+
+    image_path = image_dir / f"p{page_num}_img{img_index}.png"
+    with open(image_path, "wb") as f:
+        f.write(base64.b64decode(image_b64))
+
+    return str(image_path)

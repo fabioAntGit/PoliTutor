@@ -13,6 +13,7 @@ load_dotenv(BASE_DIR.parent / ".env")
 # Default paths
 DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
+IMAGES_OUTPUT_DIR = BASE_DIR.parent / "data" / "processed" / "images"
 
 # Specific course directory
 COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
@@ -48,7 +49,7 @@ FILE_PROCESSING_CONFIG = {
 }
 
 # --- Chroma DB Collection
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs5"
 
 # --- ChromaDB HNSW Index ---
 CHROMA_HNSW_SPACE = "cosine"
@@ -82,6 +83,24 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
 EMBEDDING_DEVICE = "cpu"
 EMBEDDING_NORMALIZE = True
 
+IMAGE_EMBEDDING_PROMPT = (
+    "Analyze this image from an educational document. "
+    "Set relevant=false ONLY if: "
+    "1) The image is a logo or university branding (e.g. P.PORTO, ESTG), a watermark, or purely decorative, OR "
+    "2) The image is a tiny fragment of a larger diagram that is too small to convey any meaning on its own "
+    "(e.g. a single isolated node, one arrow, one edge of a graph without context). "
+    "Everything else is relevant: diagrams, hierarchies, code, formulas, tables, graphs, "
+    "flowcharts, trees, UML, algorithms, even partial versions if they still show meaningful structure. "
+    "If relevant, write a concise summary in Portuguese. If irrelevant, summary must be empty. "
+    'Reply ONLY with raw JSON: {{"relevant": true, "summary": "..."}}'
+    "\n\nContext:\n{context}"
+)
+
+# --- OpenRouter Image API ---
+OPENROUTER_MODEL = "google/gemini-2.5-flash-lite"
+MAX_IMAGE_API_CALLS = None  # Limite para testes (None = sem limite)
+IMAGE_API_DELAY = 1.5
+
 # --- Retrieval ---
 TOP_K_RESULTS: int = 20
 
@@ -99,6 +118,7 @@ BENCHMARK_PROMPT = (
     "You MUST base your question and answer SOLELY on the provided context. "
     "Do NOT use any prior memory, or information outside of the given context. "
     "The Q&A pair should be answerable using only the text provided. "
+    "Generate the question and answer in Portuguese. "
     "The content is from page {page_number} of {filename} "
     "Reply ONLY with raw JSON, no markdown, no code blocks, no extra text. "
     'Use this exact format: {{"filename": "...", "page": "...", "question": "...", "answer": "..."}}'

@@ -3,6 +3,7 @@ Document Chunking Service.
 Segments processed pages into embedding-ready chunks while preserving page context.
 """
 
+import hashlib
 import logging
 import re
 from typing import List, Dict, Any
@@ -29,7 +30,7 @@ def build_splitter(source: str) -> RecursiveCharacterTextSplitter:
 
 def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Processes a list of pages into chunks, maintaining image associations 
+    Processes a list of pages into chunks, maintaining image path associations 
     and tracking page numbers across splits.
     """
     if not pages:
@@ -38,9 +39,9 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     source = pages[0]["metadata"].get("source", "default")
     splitter = build_splitter(source)
     
-    # Map images to their respective page numbers
+    # Map image paths to their respective page numbers
     images_by_page = {
-        page["metadata"]["page_number"]: page.get("images", [])
+        page["metadata"]["page_number"]: page.get("image_paths", [])
         for page in pages
     }
     
@@ -58,6 +59,7 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     base_metadata = pages[0]["metadata"]
     last_pages = []
     chunks = []
+    seen_images = set()
 
     # Regex pattern to find page markers
     page_marker_pattern = re.compile(r'\[PAGE:(\d+)\]')
@@ -89,10 +91,13 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if len(clean_text) <= CHUNK_MIN_LENGTH:
             continue
         
-        # Collect images from all pages involved in this chunk
-        chunk_images = []
+        # Collect unique image paths from all pages involved in this chunk
+        chunk_image_paths = []
         for p in page_numbers:
-            chunk_images.extend(images_by_page.get(p, []))
+            for img_path in images_by_page.get(p, []):
+                if img_path not in seen_images:
+                    seen_images.add(img_path)
+                    chunk_image_paths.append(img_path)
 
         chunk_metadata = base_metadata.copy()
 
@@ -105,9 +110,27 @@ def chunk_document(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
         chunks.append({
             "text": clean_text,
-            "images": chunk_images,
+            "image_paths": chunk_image_paths,
             "metadata": chunk_metadata
         })
     
+    if chunks:
+        all_chunk_pages = set()
+        for chunk in chunks:
+            for p in chunk["metadata"]["pages"]:
+                all_chunk_pages.add(p)
+
+        for page_num, img_paths in images_by_page.items():
+            if page_num not in all_chunk_pages and img_paths:
+                best_chunk = min(
+                    chunks,
+                    key=lambda c: min(abs(p - page_num) for p in c["metadata"]["pages"])
+                )
+                for img_path in img_paths:
+                    if img_path not in seen_images:
+                        seen_images.add(img_path)
+                        best_chunk["image_paths"].append(img_path)
+                        logger.debug(f"Orphan image from page {page_num} associated to chunk with pages {best_chunk['metadata']['pages']}")
+
     logger.info(f"Created {len(chunks)} chunks for {base_metadata.get('filename')}")
     return chunks
