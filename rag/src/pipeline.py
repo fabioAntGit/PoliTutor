@@ -9,7 +9,7 @@ from typing import List
 
 from config import COURSE_PATH, KEYWORDS_TO_EXCLUDE, SUPPORTED_EXTENSIONS
 from utils import extract_metadata_from_filename
-from pdf_extractor import extract_elements_from_file, filter_elements, group_elements_by_page
+from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from chunker import chunk_document
 from embedding import embed_chunks
 

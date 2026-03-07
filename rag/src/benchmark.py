@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from ranx import Qrels, Run, evaluate
 from config import BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE, BENCHMARK_MIN_CONTEXT_LENGTH, BENCHMARK_EVAL_METRICS, SUPPORTED_EXTENSIONS
-from pdf_extractor import extract_elements_from_file, filter_elements, group_elements_by_page
+from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from utils import extract_metadata_from_filename
 from retrieval import retrieve
 
