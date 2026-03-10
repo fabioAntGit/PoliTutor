@@ -1,0 +1,176 @@
+[
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "2",
+    "question": "Quais são as três hipóteses sobre ordem discutidas nas colecções?",
+    "answer": "A ordem não é importante; a ordem é determinada pela forma como os elementos são adicionados; a ordem é determinada pela comparação dos valores dos elementos."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "3",
+    "question": "O que determina a localização de um elemento numa tabela de hash?",
+    "answer": "A localização de um elemento numa tabela de hash é determinada por uma função de hash aplicada ao valor do elemento a ser armazenado."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "4",
+    "question": "Quantos elementos o array criado irá armazenar?",
+    "answer": "O array irá armazenar 26 elementos."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "6",
+    "question": "Qual é a complexidade das operações num elemento de uma tabela hash quando cada elemento é mapeado para uma posição única?",
+    "answer": "A complexidade das operações num elemento de uma tabela hash é O(1) quando cada elemento é mapeado para uma posição única."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "7",
+    "question": "O que é uma função hash perfeita?",
+    "answer": "Uma função hash perfeita é uma função hash que mapeia cada elemento para uma localização única."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "8",
+    "question": "Qual deve ser o tamanho da tabela de hashing se tivermos uma função de hashing perfeita e um conjunto de tamanho n?",
+    "answer": "Se tivermos uma função de hashing perfeita e um conjunto de tamanho n, a tabela deve ser de tamanho n."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "9",
+    "question": "O que acontece no redimensionamento dinâmico de uma tabela hash?",
+    "answer": "O redimensionamento dinâmico de uma tabela hash envolve a criação de uma nova tabela de hash maior e, de seguida, inserir todos os elementos da tabela antiga na nova."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "10",
+    "question": "O que é o factor de carga numa tabela de hash?",
+    "answer": "O factor de carga de uma tabela de hash é a percentagem de ocupação da tabela em que a tabela será redimensionada."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "11",
+    "question": "O que é o método de extracção em funções de hash?",
+    "answer": "O método de extracção envolve o uso de apenas uma parte do valor de um elemento ou uma chave para calcular o local onde armazenar o elemento."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "12",
+    "question": "O que significa uma função de hash por divisão?",
+    "answer": "Uma função de hash por divisão significa que vamos usar o resto da divisão inteira da chave (key) dividida por um qualquer valor inteiro positivo."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "13",
+    "question": "Quais são os dois tipos de desdobramento mencionados no método de funções de hash?",
+    "answer": "Os dois tipos de desdobramento mencionados são shift folding e limit folding."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "14",
+    "question": "Como é calculado o índice no método shift folding usando o SSN 987-65-4321?",
+    "answer": "No método shift folding, o SSN 987-65-4321 é dividido em três partes: 987, 654 e 321. Estas partes são somadas, resultando em 1962. Depois, utiliza-se o método da divisão ou da extracção para obter um índice de três dígitos."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "15",
+    "question": "Qual é o resultado da soma das partes do SSN após aplicar o método limit folding?",
+    "answer": "O resultado da soma das partes do SSN após aplicar o método limit folding é 1764."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "16",
+    "question": "O que é o método do meio do quadrado nas funções de hash?",
+    "answer": "No método do meio do quadrado, a chave é multiplicada por si mesma e, de seguida, o método de extracção é usado para extrair o número necessário de dígitos a partir do meio do resultado."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "18",
+    "question": "O que é o método de análise de dígitos em funções de hash?",
+    "answer": "No método de análise de dígitos, o índice é formado pela extracção, e de seguida pela manipulação de dígitos específicos da chave."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "20",
+    "question": "Qual é o propósito do método hashcode na classe java.lang.Object?",
+    "answer": "O método hashcode na classe java.lang.Object retorna um inteiro com base na localização de memória do objecto."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "21",
+    "question": "O que é necessário fazer quando não é possível desenvolver uma função de hashing perfeito?",
+    "answer": "Devemos escolher um método para o tratamento de colisões."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "22",
+    "question": "O que é o método de encadeamento no tratamento de colisões em tabelas de hash?",
+    "answer": "O método de encadeamento trata conceptualmente a tabela de hash como uma tabela de colecções, em vez de uma tabela de elementos individuais. Cada célula é uma referência para a colecção associada com essa referência na tabela."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "23",
+    "question": "Que tipos de coleções internas são normalmente utilizados?",
+    "answer": "Normalmente, esta colecção interna ou é uma lista não ordenada, ou uma lista ordenada."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "26",
+    "question": "O que é o método de endereçamento aberto no tratamento de colisões?",
+    "answer": "O método de endereçamento aberto procura por outra posição em aberto na tabela diferente daquele ao qual o elemento é originalmente atribuído (através da função de hash)."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "27",
+    "question": "O que acontece se a posição calculada para um elemento na tentativa linear já estiver ocupada?",
+    "answer": "Se a posição calculada para um elemento na tentativa linear já estiver ocupada, tenta-se a posição (p + 1) % s, onde s é o tamanho da tabela."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "29",
+    "question": "O que é a tentativa quadrática no contexto de endereçamento aberto?",
+    "answer": "A tentativa quadrática é um método de endereçamento aberto em que, após uma colisão, o próximo índice a testar é calculado pela função newhashcode(x) = hashcode(x) + (-1)i-1((i +1)/2)2. Este método ajuda a eliminar o problema de clusters primários."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "31",
+    "question": "O que é a dispersão dupla no contexto de endereçamento aberto?",
+    "answer": "A dispersão dupla é um método de endereçamento aberto onde as colisões são resolvidas através do uso de uma segunda função de hash. Por exemplo, se uma chave x é calculada para uma posição p já ocupada, a próxima posição p' será determinada por p' = p + secondaryhashcode(x)."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "33",
+    "question": "Quantos casos existem para a remoção de um elemento numa implementação encadeada de uma tabela de hash?",
+    "answer": "Existem cinco casos para a remoção de um elemento de uma implementação encadeada."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "34",
+    "question": "O que deve ser feito após remover um elemento que tem um índice para a área de overflow?",
+    "answer": "Após remover um elemento que tem um índice para a área de overflow, deve-se substituir o elemento e o próximo valor do índice na tabela pelo elemento e pelo próximo valor do índice da posição do array apontada pelo elemento a ser removido. Em seguida, a posição na área de overflow deve ser definida como null e adicionada de volta à lista de células disponíveis de overflow."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "35",
+    "question": "O que deve ser feito se o elemento que estamos a tentar remover estiver no final da lista de elementos armazenados numa localização da tabela?",
+    "answer": "Deve-se definir a sua posição na tabela como null, definir a referência do próximo elemento do elemento anterior a null e adicionar essa posição à lista de células overflow disponível."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "36",
+    "question": "O que deve ser feito se o elemento que estamos a tentar remover estiver no meio da lista de elementos armazenados numa localização?",
+    "answer": "Deve-se definir a sua posição na área de overflow como null, definir a referência do próximo elemento do elemento anterior para apontar para o próximo elemento do elemento a ser removido e adicionar a posição de volta à lista de células de overflow disponíveis."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "37",
+    "question": "Por que a remoção de um elemento em uma tabela com endereçamento aberto é um desafio?",
+    "answer": "A remoção de um elemento em uma tabela com endereçamento aberto é um desafio porque não podemos remover um item excluído sem afectar a capacidade de encontrar itens que colidiram com essa entrada."
+  },
+  {
+    "filename": "Slides.ED.Aula13.pdf",
+    "page": "39",
+    "question": "Quantas implementações de hash são fornecidas pela plataforma de colecções do Java?",
+    "answer": "A plataforma de colecções do Java fornece sete implementações de hash."
+  }
+]

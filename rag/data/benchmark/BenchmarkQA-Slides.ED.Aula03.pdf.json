@@ -1,0 +1,38 @@
+[
+  {
+    "filename": "Slides.ED.Aula03.pdf",
+    "page": "6",
+    "question": "O que é uma lista ligada?",
+    "answer": "Uma lista ligada é uma estrutura onde um objecto se refere ao seguinte, que remete para o próximo, e assim sucessivamente."
+  },
+  {
+    "filename": "Slides.ED.Aula03.pdf",
+    "page": "7",
+    "question": "Qual é a principal diferença entre uma lista ligada e um array em termos de tamanho?",
+    "answer": "Uma lista ligada é uma estrutura de dados dinâmica, em que seu tamanho aumenta e diminui conforme a necessidade, ao contrário de um array, cujo tamanho é estático ou fixo."
+  },
+  {
+    "filename": "Slides.ED.Aula03.pdf",
+    "page": "10",
+    "question": "Por que é importante gerir cuidadosamente as referências numa lista ligada?",
+    "answer": "É importante gerir cuidadosamente as referências numa lista ligada para manter a integridade da estrutura e garantir que o ponto de entrada na lista é mantido adequadamente."
+  },
+  {
+    "filename": "Slides.ED.Aula03.pdf",
+    "page": "15",
+    "question": "Qual é o problema com os objectos auto-referenciados?",
+    "answer": "O problema com os objectos auto-referenciados é que estes devem 'saber' que fazem parte de uma lista."
+  },
+  {
+    "filename": "Slides.ED.Aula03.pdf",
+    "page": "18",
+    "question": "O que são nós sentinelas e qual é a sua utilidade em listas ligadas?",
+    "answer": "Os nós sentinelas, ou nós fictícios, são utilizados em cada extremidade da lista ligada para eliminar os casos especiais de inserir ou excluir o nó do primeiro ou último."
+  },
+  {
+    "filename": "Slides.ED.Aula03.pdf",
+    "page": "19",
+    "question": "O que é uma lista duplamente ligada?",
+    "answer": "É uma variação de lista em que cada nó tem uma referência para os nós seguintes e anteriores na lista, facilitando o seu percurso."
+  }
+]

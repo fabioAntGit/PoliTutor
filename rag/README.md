@@ -176,9 +176,14 @@ python src/retrieval.py
 # Generate benchmark Q&A datasets
 python src/benchmark.py --generate
 
-# Evaluate retrieval against existing benchmark files
-python src/benchmark.py                                                   # evaluates all BenchmarkQA-*.json
-python src/benchmark.py data/benchmark/BenchmarkQA-slides.ED.CAP1.json   # single file
+# Evaluate retrieval with the default config (all BenchmarkQA-*.json files)
+python src/benchmark.py
+
+# Evaluate a single benchmark file
+python src/benchmark.py data/benchmark/BenchmarkQA-slides.ED.CAP1.json
+
+# Compare multiple retrieval configurations side by side
+python src/benchmark.py --compare
 
 # Visualise embeddings with Spotlight
 python src/visualize.py
@@ -222,17 +227,76 @@ For local testing, run `python src/retrieval.py` to launch the interactive CLI.
 
 ## Benchmark
 
-The benchmark module generates Q&A pairs from page content (via IAEdu API) and evaluates ChromaDB retrieval quality.
+The benchmark module generates Q&A pairs from page content and evaluates ChromaDB retrieval quality across configurable combinations of embedding model, reranker, and score threshold.
 
-**Generate datasets** (requires IAEdu API):
+### Dataset generation
+
+Requires IAEdu API. For each document in `COURSE_PATH`, the module extracts page content and sends it to the LLM to generate a Q&A pair. Results are saved to `rag/data/benchmark/`.
+
 ```bash
 python src/benchmark.py --generate
 ```
-This creates `BenchmarkQA-<filename>.json` files in `rag/data/benchmark/`.
 
-**Evaluate retrieval:**
+Output: `BenchmarkQA-<filename>.json` — one file per ingested document.
+
+### Evaluation
+
+**Default config** (embedding + reranker as defined in `config.py`):
 ```bash
-python src/benchmark.py
+python src/benchmark.py                                                    # all files
+python src/benchmark.py data/benchmark/BenchmarkQA-slides.ED.CAP1.json    # single file
 ```
 
+**Comparison mode** — runs all configurations defined in `BENCHMARK_COMPARISON_CONFIGS` (`config.py`) and prints a side-by-side table:
+```bash
+python src/benchmark.py --compare
+```
+
+Example output:
+```
+-------------------------------------------------------------------------------------------------------
+Config                                   hit_rate@5         mrr@5        ndcg@5         map@5  precision@5      recall@5
+-------------------------------------------------------------------------------------------------------
+No Reranker                                  0.7200        0.5800        0.6300        0.5600       0.1440        0.7200
+Reranker mMiniLM                             0.8400        0.7100        0.7600        0.7000       0.1680        0.8400
+Reranker mMiniLM | threshold=0.0             0.8200        0.7000        0.7400        0.6800       0.1640        0.8200
+Reranker mMiniLM | threshold=1.0             0.7800        0.6800        0.7100        0.6500       0.1560        0.7800
+Reranker mMiniLM | threshold=2.0             0.7000        0.6200        0.6600        0.5900       0.1400        0.7000
+-------------------------------------------------------------------------------------------------------
+```
+
+### How metrics are calculated
+
+For each Q&A pair in the dataset:
+
+1. The question is sent to ChromaDB (filtered by course unit) to retrieve `top_k` candidate chunks.
+2. If a reranker is configured, chunks are re-scored by a cross-encoder and truncated to `reranker_top_k`.
+3. If a `score_threshold` is set, chunks with score below the threshold are discarded.
+4. A **relevance key** `<filename>_p<page>` is built for each page covered by each returned chunk. When a chunk spans multiple pages, all of them are registered with the same score so that a match on any page counts.
+5. The ground-truth relevant document is `<filename>_p<page>` from the QA pair (binary relevance = 1).
+6. `ranx` computes the final metrics by comparing the ranked run against the ground-truth qrels.
+
 **Reported metrics** (via `ranx` at `@5`): Hit Rate, MRR, NDCG, MAP, Precision, Recall.
+
+### Score scales
+
+| Config | Score source | Range (approx.) |
+| --- | --- | --- |
+| No Reranker | Cosine similarity (`1 − distance`) | `[−1, 1]` |
+| With Reranker | Cross-encoder logits | `[−10, +10]` |
+
+Score thresholds only make sense relative to the score source of the config they are applied to. Thresholds in the default configs (`0.0`, `1.0`, `2.0`) are calibrated for the cross-encoder scale.
+
+### Customising configurations
+
+Edit `BENCHMARK_COMPARISON_CONFIGS` in `config.py` to add, remove, or modify configurations. Each entry accepts:
+
+| Key | Description |
+| --- | --- |
+| `name` | Label shown in the output table |
+| `embedding_model` | HuggingFace model name for query embedding |
+| `collection_name` | ChromaDB collection to query (must be pre-indexed with the right model) |
+| `top_k` | Initial number of candidates retrieved from ChromaDB |
+| `reranker_model` | Cross-encoder model name, or `null` to skip reranking |
+| `reranker_top_k` | Number of results to keep after reranking |
+| `score_threshold` | Minimum score to include a chunk (applied after reranking), or `null` to disable |

@@ -1,0 +1,230 @@
+[
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "3",
+    "question": "Qual é a propriedade das árvores binárias de pesquisa?",
+    "answer": "Para qualquer nó numa árvore, todos os elementos nos nós da sub-árvore esquerda são menores que o elemento do nó e todos os elementos da sub-árvore direita são maiores ou iguais ao elemento do nó."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "4",
+    "question": "Qual é a função da operação 'removeAllOccurrences' numa Árvore Binária de Pesquisa?",
+    "answer": "Remove todas as ocorrências do elemento da árvore."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "6",
+    "question": "O que a interface BinarySearchTreeADT define?",
+    "answer": "A interface BinarySearchTreeADT define a interface para uma árvore binária de pesquisa."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "7",
+    "question": "Qual é o método que remove e devolve o menor elemento de uma árvore?",
+    "answer": "O método que remove e devolve o menor elemento de uma árvore é o 'removeMin()'."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "8",
+    "question": "Qual é o método que remove e devolve o maior elemento de uma árvore?",
+    "answer": "O método que remove e devolve o maior elemento de uma árvore é o 'removeMax()'."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "9",
+    "question": "Que tipo de árvores podem ser implementadas ao estender a definição de uma LinkedBinaryTree?",
+    "answer": "Podem ser implementadas Árvores Binárias de Pesquisa ao estender a definição de uma LinkedBinaryTree."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "10",
+    "question": "O que acontece quando o construtor LinkedBinarySearchTree() é chamado sem argumentos?",
+    "answer": "Quando o construtor LinkedBinarySearchTree() é chamado sem argumentos, é criada uma árvore binária de pesquisa vazia."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "11",
+    "question": "Qual é o propósito do método addElement na árvore?",
+    "answer": "O propósito do método addElement é encontrar o local apropriado para o elemento dado e adicioná-lo como uma folha na árvore."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "13",
+    "question": "O que acontece quando elementos iguais são adicionados à árvore binária de pesquisa?",
+    "answer": "Elementos iguais são adicionados à direita na árvore binária de pesquisa."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "16",
+    "question": "O que é necessário para remover elementos de uma árvore binária de pesquisa?",
+    "answer": "Remover elementos de uma árvore binária de pesquisa requer encontrar o elemento a ser removido, substituí-lo com o seu sucessor inorder se não for uma folha, e retornar o elemento removido."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "17",
+    "question": "O que acontece se o elemento alvo especificado não for encontrado na árvore binária de pesquisa ao usar o método removeElement?",
+    "answer": "Se o elemento alvo especificado não for encontrado na árvore binária de pesquisa, será lançada uma exceção do tipo ElementNotFoundException."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "18",
+    "question": "O que acontece quando o elemento alvo é encontrado no nó atual da árvore binária?",
+    "answer": "Quando o elemento alvo é encontrado no nó atual da árvore binária, a variável 'found' é definida como verdadeira, o contador 'count' é decrementado, e o resultado é atribuído ao elemento do nó atual. Além disso, se o nó atual for o filho esquerdo do nó pai, o filho esquerdo do nó pai é substituído pelo resultado da função 'replacement(current)'."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "19",
+    "question": "O que acontece se o elemento alvo não for encontrado na árvore de pesquisa binária?",
+    "answer": "Se o elemento alvo não for encontrado na árvore de pesquisa binária, é lançada uma exceção chamada ElementNotFoundException com a mensagem 'binary search tree'."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "20",
+    "question": "O que acontece quando o nó a ser removido tem dois filhos?",
+    "answer": "Quando o nó a ser removido tem dois filhos, o sucessor em ordem é utilizado como seu substituto."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "21",
+    "question": "O que acontece se 'node.right' for igual a 'current' no código apresentado?",
+    "answer": "Se 'node.right' for igual a 'current', 'current.left' será atribuído a 'node.left'."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "22",
+    "question": "O que faz o método removeAllOccurrences?",
+    "answer": "O método removeAllOccurrences remove todas as ocorrências de um elemento da árvore e utiliza o método removeElement, que distingue entre a primeira chamada e as sucessivas chamadas ao método."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "23",
+    "question": "Quais são os casos para remover o elemento mínimo de uma Árvore Binária de Pesquisa?",
+    "answer": "Existem três casos: 1) Se a raiz não tem filho esquerdo, então a raiz é o elemento mínimo e o filho à direita da raiz torna-se a nova raiz; 2) Se o nó mais à esquerda da árvore é uma folha, então colocamos a referência do filho esquerdo do pai a null; 3) Se o nó mais à esquerda da árvore é um nó interno, então colocamos a referência do filho esquerdo do pai a apontar para o filho direito do nó a ser removido."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "26",
+    "question": "O que a classe ArrayBinarySearchTree implementa?",
+    "answer": "A classe ArrayBinarySearchTree implementa uma árvore binária de pesquisa utilizando um array."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "27",
+    "question": "Qual é a altura inicial de uma árvore binária de pesquisa criada com o construtor sem parâmetros?",
+    "answer": "A altura inicial é 0."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "28",
+    "question": "Como é determinado o índice do filho esquerdo e do filho direito de um nó na árvore binária de pesquisa?",
+    "answer": "O índice do filho esquerdo de um nó é encontrado ao dobrar o índice atual e adicionar 1, enquanto o índice do filho direito é calculado ao dobrar o índice atual e adicionar 2."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "29",
+    "question": "O que acontece se o elemento atual for menor do que o elemento na posição atual da árvore?",
+    "answer": "Se o elemento atual for menor do que o elemento na posição atual da árvore, o algoritmo tenta ir para a esquerda. Se a posição à esquerda (currentIndex*2+1) estiver vazia, o elemento é adicionado nessa posição e a variável 'added' é definida como verdadeira. Caso contrário, o índice atual é atualizado para a posição à esquerda (currentIndex*2+1)."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "30",
+    "question": "Como é calculada a altura da árvore no código apresentado?",
+    "answer": "A altura da árvore é calculada utilizando a fórmula (int)(Math.log(maxIndex + 1) / Math.log(2)) + 1."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "32",
+    "question": "Por que é importante o pressuposto de balanceamento em árvores binárias de pesquisa?",
+    "answer": "O pressuposto de balanceamento é importante porque, sem ele, ao inserir os números 3, 5, 9, 12, 18, 20 na respetiva ordem, a árvore resultante não será balanceada, o que pode levar a um desempenho ineficiente nas operações de pesquisa."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "34",
+    "question": "O que é uma árvore binária degenerada?",
+    "answer": "Uma árvore binária degenerada é uma árvore binária de pesquisa que é muito menos eficiente do que as árvores binárias de pesquisa balanceadas, apresentando complexidade O(n) na localização em vez de O(logn)."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "35",
+    "question": "Quais são os passos de um método de força bruta para balancear árvores binárias?",
+    "answer": "Escrever uma travessia em-ordem para um ficheiro e usar uma pesquisa recursiva binária do ficheiro para reconstruir a árvore."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "36",
+    "question": "Quais algoritmos são mencionados como soluções para manter o equilíbrio da árvore?",
+    "answer": "Árvores vermelhas e pretas e as árvores AVL."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "37",
+    "question": "O que a rotação à direita resolve e como é realizada?",
+    "answer": "A rotação à direita resolve um não balanceamento causado por um longo caminho na sub-árvore esquerda do filho esquerdo da raiz. É realizada fazendo do elemento filho esquerdo da raiz o novo elemento raiz, do antigo elemento raiz o filho à direita da nova raiz, e do antigo filho direito da nova raiz o filho esquerdo da antiga raiz."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "39",
+    "question": "O que é resolvido pela rotação à esquerda?",
+    "answer": "A rotação à esquerda resolve um desequilíbrio causado por um longo caminho na sub-árvore direita do filho direito da raiz."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "41",
+    "question": "O que a rotação Direita-Esquerda resolve?",
+    "answer": "A rotação Direita-Esquerda resolve um não balanceamento causado por um longo caminho na sub-árvore esquerda do filho à direita da raiz."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "43",
+    "question": "O que é a rotação Esquerda-Direita e como é realizada?",
+    "answer": "A rotação Esquerda-Direita resolve um não balanceamento causado por um longo caminho na sub-árvore direita do filho esquerdo da raiz. É realizada primeiro com uma rotação à esquerda do filho direito do filho esquerdo da raiz em torno do filho esquerdo da raiz, seguida de uma rotação à direita do filho esquerdo resultante da raiz em torno da raiz."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "45",
+    "question": "O que é o factor de balanceamento nas árvores AVL?",
+    "answer": "O factor de balanceamento nas árvores AVL é a diferença de altura entre as sub-árvores direita e esquerda de cada nó."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "46",
+    "question": "O que significa quando o factor de balanceamento de um nó é -2?",
+    "answer": "Significa que a sub-árvore esquerda tem um caminho que é longo demais."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "48",
+    "question": "O que significa quando o factor de balanceamento de um nó é +2?",
+    "answer": "Significa que a sub-árvore direita tem um caminho que é longo demais."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "49",
+    "question": "O que significa quando o factor de balanceamento de um nó é +2 e o factor de balanceamento do filho direito é -1?",
+    "answer": "Significa que a sub-árvore direita tem um caminho que é longo demais e que o caminho longo é da sub-árvore esquerda do filho direito. Neste caso, uma rotação Direita-Esquerda irá resolver o balanceamento."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "51",
+    "question": "O que significa quando o factor de balanceamento de um nó é -2?",
+    "answer": "Significa que a sub-árvore esquerda tem um caminho que é longo demais."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "52",
+    "question": "Quais são as duas implementações de árvores binárias de pesquisa fornecidas pela plataforma de colecções do Java?",
+    "answer": "TreeSet e TreeMap."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "53",
+    "question": "Qual é a diferença entre um set e um map na terminologia da plataforma de colecções do Java?",
+    "answer": "Um set é um grupo onde todos os dados associados a um objecto estão armazenados na colecção, enquanto um map é uma colecção onde as chaves que fazem referência a um objecto são armazenadas na colecção, mas os demais dados são armazenados separadamente."
+  },
+  {
+    "filename": "Slides.ED.Aula10.pdf",
+    "page": "54",
+    "question": "Por que razão os maps são úteis?",
+    "answer": "Os maps são úteis porque permitem manipular as chaves dentro de uma colecção, em vez de todo o objecto, tornando as colecções menores, mais eficientes e mais fáceis de gerir. Além disso, permitem que o mesmo objecto seja parte de várias colecções ao ter chaves em cada uma delas."
+  }
+]

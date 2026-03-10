@@ -1,0 +1,218 @@
+[
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "2",
+    "question": "O que é um jornal segundo a explicação sobre Estruturas de Dados?",
+    "answer": "Um jornal é uma agregação, ou colecção de páginas."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "3",
+    "question": "O que é uma estrutura de dados?",
+    "answer": "Uma estrutura de dados é uma agregação de componentes de dados que, todos juntos, constituem um todo com significado."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "4",
+    "question": "Qual é a definição de unidade atómica para o leitor?",
+    "answer": "Para o leitor, os caracteres que formam uma palavra são a unidade atómica."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "5",
+    "question": "Quais são as categorias de estruturas de dados mencionadas no texto?",
+    "answer": "As categorias de estruturas de dados mencionadas são lineares e não lineares."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "7",
+    "question": "Quais são os tipos de colecções lineares mencionados no texto?",
+    "answer": "Listas, Queues e Stacks."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "9",
+    "question": "Qual é a principal diferença entre as estruturas de dados Stack e Queue em relação à ordem de remoção das entradas?",
+    "answer": "A principal diferença é que na Stack as entradas são removidas na ordem contrária à que foram adicionadas (LIFO), enquanto na Queue as entradas são removidas na mesma ordem em que foram adicionadas (FIFO)."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "11",
+    "question": "O que acontece ao significado de uma árvore binária se uma entrada for movida de uma posição para outra?",
+    "answer": "Mover uma entrada de uma posição para outra altera o significado da árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "12",
+    "question": "Qual é a principal característica estrutural de uma Árvore Binária de Pesquisa?",
+    "answer": "Possui a mesma forma estrutural de uma Árvore Binária, mas cada entrada é independente e a organização é de forma ordenada, análoga à lista ordenada."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "13",
+    "question": "Qual é o objectivo principal de uma tabela de hash?",
+    "answer": "O objectivo principal de uma tabela de hash é permitir uma pesquisa eficiente."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "14",
+    "question": "O que é um grafo e para que pode ser usado?",
+    "answer": "Um grafo é um tipo especial de árvore geral, sendo que a hierarquia é um sistema especial de relações entre as entidades. Os grafos podem ser usados para modelar sistemas de ligações físicas, como redes de computadores e linhas aéreas, bem como relacionamentos abstractos."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "15",
+    "question": "Quais são os dois tipos de grafos mencionados no contexto?",
+    "answer": "Os dois tipos de grafos mencionados são grafos dirigidos, que têm um relacionamento assimétrico, e grafos não dirigidos, que têm um relacionamento simétrico."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "16",
+    "question": "O que é uma estrutura de dados?",
+    "answer": "Uma estrutura de dados é um tipo de dados abstracto."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "17",
+    "question": "Quem foi responsável por criar a interface e implementação para os tipos de dados inteiros?",
+    "answer": "Os criadores da linguagem e quem escreveu o compilador foram responsáveis por criar a interface e implementação para os tipos de dados inteiros."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "18",
+    "question": "O que é relevante para os programadores em relação aos inteiros?",
+    "answer": "Para os programadores o que interessa é o tipo de dados inteiro."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "19",
+    "question": "Quais são alguns dos aspetos que os telespectadores observam numa televisão?",
+    "answer": "Os telespectadores observam uma televisão em termos de volume, contraste, brilho, assim como outros controlos."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "21",
+    "question": "O que é uma Stack e como pode ser criada?",
+    "answer": "Uma Stack é uma estrutura de dados definida pelo utilizador que pode ser criada tendo por base uma Lista (de inteiros), que por sua vez pode ser criada tendo por base um array (de inteiros)."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "23",
+    "question": "Qual é a vantagem de um ADT em relação à separação entre interface e implementação?",
+    "answer": "A vantagem é que o utilizador vê apenas a interface e não precisa de mexer com a implementação, o que torna o código mais fácil de manter."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "25",
+    "question": "Como o paradigma orientado a objectos vê um programa?",
+    "answer": "O paradigma orientado a objectos vê um programa como um sistema de objectos que interagem entre si."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "26",
+    "question": "O que é que um objecto encapsula?",
+    "answer": "Um objecto encapsula estado e comportamento."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "29",
+    "question": "O que acontece quando a estrutura de dados A herda da estrutura de dados B?",
+    "answer": "Quando a estrutura de dados A herda da estrutura de dados B, todo o objecto A é um objecto B."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "30",
+    "question": "O que significa herdar no contexto do paradigma de programação orientada a objetos?",
+    "answer": "Herdar significa partilhar o código de implementação."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "31",
+    "question": "Quais são os fatores a considerar ao escolher a estrutura de dados mais adequada?",
+    "answer": "Os fatores a considerar são a interface de operações suportada pela estrutura de dados, o espaço necessário para a estrutura de dados e os tempos de execução das operações na interface."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "32",
+    "question": "Qual é a estrutura de dados apropriada para implementar uma fila de impressão?",
+    "answer": "Uma lista não-ordenada seria a estrutura de dados apropriada para implementar uma fila de impressão."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "33",
+    "question": "Por que razão uma estrutura de dados com a melhor interface pode não ser a melhor solução global?",
+    "answer": "Porque os tempos de execução das suas operações podem não estar à altura do pretendido, mesmo que a interface seja a mais adequada."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "35",
+    "question": "Qual é a diferença principal entre a Stack A e a Stack B em relação à operação getSize?",
+    "answer": "A Stack A não fornece a operação getSize, enquanto a Stack B fornece essa operação, mas a sua implementação remove os elementos da Stack atual, adiciona-os a uma Stack temporária e conta os elementos durante a troca."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "37",
+    "question": "Qual é a necessidade quando se precisa manter um grande número de pilhas sem a necessidade de encontrar o número de entradas?",
+    "answer": "A necessidade é de manter um grande número de pilhas (Stacks), sem a necessidade de encontrar o número de entradas."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "39",
+    "question": "Qual stack é mais eficiente para operações frequentes de getSize, Stack B ou Stack C?",
+    "answer": "A Stack C é mais eficiente para operações frequentes de getSize."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "40",
+    "question": "Qual é a vantagem da Stack C em relação à Stack B?",
+    "answer": "A Stack C oferece um getSize mais rápido, embora isso implique o custo extra de mais uma variável por Stack, o que pode consumir mais espaço."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "42",
+    "question": "Qual é um importante aspecto da qualidade de software mencionado no texto?",
+    "answer": "O uso eficiente dos recursos, incluindo o CPU."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "43",
+    "question": "O que representa uma função de crescimento?",
+    "answer": "Uma função de crescimento apresenta o relacionamento entre o tamanho do problema (n) e o tempo que leva a resolver o problema."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "44",
+    "question": "Quantos pratos (n) correspondem ao valor 750,450 000 na tabela?",
+    "answer": "70000"
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "45",
+    "question": "O que é usado para especificar a ordem de um algoritmo?",
+    "answer": "É usada a notação Big-Oh, tal como O(n2), para especificar a ordem de um algoritmo."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "46",
+    "question": "Qual é a ordem de crescimento da função f(n) = 20n - 4?",
+    "answer": "O(n)"
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "49",
+    "question": "Qual é a complexidade de um ciclo que executa n vezes?",
+    "answer": "A complexidade de um ciclo que executa n vezes é n vezes a complexidade do corpo do ciclo."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "51",
+    "question": "Qual é a complexidade do ciclo apresentado no contexto?",
+    "answer": "A complexidade do ciclo é O(n2), porque o ciclo é executado n vezes e o corpo do ciclo, que inclui um ciclo aninhado, é O(n)."
+  },
+  {
+    "filename": "Slides.ED.Aula02.pdf",
+    "page": "52",
+    "question": "Qual é a complexidade de uma chamada para o método printsum?",
+    "answer": "A complexidade de uma chamada para o método printsum é O(1)."
+  }
+]

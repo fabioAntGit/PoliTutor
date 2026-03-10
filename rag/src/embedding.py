@@ -20,24 +20,26 @@ from database import get_collection
 
 logger = logging.getLogger(__name__)
 
-_embedder: HuggingFaceEmbeddings | None = None
+_embedder_cache: dict[str, HuggingFaceEmbeddings] = {}
 _image_api_calls = 0
 
-def get_embedder() -> HuggingFaceEmbeddings:
+def get_embedder_for_model(model_name: str) -> HuggingFaceEmbeddings:
     """
-    Returns a singleton instance of the HuggingFace embedding model.
+    Returns a cached HuggingFace embedder for the given model name.
+    Loads the model on first use.
     """
-    global _embedder
-    
-    if _embedder is None:
-        logger.info("Loading embedding model into memory: %s", EMBEDDING_MODEL)
-        _embedder = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
+    if model_name not in _embedder_cache:
+        logger.info("Loading embedding model into memory: %s", model_name)
+        _embedder_cache[model_name] = HuggingFaceEmbeddings(
+            model_name=model_name,
             model_kwargs={"device": EMBEDDING_DEVICE},
             encode_kwargs={"normalize_embeddings": EMBEDDING_NORMALIZE},
         )
+    return _embedder_cache[model_name]
 
-    return _embedder
+def get_embedder() -> HuggingFaceEmbeddings:
+    """Returns the default embedder defined in config."""
+    return get_embedder_for_model(EMBEDDING_MODEL)
 
 def _build_meta(chunk: Dict[str, Any], doc_type: str, **extra) -> Dict[str, Any]:
     """Builds a metadata dict from a chunk, converting pages to str."""

@@ -32,17 +32,13 @@ def get_client() -> chromadb.CloudClient:
 
     return _chroma_client
 
-def get_collection() -> chromadb.Collection:
+def get_collection_by_name(name: str) -> chromadb.Collection:
     """
-    Returns the ChromaDB collection defined in config.
-
-    Uses cosine similarity with HNSW indexing. The collection is created
-    if it does not already exist.
+    Returns a ChromaDB collection by name, creating it if it does not exist.
     """
     client = get_client()
-
     return client.get_or_create_collection(
-        name=CHROMA_COLLECTION_NAME,
+        name=name,
         metadata={
             "hnsw:space":           CHROMA_HNSW_SPACE,
             "hnsw:M":               CHROMA_HNSW_M,
@@ -50,3 +46,7 @@ def get_collection() -> chromadb.Collection:
             "hnsw:search_ef":       CHROMA_HNSW_SEARCH_EF,
         }
     )
+
+def get_collection() -> chromadb.Collection:
+    """Returns the default ChromaDB collection defined in config."""
+    return get_collection_by_name(CHROMA_COLLECTION_NAME)

@@ -49,7 +49,7 @@ FILE_PROCESSING_CONFIG = {
 }
 
 # --- Chroma DB Collection
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs5"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs-e5-large"
 
 # --- ChromaDB HNSW Index ---
 CHROMA_HNSW_SPACE = "cosine"
@@ -112,6 +112,32 @@ RERANKER_TOP_K: int = 5
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
 BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"]
+
+# --- Benchmark Comparison Configs ---
+# Each entry overrides specific defaults; all other fields fall back to the values above.
+BENCHMARK_COMPARISON_CONFIGS = [
+    {
+        "name": "No Reranker",
+        "reranker_model": None,
+        "score_threshold": None,
+    },
+    {
+        "name": "Reranker mMiniLM",
+        "reranker_model": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+        "score_threshold": None,
+    },
+]
+# --- Benchmark Threshold Sweep ---
+# Retrieval runs ONCE with the reranker (no threshold); each threshold value
+# is then applied in memory — no extra database calls.
+BENCHMARK_THRESHOLD_SWEEP = {
+    "reranker_model": RERANKER_MODEL,
+    "start": -4.0,
+    "stop":   4.0,
+    "step":   0.25,
+    "primary_metric": "ndcg@5",
+}
+
 BENCHMARK_PROMPT = (
     "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
     "Your task is to create a Q&A pair based on the following context. "
