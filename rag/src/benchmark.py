@@ -4,7 +4,8 @@ import sys
 import uuid
 import requests
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from datetime import datetime
 
 from pathlib import Path
 from dotenv import load_dotenv
@@ -19,15 +20,11 @@ from extractor import extract_elements_from_file, filter_elements, group_element
 from utils import extract_metadata_from_filename
 from retrieval import retrieve, retrieve_with_config
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+RESULTS_DIR = BENCHMARK_OUTPUT_DIR / "results"
 
 @dataclass
 class BenchmarkConfig:
@@ -40,8 +37,9 @@ class BenchmarkConfig:
     reranker_top_k: int = RERANKER_TOP_K
     score_threshold: float | None = None
 
+# ── Dataset Generation ──────────────────────────────────────────────
 
-def create_qa(context: str, page_number: int, filename: str) -> dict:
+def create_qa(context: str, page_number: int, filename: str) -> dict | None:
     """
     Sends a page context to the LLM endpoint and returns a generated Q&A pair.
     """
@@ -66,6 +64,7 @@ def create_qa(context: str, page_number: int, filename: str) -> dict:
 
     if not response.ok:
         logger.error(f"IAEdu API error {response.status_code}: {response.text}")
+        return None
     
     for line in response.iter_lines():
         if line:
@@ -85,13 +84,13 @@ def generate_benchmark_dataset():
     Generates BenchmarkQA JSON files from all files found in COURSE_PATH.
     """
     docs = [f for ext in SUPPORTED_EXTENSIONS for f in Path(COURSE_PATH).rglob(ext)]
-    all_qa = []
 
     for file_path in docs:
         file_name = file_path.name
+        all_qa = []
 
         try:
-            source_type, course_code = extract_metadata_from_filename(file_name)
+            source_type, course_code, stem = extract_metadata_from_filename(file_name)
         except ValueError:
             continue
 
@@ -122,8 +121,9 @@ def generate_benchmark_dataset():
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(all_qa, f, ensure_ascii=False, indent=2)
             logger.info("Saved %d Q&A pairs to %s", len(all_qa), output_file.name)
-            all_qa = []
 
+
+# ── Evaluation Core ─────────────────────────────────────────────────
 def _build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[dict, dict]:
     """
     Reads a BenchmarkQA file and runs retrieval for each question using `config`.
@@ -133,7 +133,7 @@ def _build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple
         qa_pairs = json.load(f)
 
     file_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
-    _, course_code = extract_metadata_from_filename(file_stem)
+    _, course_code, _ = extract_metadata_from_filename(file_stem)
 
     qrels_dict: dict = {}
     run_dict: dict = {}
@@ -156,14 +156,8 @@ def _build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple
             score_threshold=config.score_threshold,
         )
 
-        ids       = results.get("ids",       [[]])[0]
-        distances = results.get("distances", [[]])[0]
-        metadatas = results.get("metadatas", [[]])[0]
-        documents = results.get("documents", [[]])[0]
-        scores    = results.get("scores",    [[]])[0]
-
         run_dict[q_id] = {}
-        for _, distance, metadata, _, score in zip(ids, distances, metadatas, documents, scores):
+        for _, distance, metadata, _, score in zip(results.ids, results.distances, results.metadatas, results.documents, results.scores):
             pages_str = metadata.get("pages", "[]")
             pages = json.loads(pages_str) if isinstance(pages_str, str) else pages_str
             filename = metadata.get("filename", "Unknown")
@@ -177,16 +171,6 @@ def _build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple
 
     return qrels_dict, run_dict
 
-
-def execute_retrieval_benchmark(benchmark_file: Path) -> None:
-    """Reads a BenchmarkQA JSON and evaluates ChromaDB retrieval using the default config."""
-    file_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
-    _, course_code = extract_metadata_from_filename(file_stem)
-    logger.info("Evaluating: %s | Course: %s", benchmark_file.name, course_code)
-
-    default_config = BenchmarkConfig(name="default")
-    qrels_dict, run_dict = _build_qrels_and_run(benchmark_file, default_config)
-    evaluate_benchmark_retrieval_metrics(qrels_dict, run_dict)
 
 def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> dict:
     """
@@ -202,7 +186,20 @@ def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> di
         logger.info(f"  {metric}: {value:.4f}")
 
     return metrics
-    
+
+# ── Result Persistence ──────────────────────────────────────────────
+def _save_results(data: dict, prefix: str) -> Path:
+    """Saves benchmark results to a JSON file with timestamp."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    output_file = RESULTS_DIR / f"{prefix}_{timestamp}.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info("Results saved to %s", output_file)
+    return output_file
+
+
+# ── Comparison Table ────────────────────────────────────────────────
 def _print_comparison_table(results: dict[str, dict]) -> None:
     """Prints a formatted side-by-side comparison table of metrics across configs."""
     if not results:
@@ -227,32 +224,116 @@ def _print_comparison_table(results: dict[str, dict]) -> None:
     print(separator + "\n")
 
 
-def sweep_threshold_benchmark(benchmark_files: list[Path]) -> None:
+# ── Single File Evaluation ──────────────────────────────────────────
+
+def execute_retrieval_benchmark(benchmark_file: Path) -> None:
+    """Reads a BenchmarkQA JSON and evaluates ChromaDB retrieval using the default config."""
+    file_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
+    _, course_code, _ = extract_metadata_from_filename(file_stem)
+    logger.info("Evaluating: %s | Course: %s", benchmark_file.name, course_code)
+
+    default_config = BenchmarkConfig(name="default")
+    qrels_dict, run_dict = _build_qrels_and_run(benchmark_file, default_config)
+    evaluate_benchmark_retrieval_metrics(qrels_dict, run_dict)
+
+
+# ── Multi-Config Comparison ─────────────────────────────────────────
+
+def run_comparison_benchmark(benchmark_files: list[Path]) -> tuple[dict[str, dict], BenchmarkConfig | None]:
     """
-    Finds the optimal score threshold for the configured reranker.
+    Runs all configurations defined in BENCHMARK_COMPARISON_CONFIGS against
+    the provided benchmark files and prints a side-by-side metrics table.
+
+    Returns (all_results, best_config) where best_config is the BenchmarkConfig
+    that achieved the highest primary_metric score.
+    """
+    primary_metric = BENCHMARK_THRESHOLD_SWEEP["primary_metric"]
+    configs = [BenchmarkConfig(**c) for c in BENCHMARK_COMPARISON_CONFIGS]
+    all_results: dict[str, dict] = {}
+    config_map: dict[str, BenchmarkConfig] = {}
+
+    for config in configs:
+        logger.info("=== Running config: %s ===", config.name)
+        combined_qrels: dict = {}
+        combined_run:   dict = {}
+
+        for benchmark_file in benchmark_files:
+            try:
+                qrels, run = _build_qrels_and_run(benchmark_file, config)
+                combined_qrels.update(qrels)
+                combined_run.update(run)
+            except Exception as e:
+                logger.error(
+                    "Error processing '%s' with config '%s': %s",
+                    benchmark_file.name, config.name, e,
+                )
+
+        if combined_qrels and combined_run:
+            metrics = evaluate_benchmark_retrieval_metrics(combined_qrels, combined_run)
+            all_results[config.name] = metrics
+            config_map[config.name] = config
+        else:
+            logger.warning("No valid data for config '%s'. Skipping.", config.name)
+
+    _print_comparison_table(all_results)
+
+    # Save results
+    _save_results({
+        "configs": {name: asdict(cfg) for name, cfg in config_map.items()},
+        "metrics": all_results,
+        "primary_metric": primary_metric,
+    }, prefix="comparison")
+
+    # Determine best config
+    best_config = None
+    if all_results:
+        best_name = max(all_results, key=lambda k: all_results[k].get(primary_metric, 0.0))
+        best_config = config_map[best_name]
+        best_score = all_results[best_name][primary_metric]
+        logger.info(
+            "Best config: '%s' → %s = %.4f",
+            best_name, primary_metric, best_score,
+        )
+
+    return all_results, best_config
+
+
+# ── Threshold Sweep ─────────────────────────────────────────────────
+
+def sweep_threshold_benchmark(benchmark_files: list[Path], config: BenchmarkConfig) -> None:
+    """
+    Finds the optimal score threshold for the given config.
 
     Runs retrieval ONCE (no threshold) and applies each threshold value in
     memory — no extra database or embedding calls per threshold step.
     At the end prints a comparison table and highlights the best threshold.
     """
-    reranker_model = BENCHMARK_THRESHOLD_SWEEP["reranker_model"]
     start          = BENCHMARK_THRESHOLD_SWEEP["start"]
     stop           = BENCHMARK_THRESHOLD_SWEEP["stop"]
     step           = BENCHMARK_THRESHOLD_SWEEP["step"]
     primary_metric = BENCHMARK_THRESHOLD_SWEEP["primary_metric"]
 
     logger.info(
-        "Threshold sweep: collecting raw scores with reranker '%s'...", reranker_model
+        "Threshold sweep for config '%s' (embedding: %s, reranker: %s)...",
+        config.name, config.embedding_model, config.reranker_model,
     )
 
     # Step 1 — retrieve once, no threshold
-    config = BenchmarkConfig(name="sweep", reranker_model=reranker_model, score_threshold=None)
+    sweep_config = BenchmarkConfig(
+        name="sweep",
+        embedding_model=config.embedding_model,
+        collection_name=config.collection_name,
+        top_k=config.top_k,
+        reranker_model=config.reranker_model,
+        reranker_top_k=config.reranker_top_k,
+        score_threshold=None,
+    )
     combined_qrels: dict = {}
     combined_run_raw: dict = {}
 
     for benchmark_file in benchmark_files:
         try:
-            qrels, run = _build_qrels_and_run(benchmark_file, config)
+            qrels, run = _build_qrels_and_run(benchmark_file, sweep_config)
             combined_qrels.update(qrels)
             combined_run_raw.update(run)
         except Exception as e:
@@ -301,60 +382,55 @@ def sweep_threshold_benchmark(benchmark_files: list[Path]) -> None:
         primary_metric, best_threshold, primary_metric, best_value,
     )
 
+    # Save results
+    _save_results({
+        "config": asdict(config),
+        "best_threshold": best_threshold,
+        "best_metric_value": best_value,
+        "primary_metric": primary_metric,
+        "sweep": sweep_results,
+    }, prefix="sweep")
 
-def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
+
+# ── Find Best (Comparison + Threshold Sweep) ────────────────────────
+
+def find_best_benchmark(benchmark_files: list[Path]) -> None:
     """
-    Runs all configurations defined in BENCHMARK_COMPARISON_CONFIGS against
-    the provided benchmark files and prints a side-by-side metrics table.
-
-    Each config is evaluated over all files combined so that the final metrics
-    reflect the full dataset, not individual files.
+    Two-phase automatic benchmark:
+      1. Compares all configs in BENCHMARK_COMPARISON_CONFIGS → picks the best
+      2. Runs a threshold sweep on the winning config
     """
-    configs = [BenchmarkConfig(**c) for c in BENCHMARK_COMPARISON_CONFIGS]
-    all_results: dict[str, dict] = {}
+    logger.info("=" * 60)
+    logger.info("PHASE 1: Comparing embedding + reranker configurations")
+    logger.info("=" * 60)
 
-    for config in configs:
-        logger.info("=== Running config: %s ===", config.name)
-        combined_qrels: dict = {}
-        combined_run:   dict = {}
+    all_results, best_config = run_comparison_benchmark(benchmark_files)
 
-        for benchmark_file in benchmark_files:
-            try:
-                qrels, run = _build_qrels_and_run(benchmark_file, config)
-                combined_qrels.update(qrels)
-                combined_run.update(run)
-            except Exception as e:
-                logger.error(
-                    "Error processing '%s' with config '%s': %s",
-                    benchmark_file.name, config.name, e,
-                )
+    if best_config is None:
+        logger.error("No valid results from comparison — cannot proceed to sweep.")
+        return
 
-        if combined_qrels and combined_run:
-            metrics = evaluate_benchmark_retrieval_metrics(combined_qrels, combined_run)
-            all_results[config.name] = metrics
-        else:
-            logger.warning("No valid data for config '%s'. Skipping.", config.name)
+    logger.info("")
+    logger.info("=" * 60)
+    logger.info("PHASE 2: Threshold sweep on best config '%s'", best_config.name)
+    logger.info("=" * 60)
 
-    _print_comparison_table(all_results)
+    sweep_threshold_benchmark(benchmark_files, best_config)
 
+
+# ── CLI ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         if arg == "--generate":
             generate_benchmark_dataset()
-        elif arg == "--compare":
+        elif arg == "--find-best":
             json_files = list(Path(BENCHMARK_OUTPUT_DIR).rglob("BenchmarkQA-*.json"))
             if not json_files:
                 logger.warning("No BenchmarkQA-*.json files found in %s", BENCHMARK_OUTPUT_DIR)
             else:
-                run_comparison_benchmark(json_files)
-        elif arg == "--sweep-threshold":
-            json_files = list(Path(BENCHMARK_OUTPUT_DIR).rglob("BenchmarkQA-*.json"))
-            if not json_files:
-                logger.warning("No BenchmarkQA-*.json files found in %s", BENCHMARK_OUTPUT_DIR)
-            else:
-                sweep_threshold_benchmark(json_files)
+                find_best_benchmark(json_files)
         else:
             execute_retrieval_benchmark(Path(arg))
     else:

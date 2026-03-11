@@ -6,15 +6,15 @@
 
 ## Description
 
-Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding and retrieving documents (slides, notes) from polytechnic course units. The system supports PDF, PPTX and Markdown files, multimodal image processing, cross-encoder reranking, an interactive retrieval interface, and a full evaluation benchmark.
+Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding and retrieving documents (slides, notes) from polytechnic course units. The system supports PDF, PPTX and Markdown files, multimodal image processing, cross-encoder reranking, and a full evaluation benchmark.
 
 **Key features:**
 - Multi-format extraction via Unstructured API (PDF, PPTX, MD — hi-res, table and image aware)
 - Multimodal image processing: images classified and summarised by an LLM (OpenRouter/Gemini), then embedded alongside text
 - Source-type aware chunking strategies (slides vs. notes)
-- Multilingual embeddings (`multilingual-e5-large`) stored in ChromaDB Cloud
-- Cross-encoder reranking (`mmarco-mMiniLMv2-L12-H384-v1`)
-- `retrieve()` function callable by a backend, plus an interactive CLI for local testing
+- Multilingual embeddings stored in ChromaDB Cloud
+- Cross-encoder reranking
+- `retrieve()` function callable by a backend integrating seamlessly into downstream endpoints
 - Automated benchmark generation and evaluation (Hit Rate, MRR, NDCG, MAP, Precision, Recall)
 - Embedding visualisation via Renumics Spotlight
 
@@ -31,16 +31,18 @@ Poli-Tutor/
     │   ├── processed/
     │   │   └── images/                 # Images extracted from documents
     │   └── benchmark/                  # Generated BenchmarkQA JSON files
+    │       └── results/                 # Persisted benchmark metric results
     │
     ├── src/
     │   ├── config.py                   # All configuration and constants
     │   ├── utils.py                    # Filename parsing and metadata extraction
+    │   ├── models.py                   # Shared data structures (RetrievalResults)
     │   ├── extractor.py                # File partitioning and page grouping
     │   ├── chunker.py                  # Text splitting with page tracking
     │   ├── embedding.py                # HuggingFace embedder + image LLM summarisation
     │   ├── database.py                 # ChromaDB Cloud client
     │   ├── reranker.py                 # Cross-encoder reranker
-    │   ├── retrieval.py                # retrieve() for backend + interactive CLI
+    │   ├── retrieval.py                # Core search logic for backend integration
     │   ├── pipeline.py                 # Main ingestion pipeline (entry point)
     │   ├── benchmark.py                # Benchmark generation and evaluation
     │   └── visualize.py                # Spotlight embedding visualiser
@@ -167,11 +169,11 @@ pip install -r requirements.txt
 
 **Run from the `rag/` folder:**
 ```bash
-# Ingest documents into ChromaDB
+# Ingest documents into ChromaDB (default embedding model)
 python src/pipeline.py
 
-# Interactive retrieval CLI
-python src/retrieval.py
+# Ingest with a specific embedding model into a named collection
+python src/pipeline.py --model BAAI/bge-m3 --collection PoliTutor-Docs-bge-m3
 
 # Generate benchmark Q&A datasets
 python src/benchmark.py --generate
@@ -179,14 +181,12 @@ python src/benchmark.py --generate
 # Evaluate retrieval with the default config (all BenchmarkQA-*.json files)
 python src/benchmark.py
 
-# Evaluate a single benchmark file
-python src/benchmark.py data/benchmark/BenchmarkQA-slides.ED.CAP1.json
-
-# Compare multiple retrieval configurations side by side
-python src/benchmark.py --compare
+# Find the best embedding + reranker combo, then sweep thresholds automatically
+python src/benchmark.py --find-best
 
 # Visualise embeddings with Spotlight
 python src/visualize.py
+# Or for a specific collection: python src/visualize.py --collection PoliTutor-Docs-e5-base
 ```
 
 ---
@@ -197,14 +197,17 @@ python src/visualize.py
 Document Files (PDF / PPTX / MD)
       |
       v
-extractor.py    →  Partition via Unstructured API (hi-res, tables, images)
+pipeline.py     →  Orchestrates the ingestion flow & validates file metadata
       |
       v
-chunker.py      →  Split into chunks, track source pages, attach image paths
+extractor.py    →  Partitions documents via Unstructured API (Tables, Images, Text)
       |
       v
-embedding.py    →  Summarise images via OpenRouter (Gemini), embed text + image
-                   summaries with multilingual-e5-large, upsert into ChromaDB Cloud
+chunker.py      →  Segments elements into chunks while preserving page context
+      |
+      v
+embedding.py    →  Summarizes relevant images (LLM) and generates vector 
+                   embeddings for storage in ChromaDB Cloud
 ```
 
 ---
@@ -219,9 +222,7 @@ from retrieval import retrieve
 results = retrieve(course="ed", query="O que é uma árvore AVL?")
 ```
 
-It queries ChromaDB filtered by course unit, then applies cross-encoder reranking before returning results.
-
-For local testing, run `python src/retrieval.py` to launch the interactive CLI.
+It queries ChromaDB filtered by course unit, then applies cross-encoder reranking before returning results as a structured `RetrievalResults` object.
 
 ---
 
@@ -247,22 +248,37 @@ python src/benchmark.py                                                    # all
 python src/benchmark.py data/benchmark/BenchmarkQA-slides.ED.CAP1.json    # single file
 ```
 
-**Comparison mode** — runs all configurations defined in `BENCHMARK_COMPARISON_CONFIGS` (`config.py`) and prints a side-by-side table:
+**Find best** — two-phase automatic benchmark: (1) compares configs in `config.py`, picks the best by `ndcg@5`, then (2) sweeps score thresholds on the winner:
 ```bash
-python src/benchmark.py --compare
+python src/benchmark.py --find-best
 ```
 
-Example output:
+All comparison and sweep results are persisted to `data/benchmark/results/` as timestamped JSON files.
+
+Example comparison output:
 ```
 -------------------------------------------------------------------------------------------------------
 Config                                   hit_rate@5         mrr@5        ndcg@5         map@5  precision@5      recall@5
 -------------------------------------------------------------------------------------------------------
-No Reranker                                  0.7200        0.5800        0.6300        0.5600       0.1440        0.7200
-Reranker mMiniLM                             0.8400        0.7100        0.7600        0.7000       0.1680        0.8400
-Reranker mMiniLM | threshold=0.0             0.8200        0.7000        0.7400        0.6800       0.1640        0.8200
-Reranker mMiniLM | threshold=1.0             0.7800        0.6800        0.7100        0.6500       0.1560        0.7800
-Reranker mMiniLM | threshold=2.0             0.7000        0.6200        0.6600        0.5900       0.1400        0.7000
+e5-large + mMiniLM                           0.8400        0.7100        0.7600        0.7000       0.1680        0.8400
+e5-base + mMiniLM                            0.8200        0.7000        0.7400        0.6800       0.1640        0.8200
+bge-m3 + mMiniLM                             0.7800        0.6800        0.7100        0.6500       0.1560        0.7800
+MiniLM-L12 + mMiniLM                         0.7000        0.6200        0.6600        0.5900       0.1400        0.7000
 -------------------------------------------------------------------------------------------------------
+```
+
+### Multi-model ingestion
+
+Each embedding model produces vectors with different dimensions, so each requires its own ChromaDB collection. Before running `--compare` or `--find-best`, ingest documents with each model:
+
+```bash
+# Default model (already ingested)
+python src/pipeline.py
+
+# Additional models
+python src/pipeline.py --model intfloat/multilingual-e5-base --collection PoliTutor-Docs-e5-base
+python src/pipeline.py --model BAAI/bge-m3 --collection PoliTutor-Docs-bge-m3
+python src/pipeline.py --model sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 --collection PoliTutor-Docs-MiniLM-L12
 ```
 
 ### How metrics are calculated
@@ -278,15 +294,6 @@ For each Q&A pair in the dataset:
 
 **Reported metrics** (via `ranx` at `@5`): Hit Rate, MRR, NDCG, MAP, Precision, Recall.
 
-### Score scales
-
-| Config | Score source | Range (approx.) |
-| --- | --- | --- |
-| No Reranker | Cosine similarity (`1 − distance`) | `[−1, 1]` |
-| With Reranker | Cross-encoder logits | `[−10, +10]` |
-
-Score thresholds only make sense relative to the score source of the config they are applied to. Thresholds in the default configs (`0.0`, `1.0`, `2.0`) are calibrated for the cross-encoder scale.
-
 ### Customising configurations
 
 Edit `BENCHMARK_COMPARISON_CONFIGS` in `config.py` to add, remove, or modify configurations. Each entry accepts:
@@ -296,7 +303,6 @@ Edit `BENCHMARK_COMPARISON_CONFIGS` in `config.py` to add, remove, or modify con
 | `name` | Label shown in the output table |
 | `embedding_model` | HuggingFace model name for query embedding |
 | `collection_name` | ChromaDB collection to query (must be pre-indexed with the right model) |
-| `top_k` | Initial number of candidates retrieved from ChromaDB |
 | `reranker_model` | Cross-encoder model name, or `null` to skip reranking |
-| `reranker_top_k` | Number of results to keep after reranking |
-| `score_threshold` | Minimum score to include a chunk (applied after reranking), or `null` to disable |
+
+Threshold sweep parameters are in `BENCHMARK_THRESHOLD_SWEEP` (`start`, `stop`, `step`, `primary_metric`).

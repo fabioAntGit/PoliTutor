@@ -1,74 +1,90 @@
 """
 Reranking Service.
-Reorders ChromaDB retrieval candidates using a cross-encoder model.
+
+This module provides functions to load, cache, and apply cross-encoder AI models 
+to a set of pre-fetched ChromaDB candidate documents. It assigns a new semantic 
+relevance score to each chunk based on the exact query and reorders them.
 """
 
 import logging
-from typing import Dict, Any
 
 from sentence_transformers import CrossEncoder
 
 from config import RERANKER_MODEL, RERANKER_TOP_K
+from models import RetrievalResults
 
 logger = logging.getLogger(__name__)
 
 _reranker_cache: dict[str, CrossEncoder] = {}
 
-def get_reranker_for_model(model_name: str) -> CrossEncoder:
-    """Returns a cached cross-encoder for the given model name."""
+def get_reranker(model_name: str | None = None) -> CrossEncoder:
+    """
+    Retrieves or initializes a cross-encoder language model.
+    Models are cached in memory to avoid the massive performance penalty of reloading 
+    HuggingFace models on every RAG query.
+
+    Args:
+        model_name (str | None): The HuggingFace model identifier. Defaults to config if None.
+
+    Returns:
+        CrossEncoder: The loaded model instance ready for pair scoring.
+    """
+    model_name = model_name or RERANKER_MODEL
+
     if model_name not in _reranker_cache:
         logger.info("Loading reranker model: %s", model_name)
         _reranker_cache[model_name] = CrossEncoder(model_name)
+        
     return _reranker_cache[model_name]
 
-def get_reranker() -> CrossEncoder:
-    """Returns the default reranker defined in config."""
-    return get_reranker_for_model(RERANKER_MODEL)
-
-def rerank_with_model(
+def rerank(
     query: str,
-    results: Dict[str, Any],
-    model_name: str,
-    top_k: int,
-) -> Dict[str, Any]:
+    results: RetrievalResults,
+    model_name: str | None = None,
+    top_k: int | None = None,
+) -> RetrievalResults:
     """
-    Reranks ChromaDB candidates using the specified cross-encoder model.
-    Returns the top `top_k` results sorted by cross-encoder score.
-    """
-    ids = results.get("ids", [[]])[0]
-    documents = results.get("documents", [[]])[0]
-    metadatas = results.get("metadatas", [[]])[0]
-    distances = results.get("distances", [[]])[0]
+    Receives an initial set of RetrievalResults and applies the Cross-Encoder model
+    to generate highly accurate semantic similarity scores, overwriting the old 
+    vector-based distances and reordering the documents.
 
-    if not documents:
+    Args:
+        query (str): The user's specific context or question.
+        results (RetrievalResults): The chunks initially retrieved from ChromaDB.
+        model_name (str | None): Reranker model identifier to use.
+        top_k (int | None): Maximum number of candidates to return after scoring.
+
+    Returns:
+        RetrievalResults: A new sorted object containing only the top_k most relevant chunks.
+    """
+    if results.is_empty():
         logger.warning("Reranker received no documents to score.")
         return results
 
-    reranker = get_reranker_for_model(model_name)
-    pairs = [[query, doc] for doc in documents]
+    model_name = model_name or RERANKER_MODEL
+    top_k = top_k or RERANKER_TOP_K
+
+    reranker = get_reranker(model_name)
+    pairs = [[query, doc] for doc in results.documents]
     scores = reranker.predict(pairs)
 
     candidates = sorted(
-        zip(ids, documents, metadatas, distances, scores),
+        zip(results.ids, results.documents, results.metadatas, results.distances, scores),
         key=lambda c: c[4],
         reverse=True,
     )
 
     top_candidates = candidates[:top_k]
-    logger.info("Reranker '%s': %d candidates → top %d", model_name, len(ids), top_k)
+    logger.info("Reranker '%s': %d candidates → top %d", model_name, len(results.ids), top_k)
 
     if not top_candidates:
-        return {"ids": [[]], "documents": [[]], "metadatas": [[]], "distances": [[]], "scores": [[]]}
+        return RetrievalResults()
 
     ids_r, docs_r, metas_r, dists_r, scores_r = zip(*top_candidates)
-    return {
-        "ids":       [list(ids_r)],
-        "documents": [list(docs_r)],
-        "metadatas": [list(metas_r)],
-        "distances": [list(dists_r)],
-        "scores":    [list(scores_r)],
-    }
-
-def rerank(query: str, results: Dict[str, Any]) -> Dict[str, Any]:
-    """Reranks using the default model and top_k from config."""
-    return rerank_with_model(query, results, RERANKER_MODEL, RERANKER_TOP_K)
+    return RetrievalResults(
+        ids=list(ids_r),
+        documents=list(docs_r),
+        metadatas=list(metas_r),
+        distances=list(dists_r),
+        scores=list(scores_r),
+    )

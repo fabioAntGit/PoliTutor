@@ -3,6 +3,7 @@ Embedding Service.
 
 Handles the loading of the HuggingFace embedding model and the generation
 and upsert of embeddings into ChromaDB via the database module.
+Supports multiple embedding models and collections for benchmarking.
 """
 
 import json
@@ -23,11 +24,12 @@ logger = logging.getLogger(__name__)
 _embedder_cache: dict[str, HuggingFaceEmbeddings] = {}
 _image_api_calls = 0
 
-def get_embedder_for_model(model_name: str) -> HuggingFaceEmbeddings:
+def get_embedder(model_name: str | None = None) -> HuggingFaceEmbeddings:
     """
     Returns a cached HuggingFace embedder for the given model name.
-    Loads the model on first use.
+    If no model is provided, uses the default from config.
     """
+    model_name = model_name or EMBEDDING_MODEL
     if model_name not in _embedder_cache:
         logger.info("Loading embedding model into memory: %s", model_name)
         _embedder_cache[model_name] = HuggingFaceEmbeddings(
@@ -36,10 +38,6 @@ def get_embedder_for_model(model_name: str) -> HuggingFaceEmbeddings:
             encode_kwargs={"normalize_embeddings": EMBEDDING_NORMALIZE},
         )
     return _embedder_cache[model_name]
-
-def get_embedder() -> HuggingFaceEmbeddings:
-    """Returns the default embedder defined in config."""
-    return get_embedder_for_model(EMBEDDING_MODEL)
 
 def _build_meta(chunk: Dict[str, Any], doc_type: str, **extra) -> Dict[str, Any]:
     """Builds a metadata dict from a chunk, converting pages to str."""
@@ -51,11 +49,22 @@ def _build_meta(chunk: Dict[str, Any], doc_type: str, **extra) -> Dict[str, Any]
     return meta
 
 
-def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
+def embed_chunks(
+    chunks: List[Dict[str, Any]],
+    file_stem: str,
+    model_name: str | None = None,
+    collection_name: str | None = None,
+) -> None:
     """
     Generates embeddings and upserts chunks into ChromaDB.
     For chunks with images, sends them to the LLM for classification/summarization
     and creates separate image embeddings.
+
+    Args:
+        chunks:          List of chunk dicts with 'text' and 'metadata'.
+        file_stem:       Identifier for the source file.
+        model_name:      HuggingFace embedding model. Uses default if None.
+        collection_name: ChromaDB collection name. Uses default if None.
     """
     valid_chunks = [c for c in chunks if c["text"].strip()]
 
@@ -63,8 +72,8 @@ def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
         logger.warning("No valid text found for '%s'. Skipping.", file_stem)
         return
 
-    embedder = get_embedder()
-    collection = get_collection()
+    embedder = get_embedder(model_name)
+    collection = get_collection(collection_name)
 
     texts, ids, metadatas = [], [], []
 

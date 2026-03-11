@@ -18,7 +18,13 @@ _chroma_client: Any = None
 
 def get_client() -> chromadb.CloudClient:
     """
-    Returns a singleton ChromaDB Cloud client.
+    Initializes and returns a singleton connection to the ChromaDB Cloud cluster.
+    
+    Authenticates using the CHROMA_API_KEY, CHROMA_TENANT, and CHROMA_DATABASE 
+    environment variables. The connection is maintained in memory for subsequent calls.
+
+    Returns:
+        chromadb.CloudClient: The established database client session.
     """
     global _chroma_client
 
@@ -32,13 +38,26 @@ def get_client() -> chromadb.CloudClient:
 
     return _chroma_client
 
-def get_collection_by_name(name: str) -> chromadb.Collection:
+def get_collection(name: str | None = None) -> chromadb.Collection:
     """
-    Returns a ChromaDB collection by name, creating it if it does not exist.
+    Retrieves an existing ChromaDB collection or safely creates a new one.
+    
+    When creating a new collection, it automatically injects the exact HNSW 
+    (Hierarchical Navigable Small World) index parameters defined in `config.py` 
+    to ensure predictable search performance and latency.
+
+    Args:
+        name (str | None): The explicit name of the collection to target. 
+                           Falls back to the default CHROMA_COLLECTION_NAME if None.
+
+    Returns:
+        chromadb.Collection: The active collection instance ready for upserts or queries.
     """
     client = get_client()
+    collection_name = name or CHROMA_COLLECTION_NAME
+    
     return client.get_or_create_collection(
-        name=name,
+        name=collection_name,
         metadata={
             "hnsw:space":           CHROMA_HNSW_SPACE,
             "hnsw:M":               CHROMA_HNSW_M,
@@ -46,7 +65,3 @@ def get_collection_by_name(name: str) -> chromadb.Collection:
             "hnsw:search_ef":       CHROMA_HNSW_SEARCH_EF,
         }
     )
-
-def get_collection() -> chromadb.Collection:
-    """Returns the default ChromaDB collection defined in config."""
-    return get_collection_by_name(CHROMA_COLLECTION_NAME)

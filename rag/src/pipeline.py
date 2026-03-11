@@ -1,8 +1,13 @@
 """
 Main Pipeline Orchestrator.
-Discovers, processes, and embeds documents into the RAG system.
+
+Acts as the entry point for the RAG data ingestion process. Discovers documents,
+extracts text and images, creates vector embeddings using HuggingFace models,
+and stores the chunks into the ChromaDB cloud instance.
+Supports custom models and collections via CLI for benchmarking purposes.
 """
 
+import argparse
 import logging
 from pathlib import Path
 from typing import List
@@ -13,17 +18,31 @@ from extractor import extract_elements_from_file, filter_elements, group_element
 from chunker import chunk_document
 from embedding import embed_chunks
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
 logger = logging.getLogger(__name__)
 
-def process_single_file(file_path: Path) -> bool:
+def process_single_file(
+    file_path: Path,
+    model_name: str | None = None,
+    collection_name: str | None = None,
+) -> bool:
     """
-    Orchestrates the full pipeline for a single file.
-    From extraction to vector database embedding.
+    Orchestrates the full RAG ingestion pipeline for a single file.
+
+    Process:
+        1. Validates the filename conventions.
+        2. Extracts raw text elements and images via Unstructured API.
+        3. Groups elements contextually by page.
+        4. Splits pages into smaller, semantically preserving chunks.
+        5. Embeds the chunks along with AI-generated image summaries.
+
+    Args:
+        file_path (Path): Path to the single document file to process.
+        model_name (str | None): HuggingFace embedding model. Uses config default if None.
+        collection_name (str | None): ChromaDB collection name. Uses config default if None.
+        
+    Returns:
+        bool: True if the file was processed and embedded successfully, False if it failed
+              or was skipped due to validation errors.
     """
     file_name = file_path.name
 
@@ -33,7 +52,7 @@ def process_single_file(file_path: Path) -> bool:
 
     # Metadata Extraction & Validation
     try:
-        source_type, course_code = extract_metadata_from_filename(file_name)
+        source_type, course_code, stem = extract_metadata_from_filename(file_name)
     except ValueError as e:
         logger.error("Validation failed for '%s': %s", file_name, e)
         return False
@@ -59,7 +78,12 @@ def process_single_file(file_path: Path) -> bool:
         chunks = chunk_document(grouped_pages)
 
         # Embedding and Vector Storage
-        embed_chunks(chunks, file_stem=file_path.stem)
+        embed_chunks(
+            chunks,
+            file_stem=file_path.stem,
+            model_name=model_name,
+            collection_name=collection_name,
+        )
 
         logger.info("DONE: '%s' (%d chunks embedded).", file_name, len(chunks))
         return True
@@ -68,9 +92,16 @@ def process_single_file(file_path: Path) -> bool:
         logger.error("Critical error processing '%s': %s", file_name, e, exc_info=True)
         return False
 
-def run_pipeline() -> None:
+def run_pipeline(
+    model_name: str | None = None,
+    collection_name: str | None = None,
+) -> None:
     """
     Main entry point. Scans COURSE_PATH for files and processes them.
+
+    Args:
+        model_name:      HuggingFace embedding model. Uses default if None.
+        collection_name: ChromaDB collection name. Uses default if None.
     """
     search_path = Path(COURSE_PATH)
     files: List[Path] = [
@@ -81,14 +112,29 @@ def run_pipeline() -> None:
         logger.warning("No files found in target directory: %s", search_path)
         return
 
-    logger.info("Pipeline started. Found %d file(s) in %s", len(files), search_path.name)
+    target_info = f"model={model_name or 'default'}, collection={collection_name or 'default'}"
+    logger.info("Pipeline started. Found %d file(s) in %s (%s)", len(files), search_path.name, target_info)
 
     success_count = 0
     for file_path in files:
-        if process_single_file(file_path):
+        if process_single_file(file_path, model_name, collection_name):
             success_count += 1
 
     logger.info("Pipeline finished. Successfully processed %d/%d files.", success_count, len(files))
 
 if __name__ == "__main__":
-    run_pipeline()
+    parser = argparse.ArgumentParser(description="RAG Pipeline Orchestrator")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="HuggingFace embedding model name (e.g. 'BAAI/bge-m3'). Uses config default if omitted.",
+    )
+    parser.add_argument(
+        "--collection",
+        type=str,
+        default=None,
+        help="ChromaDB collection name (e.g. 'PoliTutor-Docs-bge-m3'). Uses config default if omitted.",
+    )
+    args = parser.parse_args()
+    run_pipeline(model_name=args.model, collection_name=args.collection)

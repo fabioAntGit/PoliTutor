@@ -1,24 +1,34 @@
 """
-Configuration settings for the RAG pipeline.
+Configuration settings for the Poli-Tutor RAG pipeline.
 """
 
 import os
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
-# --- Path Management ---
+# 1. CORE & ENVIRONMENT INITIALIZATION
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 BASE_DIR = Path(__file__).resolve().parent
+# Load environment variables from the root .env file
 load_dotenv(BASE_DIR.parent / ".env")
 
-# Default paths
+# 2. PATH MANAGEMENT
 DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
+COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
 IMAGES_OUTPUT_DIR = BASE_DIR.parent / "data" / "processed" / "images"
 
-# Specific course directory
-COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
+# 3. DOCUMENT EXTRACTION (Unstructured API)
+SUPPORTED_EXTENSIONS = ["*.pdf", "*.pptx", "*.md"]
 
-# --- Extraction & Filtering Settings ---
+# Text elements and phrases to ignore during ingestion
+ELEMENT_TYPES_TO_EXCLUDE = ["Footer", "Header", "FigureCaption", "UncategorizedText"]
 KEYWORDS_TO_EXCLUDE = [
     "Ricardo Santos",
     "rjs@estg.ipp.pt",
@@ -26,38 +36,18 @@ KEYWORDS_TO_EXCLUDE = [
     "ESTRUTURAS DE DADOS 2024/2025",
 ]
 
-# Unstructured elements to ignore
-ELEMENT_TYPES_TO_EXCLUDE = [
-    "Footer",
-    "Header",
-    "FigureCaption",
-    "UncategorizedText"
-]
-
-# --- File Discovery ---
-SUPPORTED_EXTENSIONS = ["*.pdf", "*.pptx", "*.md"]
-
-# --- Unstructured Partitioning Configuration ---
+# Unstructured API parameters
 FILE_PROCESSING_CONFIG = {
     "strategy": "hi_res",
     "languages": ["por", "eng"],
     "infer_table_structure": True,
     "extract_image_block_types": ["Image"],
     "extract_image_block_to_payload": True,
-    "chunking_strategy": None, 
+    "chunking_strategy": None,
     "skip_infer_table_types": ["md"],
 }
 
-# --- Chroma DB Collection
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs-e5-large"
-
-# --- ChromaDB HNSW Index ---
-CHROMA_HNSW_SPACE = "cosine"
-CHROMA_HNSW_M = 32
-CHROMA_HNSW_CONSTRUCTION_EF = 200
-CHROMA_HNSW_SEARCH_EF = 100
-
-# --- Chunking & Source Mapping ---
+# 4. CHUNKING STRATEGIES
 CHUNKING_STRATEGIES = {
     "apontamentos": {
         "chunk_size": 1000,
@@ -72,16 +62,19 @@ CHUNKING_STRATEGIES = {
         "chunk_overlap": 100,
     }
 }
-
-CHUNK_MIN_LENGTH = 100
 CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
-
+CHUNK_MIN_LENGTH = 100
 VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
-# --- Embedding Configuration ---
+# 5. EMBEDDING & IMAGE ANALYSIS
 EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
 EMBEDDING_DEVICE = "cpu"
 EMBEDDING_NORMALIZE = True
+
+# Image summarization (OpenRouter/Gemini)
+OPENROUTER_MODEL = "google/gemini-2.5-flash-lite"
+MAX_IMAGE_API_CALLS = None  # No limit
+IMAGE_API_DELAY = 1.5
 
 IMAGE_EMBEDDING_PROMPT = (
     "Analyze this image from an educational document. "
@@ -96,47 +89,25 @@ IMAGE_EMBEDDING_PROMPT = (
     "\n\nContext:\n{context}"
 )
 
-# --- OpenRouter Image API ---
-OPENROUTER_MODEL = "google/gemini-2.5-flash-lite"
-MAX_IMAGE_API_CALLS = None  # Limite para testes (None = sem limite)
-IMAGE_API_DELAY = 1.5
+# 6. VECTOR DATABASE (ChromaDB)
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs-e5-large"
 
-# --- Retrieval ---
-TOP_K_RESULTS: int = 20
+# Low-level HNSW tuning
+CHROMA_HNSW_SPACE = "cosine"
+CHROMA_HNSW_M = 32
+CHROMA_HNSW_CONSTRUCTION_EF = 200
+CHROMA_HNSW_SEARCH_EF = 100
 
-# --- Reranker ---
+# 7. RETRIEVAL & RERANKING
+TOP_K_RESULTS = 20
 RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
-RERANKER_TOP_K: int = 5
+RERANKER_TOP_K = 5
+RERANKER_SCORE_THRESHOLD = 0.0
 
-# --- Benchmark ---
+# 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
 BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"]
-
-# --- Benchmark Comparison Configs ---
-# Each entry overrides specific defaults; all other fields fall back to the values above.
-BENCHMARK_COMPARISON_CONFIGS = [
-    {
-        "name": "No Reranker",
-        "reranker_model": None,
-        "score_threshold": None,
-    },
-    {
-        "name": "Reranker mMiniLM",
-        "reranker_model": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
-        "score_threshold": None,
-    },
-]
-# --- Benchmark Threshold Sweep ---
-# Retrieval runs ONCE with the reranker (no threshold); each threshold value
-# is then applied in memory — no extra database calls.
-BENCHMARK_THRESHOLD_SWEEP = {
-    "reranker_model": RERANKER_MODEL,
-    "start": -4.0,
-    "stop":   4.0,
-    "step":   0.25,
-    "primary_metric": "ndcg@5",
-}
 
 BENCHMARK_PROMPT = (
     "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
@@ -150,3 +121,20 @@ BENCHMARK_PROMPT = (
     'Use this exact format: {{"filename": "...", "page": "...", "question": "...", "answer": "..."}}'
     "\n\nContext:\n{context}"
 )
+
+# Configuration comparison for sweep benchmarks
+BENCHMARK_COMPARISON_CONFIGS = [
+    {
+        "name": "e5-large + mMiniLM",
+        "embedding_model": "intfloat/multilingual-e5-large",
+        "collection_name": "PoliTutor-Docs-e5-large",
+        "reranker_model": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+    }
+]
+
+BENCHMARK_THRESHOLD_SWEEP = {
+    "start": -4.0,
+    "stop":   4.0,
+    "step":   0.25,
+    "primary_metric": "ndcg@5",
+}
