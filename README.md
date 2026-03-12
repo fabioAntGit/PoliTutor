@@ -301,8 +301,6 @@ For each Q&A pair in the dataset:
 
 **Reported metrics** (via `ranx` at `@5`): Hit Rate, MRR, NDCG, MAP, Precision, Recall.
 
-The primary metric for determining the best configuration is `BENCHMARK_PRIMARY_METRIC` (default: `ndcg@5`), defined in `config.py`.
-
 ### Customising configurations
 
 Edit `BENCHMARK_COMPARISON_CONFIGS` in `config.py` to add, remove, or modify configurations. Each entry accepts:

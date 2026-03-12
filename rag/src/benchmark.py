@@ -14,7 +14,7 @@ from config import (
     BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE,
     BENCHMARK_MIN_CONTEXT_LENGTH, BENCHMARK_EVAL_METRICS, SUPPORTED_EXTENSIONS,
     EMBEDDING_MODEL, CHROMA_COLLECTION_NAME, TOP_K_RESULTS, RERANKER_MODEL,
-    RERANKER_TOP_K, BENCHMARK_COMPARISON_CONFIGS, BENCHMARK_PRIMARY_METRIC,
+    RERANKER_TOP_K, BENCHMARK_COMPARISON_CONFIGS,
 )
 from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from utils import extract_metadata_from_filename
@@ -199,31 +199,6 @@ def _save_results(data: dict, prefix: str) -> Path:
     return output_file
 
 
-# ── Comparison Table ────────────────────────────────────────────────
-def _print_comparison_table(results: dict[str, dict]) -> None:
-    """Prints a formatted side-by-side comparison table of metrics across configs."""
-    if not results:
-        logger.warning("No comparison results to display.")
-        return
-
-    metrics   = list(next(iter(results.values())).keys())
-    col_width = max(len(name) for name in results) + 2
-    m_width   = 14
-
-    header    = f"{'Config':<{col_width}}" + "".join(f"{m:>{m_width}}" for m in metrics)
-    separator = "-" * len(header)
-
-    print("\n" + separator)
-    print(header)
-    print(separator)
-    for config_name, config_metrics in results.items():
-        row = f"{config_name:<{col_width}}" + "".join(
-            f"{config_metrics.get(m, 0.0):>{m_width}.4f}" for m in metrics
-        )
-        print(row)
-    print(separator + "\n")
-
-
 # ── Single File Evaluation ──────────────────────────────────────────
 
 def execute_retrieval_benchmark(benchmark_file: Path) -> None:
@@ -242,9 +217,9 @@ def execute_retrieval_benchmark(benchmark_file: Path) -> None:
 def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
     """
     Runs all configurations defined in BENCHMARK_COMPARISON_CONFIGS against
-    the provided benchmark files and prints a side-by-side metrics table.
+    the provided benchmark files and saves the ranx metrics per config to a
+    timestamped JSON file in data/benchmark/results/.
     """
-    primary_metric = BENCHMARK_PRIMARY_METRIC
     configs = [BenchmarkConfig(**c) for c in BENCHMARK_COMPARISON_CONFIGS]
     all_results: dict[str, dict] = {}
     config_map: dict[str, BenchmarkConfig] = {}
@@ -272,22 +247,10 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
         else:
             logger.warning("No valid data for config '%s'. Skipping.", config.name)
 
-    _print_comparison_table(all_results)
-
-    # Save results
     _save_results({
         "configs": {name: asdict(cfg) for name, cfg in config_map.items()},
         "metrics": all_results,
-        "primary_metric": primary_metric,
     }, prefix="comparison")
-
-    if all_results:
-        best_name = max(all_results, key=lambda k: all_results[k].get(primary_metric, 0.0))
-        best_score = all_results[best_name][primary_metric]
-        logger.info(
-            "Best config: '%s' → %s = %.4f",
-            best_name, primary_metric, best_score,
-        )
 
 
 # ── CLI ─────────────────────────────────────────────────────────────
