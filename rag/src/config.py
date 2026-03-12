@@ -102,7 +102,7 @@ CHROMA_HNSW_SEARCH_EF = 100
 TOP_K_RESULTS = 20
 RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
 RERANKER_TOP_K = 5
-RERANKER_SCORE_THRESHOLD = 0.0
+RERANKER_SCORE_THRESHOLD = 0.5
 
 # 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
@@ -122,7 +122,6 @@ BENCHMARK_PROMPT = (
     "\n\nContext:\n{context}"
 )
 
-# Configuration comparison for sweep benchmarks
 BENCHMARK_COMPARISON_CONFIGS = [
     {
         "name": "e5-large + mMiniLM",
@@ -132,9 +131,4 @@ BENCHMARK_COMPARISON_CONFIGS = [
     }
 ]
 
-BENCHMARK_THRESHOLD_SWEEP = {
-    "start": -4.0,
-    "stop":   4.0,
-    "step":   0.25,
-    "primary_metric": "ndcg@5",
-}
+BENCHMARK_PRIMARY_METRIC = "ndcg@5"

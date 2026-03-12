@@ -14,7 +14,7 @@ from config import (
     BENCHMARK_OUTPUT_DIR, BENCHMARK_PROMPT, COURSE_PATH, KEYWORDS_TO_EXCLUDE,
     BENCHMARK_MIN_CONTEXT_LENGTH, BENCHMARK_EVAL_METRICS, SUPPORTED_EXTENSIONS,
     EMBEDDING_MODEL, CHROMA_COLLECTION_NAME, TOP_K_RESULTS, RERANKER_MODEL,
-    RERANKER_TOP_K, BENCHMARK_COMPARISON_CONFIGS, BENCHMARK_THRESHOLD_SWEEP,
+    RERANKER_TOP_K, BENCHMARK_COMPARISON_CONFIGS, BENCHMARK_PRIMARY_METRIC,
 )
 from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from utils import extract_metadata_from_filename
@@ -239,15 +239,12 @@ def execute_retrieval_benchmark(benchmark_file: Path) -> None:
 
 # ── Multi-Config Comparison ─────────────────────────────────────────
 
-def run_comparison_benchmark(benchmark_files: list[Path]) -> tuple[dict[str, dict], BenchmarkConfig | None]:
+def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
     """
     Runs all configurations defined in BENCHMARK_COMPARISON_CONFIGS against
     the provided benchmark files and prints a side-by-side metrics table.
-
-    Returns (all_results, best_config) where best_config is the BenchmarkConfig
-    that achieved the highest primary_metric score.
     """
-    primary_metric = BENCHMARK_THRESHOLD_SWEEP["primary_metric"]
+    primary_metric = BENCHMARK_PRIMARY_METRIC
     configs = [BenchmarkConfig(**c) for c in BENCHMARK_COMPARISON_CONFIGS]
     all_results: dict[str, dict] = {}
     config_map: dict[str, BenchmarkConfig] = {}
@@ -284,138 +281,13 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> tuple[dict[str, dic
         "primary_metric": primary_metric,
     }, prefix="comparison")
 
-    # Determine best config
-    best_config = None
     if all_results:
         best_name = max(all_results, key=lambda k: all_results[k].get(primary_metric, 0.0))
-        best_config = config_map[best_name]
         best_score = all_results[best_name][primary_metric]
         logger.info(
             "Best config: '%s' → %s = %.4f",
             best_name, primary_metric, best_score,
         )
-
-    return all_results, best_config
-
-
-# ── Threshold Sweep ─────────────────────────────────────────────────
-
-def sweep_threshold_benchmark(benchmark_files: list[Path], config: BenchmarkConfig) -> None:
-    """
-    Finds the optimal score threshold for the given config.
-
-    Runs retrieval ONCE (no threshold) and applies each threshold value in
-    memory — no extra database or embedding calls per threshold step.
-    At the end prints a comparison table and highlights the best threshold.
-    """
-    start          = BENCHMARK_THRESHOLD_SWEEP["start"]
-    stop           = BENCHMARK_THRESHOLD_SWEEP["stop"]
-    step           = BENCHMARK_THRESHOLD_SWEEP["step"]
-    primary_metric = BENCHMARK_THRESHOLD_SWEEP["primary_metric"]
-
-    logger.info(
-        "Threshold sweep for config '%s' (embedding: %s, reranker: %s)...",
-        config.name, config.embedding_model, config.reranker_model,
-    )
-
-    # Step 1 — retrieve once, no threshold
-    sweep_config = BenchmarkConfig(
-        name="sweep",
-        embedding_model=config.embedding_model,
-        collection_name=config.collection_name,
-        top_k=config.top_k,
-        reranker_model=config.reranker_model,
-        reranker_top_k=config.reranker_top_k,
-        score_threshold=None,
-    )
-    combined_qrels: dict = {}
-    combined_run_raw: dict = {}
-
-    for benchmark_file in benchmark_files:
-        try:
-            qrels, run = _build_qrels_and_run(benchmark_file, sweep_config)
-            combined_qrels.update(qrels)
-            combined_run_raw.update(run)
-        except Exception as e:
-            logger.error("Error processing '%s': %s", benchmark_file.name, e)
-
-    if not combined_qrels or not combined_run_raw:
-        logger.error("No data collected — aborting sweep.")
-        return
-
-    total_queries = len(combined_qrels)
-
-    # Step 2 — generate threshold values
-    n_steps    = round((stop - start) / step)
-    thresholds = [round(start + i * step, 6) for i in range(n_steps + 1)]
-
-    # Step 3 — apply each threshold in memory and compute metrics
-    sweep_results: dict[str, dict] = {}
-    qrels_obj = Qrels(combined_qrels)
-
-    for threshold in thresholds:
-        filtered_run: dict = {}
-        covered = 0
-        for q_id, page_scores in combined_run_raw.items():
-            kept = {k: v for k, v in page_scores.items() if v >= threshold}
-            if kept:
-                filtered_run[q_id] = kept
-                covered += 1
-
-        label = f"t={threshold:+.2f} ({covered}/{total_queries})"
-
-        if not filtered_run:
-            sweep_results[label] = {m: 0.0 for m in BENCHMARK_EVAL_METRICS}
-            continue
-
-        metrics = dict(evaluate(qrels_obj, Run(filtered_run), BENCHMARK_EVAL_METRICS, make_comparable=True))
-        sweep_results[label] = metrics
-
-    _print_comparison_table(sweep_results)
-
-    # Step 4 — report best threshold
-    best_label = max(sweep_results, key=lambda k: sweep_results[k].get(primary_metric, 0.0))
-    best_value = sweep_results[best_label][primary_metric]
-    best_threshold = float(best_label.split("=")[1].split()[0])
-    logger.info(
-        "Best threshold for '%s': %.2f  →  %s = %.4f",
-        primary_metric, best_threshold, primary_metric, best_value,
-    )
-
-    # Save results
-    _save_results({
-        "config": asdict(config),
-        "best_threshold": best_threshold,
-        "best_metric_value": best_value,
-        "primary_metric": primary_metric,
-        "sweep": sweep_results,
-    }, prefix="sweep")
-
-
-# ── Find Best (Comparison + Threshold Sweep) ────────────────────────
-
-def find_best_benchmark(benchmark_files: list[Path]) -> None:
-    """
-    Two-phase automatic benchmark:
-      1. Compares all configs in BENCHMARK_COMPARISON_CONFIGS → picks the best
-      2. Runs a threshold sweep on the winning config
-    """
-    logger.info("=" * 60)
-    logger.info("PHASE 1: Comparing embedding + reranker configurations")
-    logger.info("=" * 60)
-
-    all_results, best_config = run_comparison_benchmark(benchmark_files)
-
-    if best_config is None:
-        logger.error("No valid results from comparison — cannot proceed to sweep.")
-        return
-
-    logger.info("")
-    logger.info("=" * 60)
-    logger.info("PHASE 2: Threshold sweep on best config '%s'", best_config.name)
-    logger.info("=" * 60)
-
-    sweep_threshold_benchmark(benchmark_files, best_config)
 
 
 # ── CLI ─────────────────────────────────────────────────────────────
@@ -425,12 +297,12 @@ if __name__ == "__main__":
         arg = sys.argv[1]
         if arg == "--generate":
             generate_benchmark_dataset()
-        elif arg == "--find-best":
+        elif arg == "--compare":
             json_files = list(Path(BENCHMARK_OUTPUT_DIR).rglob("BenchmarkQA-*.json"))
             if not json_files:
                 logger.warning("No BenchmarkQA-*.json files found in %s", BENCHMARK_OUTPUT_DIR)
             else:
-                find_best_benchmark(json_files)
+                run_comparison_benchmark(json_files)
         else:
             execute_retrieval_benchmark(Path(arg))
     else:

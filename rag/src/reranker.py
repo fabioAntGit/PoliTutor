@@ -7,6 +7,7 @@ relevance score to each chunk based on the exact query and reorders them.
 """
 
 import logging
+import torch.nn as nn
 
 from sentence_transformers import CrossEncoder
 
@@ -33,7 +34,7 @@ def get_reranker(model_name: str | None = None) -> CrossEncoder:
 
     if model_name not in _reranker_cache:
         logger.info("Loading reranker model: %s", model_name)
-        _reranker_cache[model_name] = CrossEncoder(model_name)
+        _reranker_cache[model_name] = CrossEncoder(model_name, activation_fct=nn.Sigmoid())
         
     return _reranker_cache[model_name]
 
