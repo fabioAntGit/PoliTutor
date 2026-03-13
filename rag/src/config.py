@@ -14,6 +14,7 @@ Organised into sections:
 
 import logging
 import os
+import torch
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -79,7 +80,7 @@ VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
 # 5. EMBEDDING & IMAGE ANALYSIS
 EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
-EMBEDDING_DEVICE = "cpu"
+EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 EMBEDDING_NORMALIZE = True
 
 # Image summarization (OpenRouter/Gemini)
@@ -137,9 +138,21 @@ BENCHMARK_PROMPT = (
 # (top_k=TOP_K_RESULTS, reranker_top_k=RERANKER_TOP_K, score_threshold=None).
 BENCHMARK_COMPARISON_CONFIGS = [
     {
-        "name": "e5-large + mMiniLM",
-        "embedding_model": "intfloat/multilingual-e5-large",
-        "collection_name": "PoliTutor-Docs-e5-large",
-        "reranker_model": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+        "name": "bge-m3 + jinaai jina-reranker-v2-base-multilingual",
+        "embedding_model": "BAAI/bge-m3",
+        "collection_name": "PoliTutor-Docs-bge-m3",
+        "reranker_model": "jinaai/jina-reranker-v2-base-multilingual",
+    },
+    {
+        "name": "bge-m3 +  BAAI bge-reranker-base",
+        "embedding_model": "BAAI/bge-m3",
+        "collection_name": "PoliTutor-Docs-bge-m3",
+        "reranker_model": "BAAI/bge-reranker-base",
+    },
+    {
+        "name": "bge-m3 + Alibaba-NLP gte-reranker-modernbert-base",
+        "embedding_model": "BAAI/bge-m3",
+        "collection_name": "PoliTutor-Docs-bge-m3",
+        "reranker_model": "Alibaba-NLP/gte-reranker-modernbert-base",
     }
 ]
