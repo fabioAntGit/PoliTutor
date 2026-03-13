@@ -9,8 +9,8 @@ Supports custom models and collections via CLI for benchmarking purposes.
 
 import argparse
 import logging
+import os
 from pathlib import Path
-from typing import List
 
 from config import COURSE_PATH, KEYWORDS_TO_EXCLUDE, SUPPORTED_EXTENSIONS
 from utils import extract_metadata_from_filename
@@ -19,6 +19,31 @@ from chunker import chunk_document
 from embedding import embed_chunks
 
 logger = logging.getLogger(__name__)
+
+_REQUIRED_ENV_VARS = [
+    "UNSTRUCTURED_API_URL",
+    "UNSTRUCTURED_API_KEY",
+    "CHROMA_API_KEY",
+    "CHROMA_TENANT",
+    "CHROMA_DATABASE",
+]
+
+def validate_environment() -> None:
+    """
+    Checks that all required environment variables are set and that COURSE_PATH exists.
+    Raises early so the pipeline never starts in a broken state.
+
+    Raises:
+        EnvironmentError: If any required environment variable is missing.
+        FileNotFoundError: If COURSE_PATH does not exist on disk.
+    """
+    missing = [var for var in _REQUIRED_ENV_VARS if not os.getenv(var)]
+    if missing:
+        raise EnvironmentError(f"Missing required environment variables: {missing}")
+
+    search_path = Path(COURSE_PATH)
+    if not search_path.exists():
+        raise FileNotFoundError(f"COURSE_PATH does not exist: {search_path}")
 
 def process_single_file(
     file_path: Path,
@@ -29,20 +54,22 @@ def process_single_file(
     Orchestrates the full RAG ingestion pipeline for a single file.
 
     Process:
-        1. Validates the filename conventions.
-        2. Extracts raw text elements and images via Unstructured API.
-        3. Groups elements contextually by page.
-        4. Splits pages into smaller, semantically preserving chunks.
-        5. Embeds the chunks along with AI-generated image summaries.
+        1. Skips the file if it is empty.
+        2. Validates the filename convention to extract source type and course code.
+        3. Extracts structured elements (text, tables, images) via the Unstructured API.
+        4. Filters out excluded element types and noise keywords.
+        5. Groups filtered elements into pages, saving images to disk.
+        6. Splits pages into semantically-bounded chunks with page tracking.
+        7. Embeds text chunks and AI-summarized images into ChromaDB.
 
     Args:
-        file_path (Path): Path to the single document file to process.
-        model_name (str | None): HuggingFace embedding model. Uses config default if None.
-        collection_name (str | None): ChromaDB collection name. Uses config default if None.
-        
+        file_path:       Path to the document file to process.
+        model_name:      HuggingFace embedding model. Uses config default if None.
+        collection_name: ChromaDB collection name. Uses config default if None.
+
     Returns:
-        bool: True if the file was processed and embedded successfully, False if it failed
-              or was skipped due to validation errors.
+        True if the file was processed and embedded successfully.
+        False if the file was skipped (empty or invalid filename) or processing failed.
     """
     file_name = file_path.name
 
@@ -52,7 +79,7 @@ def process_single_file(
 
     # Metadata Extraction & Validation
     try:
-        source_type, course_code, stem = extract_metadata_from_filename(file_name)
+        source_type, course_code, _ = extract_metadata_from_filename(file_name)
     except ValueError as e:
         logger.error("Validation failed for '%s': %s", file_name, e)
         return False
@@ -65,7 +92,6 @@ def process_single_file(
 
         filtered_elements = filter_elements(elements, KEYWORDS_TO_EXCLUDE)
 
-        # Group by page with context
         grouped_pages = group_elements_by_page(
             filtered_elements,
             source_filename=file_name,
@@ -74,10 +100,8 @@ def process_single_file(
             save_images=True
         )
 
-        # Segment into chunks
         chunks = chunk_document(grouped_pages)
 
-        # Embedding and Vector Storage
         embed_chunks(
             chunks,
             file_stem=file_path.stem,
@@ -97,14 +121,20 @@ def run_pipeline(
     collection_name: str | None = None,
 ) -> None:
     """
-    Main entry point. Scans COURSE_PATH for files and processes them.
+    Main entry point for the ingestion pipeline.
+
+    Validates the environment, discovers all supported documents under COURSE_PATH,
+    and processes each one. Files that fail are skipped without stopping the pipeline.
+    Logs a success/total summary on completion.
 
     Args:
-        model_name:      HuggingFace embedding model. Uses default if None.
-        collection_name: ChromaDB collection name. Uses default if None.
+        model_name:      HuggingFace embedding model. Uses config default if None.
+        collection_name: ChromaDB collection name. Uses config default if None.
     """
+    validate_environment()
+
     search_path = Path(COURSE_PATH)
-    files: List[Path] = [
+    files: list[Path] = [
         f for ext in SUPPORTED_EXTENSIONS for f in search_path.rglob(ext)
     ]
 
