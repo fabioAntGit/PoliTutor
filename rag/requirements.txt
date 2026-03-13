@@ -7,8 +7,10 @@ sentence-transformers
 renumics-spotlight
 requests
 ranx
+# CUDA: pip install torch --index-url https://download.pytorch.org/whl/cu124
 torch
 numpy
 pandas
 accelerate
 einops
+transformers==4.44.2
