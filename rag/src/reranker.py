@@ -11,7 +11,7 @@ import torch.nn as nn
 
 from sentence_transformers import CrossEncoder
 
-from config import RERANKER_MODEL, RERANKER_TOP_K
+from config import RERANKER_MODEL, RERANKER_TOP_K, EMBEDDING_DEVICE
 from models import RetrievalResults
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def get_reranker(model_name: str | None = None) -> CrossEncoder:
 
     if model_name not in _reranker_cache:
         logger.info("Loading reranker model: %s", model_name)
-        _reranker_cache[model_name] = CrossEncoder(model_name, activation_fn=nn.Sigmoid(), trust_remote_code=True)
+        _reranker_cache[model_name] = CrossEncoder(model_name, activation_fn=nn.Sigmoid(), trust_remote_code=True, device=EMBEDDING_DEVICE)
         
     return _reranker_cache[model_name]
 
