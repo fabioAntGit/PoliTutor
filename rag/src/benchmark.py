@@ -283,37 +283,38 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
         benchmark_files: List of BenchmarkQA-*.json files to evaluate.
     """
     configs = [BenchmarkConfig(**c) for c in BENCHMARK_COMPARISON_CONFIGS]
-    all_results: dict[str, dict] = {}
-    config_map: dict[str, BenchmarkConfig] = {}
+    results_list: list[dict] = []
 
     for config in configs:
-        logger.info("=== Running config: %s ===", config.name)
-        combined_qrels: dict = {}
-        combined_run: dict = {}
+        logger.info(
+    "=== Running config: %s | embedding_model: %s | reranker_model: %s ===",
+    config.name, config.embedding_model, config.reranker_model,
+)
 
         for benchmark_file in benchmark_files:
             try:
                 qrels, run = build_qrels_and_run(benchmark_file, config)
-                combined_qrels.update(qrels)
-                combined_run.update(run)
+                file_metrics = evaluate_benchmark_retrieval_metrics(qrels, run)
+
+                results_list.append({
+                    "file": benchmark_file.name.replace("BenchmarkQA-", "").replace(".json", ""),
+                    "embedding_model": config.embedding_model,
+                    "reranker_model": config.reranker_model,
+                    "top_k": config.top_k,
+                    "reranker_top_k": config.reranker_top_k,
+                    "collection_name": config.collection_name,
+                    "metrics": file_metrics,
+                })
             except Exception as e:
                 logger.error(
                     "Error processing '%s' with config '%s': %s",
                     benchmark_file.name, config.name, e,
                 )
 
-        if combined_qrels and combined_run:
-            metrics = evaluate_benchmark_retrieval_metrics(combined_qrels, combined_run)
-            all_results[config.name] = metrics
-            config_map[config.name] = config
-        else:
-            logger.warning("No valid data for config '%s'. Skipping.", config.name)
-
-    save_results({
-        "configs": {name: asdict(cfg) for name, cfg in config_map.items()},
-        "metrics": all_results,
-    }, prefix="comparison")
-
+    if results_list:
+        _save_results(results_list, prefix="comparison")
+    else:
+        logger.warning("No valid results to save.")
 
 # ── CLI ─────────────────────────────────────────────────────────────
 
