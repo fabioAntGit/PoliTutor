@@ -8,7 +8,14 @@ to the user's queries against the ChromaDB document store.
 
 import logging
 
-from config import TOP_K_RESULTS, EMBEDDING_MODEL, CHROMA_COLLECTION_NAME, RERANKER_MODEL, RERANKER_TOP_K, RERANKER_SCORE_THRESHOLD
+from config import (
+    CHROMA_COLLECTION_NAME,
+    EMBEDDING_MODEL,
+    RERANKER_MODEL,
+    RERANKER_SCORE_THRESHOLD,
+    RERANKER_TOP_K,
+    TOP_K_RESULTS,
+)
 from embedding import get_embedder
 from database import get_collection
 from models import RetrievalResults
@@ -16,17 +23,17 @@ from reranker import rerank
 
 logger = logging.getLogger(__name__)
 
+
 def apply_threshold(results: RetrievalResults, threshold: float) -> RetrievalResults:
     """
-    Filters out any retrieved chunks whose relevance score strictly falls below 
-    the provided confidence threshold. Keeps the high-quality signals and removes noise.
+    Filters out chunks whose reranker score falls below the given threshold.
 
     Args:
-        results (RetrievalResults): The scored chunk candidates.
-        threshold (float): Minimum acceptable score.
+        results: The scored chunk candidates.
+        threshold: Minimum acceptable score (inclusive).
 
     Returns:
-        RetrievalResults: A subset containing only candidates satisfying (score >= threshold).
+        A subset of results containing only candidates with score >= threshold.
     """
     if results.is_empty():
         return results
@@ -57,7 +64,7 @@ def retrieve_with_config(
     reranker_model: str | None = RERANKER_MODEL,
     reranker_top_k: int = RERANKER_TOP_K,
     score_threshold: float | None = None,
-) -> Dict[str, Any]:
+) -> RetrievalResults:
     """
     Flexible retrieval for benchmarking. Supports custom embedding models,
     ChromaDB collections, rerankers, and score thresholds.
@@ -76,7 +83,7 @@ def retrieve_with_config(
         Structured RetrievalResults with aligned arrays of ids, documents, metadatas, distances, scores.
     """
     collection = get_collection(collection_name)
-    embedder   = get_embedder(embedding_model)
+    embedder = get_embedder(embedding_model)
 
     query_vector = embedder.embed_query(query)
 

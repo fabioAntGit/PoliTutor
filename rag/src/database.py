@@ -5,26 +5,33 @@ Manages the connection to ChromaDB Cloud and exposes a singleton client
 and collection accessor.
 """
 
-import os
 import logging
-from typing import Any
+import os
 
 import chromadb
-from config import CHROMA_COLLECTION_NAME, CHROMA_HNSW_SPACE, CHROMA_HNSW_M, CHROMA_HNSW_CONSTRUCTION_EF, CHROMA_HNSW_SEARCH_EF
+
+from config import (
+    CHROMA_COLLECTION_NAME,
+    CHROMA_HNSW_CONSTRUCTION_EF,
+    CHROMA_HNSW_M,
+    CHROMA_HNSW_SEARCH_EF,
+    CHROMA_HNSW_SPACE,
+)
 
 logger = logging.getLogger(__name__)
 
-_chroma_client: Any = None
+_chroma_client: chromadb.CloudClient | None = None
+
 
 def get_client() -> chromadb.CloudClient:
     """
-    Initializes and returns a singleton connection to the ChromaDB Cloud cluster.
-    
-    Authenticates using the CHROMA_API_KEY, CHROMA_TENANT, and CHROMA_DATABASE 
-    environment variables. The connection is maintained in memory for subsequent calls.
+    Returns the singleton ChromaDB Cloud client, initializing it on first call.
+
+    Authenticates using the CHROMA_API_KEY, CHROMA_TENANT, and CHROMA_DATABASE
+    environment variables. The connection is reused across all subsequent calls.
 
     Returns:
-        chromadb.CloudClient: The established database client session.
+        The established ChromaDB Cloud client session.
     """
     global _chroma_client
 
@@ -38,24 +45,24 @@ def get_client() -> chromadb.CloudClient:
 
     return _chroma_client
 
+
 def get_collection(name: str | None = None) -> chromadb.Collection:
     """
-    Retrieves an existing ChromaDB collection or safely creates a new one.
-    
-    When creating a new collection, it automatically injects the exact HNSW 
-    (Hierarchical Navigable Small World) index parameters defined in `config.py` 
-    to ensure predictable search performance and latency.
+    Retrieves or creates a ChromaDB collection with the configured HNSW index parameters.
+
+    HNSW parameters (space, M, construction_ef, search_ef) are injected at creation
+    time to ensure consistent search performance. If the collection already exists,
+    the parameters are ignored by ChromaDB.
 
     Args:
-        name (str | None): The explicit name of the collection to target. 
-                           Falls back to the default CHROMA_COLLECTION_NAME if None.
+        name: Collection name to target. Uses config default if None.
 
     Returns:
-        chromadb.Collection: The active collection instance ready for upserts or queries.
+        The active collection instance, ready for upserts or queries.
     """
     client = get_client()
     collection_name = name or CHROMA_COLLECTION_NAME
-    
+
     return client.get_or_create_collection(
         name=collection_name,
         metadata={
@@ -63,5 +70,5 @@ def get_collection(name: str | None = None) -> chromadb.Collection:
             "hnsw:M":               CHROMA_HNSW_M,
             "hnsw:construction_ef": CHROMA_HNSW_CONSTRUCTION_EF,
             "hnsw:search_ef":       CHROMA_HNSW_SEARCH_EF,
-        }
+        },
     )

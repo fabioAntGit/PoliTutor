@@ -20,15 +20,13 @@ _reranker_cache: dict[str, CrossEncoder] = {}
 
 def get_reranker(model_name: str | None = None) -> CrossEncoder:
     """
-    Retrieves or initializes a cross-encoder language model.
-    Models are cached in memory to avoid the massive performance penalty of reloading 
-    HuggingFace models on every RAG query.
+    Returns a cached cross-encoder model, loading it on first use.
 
     Args:
-        model_name (str | None): The HuggingFace model identifier. Defaults to config if None.
+        model_name: HuggingFace model identifier. Uses config default if None.
 
     Returns:
-        CrossEncoder: The loaded model instance ready for pair scoring.
+        The loaded CrossEncoder instance ready for pair scoring.
     """
     model_name = model_name or RERANKER_MODEL
 
@@ -45,18 +43,20 @@ def rerank(
     top_k: int | None = None,
 ) -> RetrievalResults:
     """
-    Receives an initial set of RetrievalResults and applies the Cross-Encoder model
-    to generate highly accurate semantic similarity scores, overwriting the old 
-    vector-based distances and reordering the documents.
+    Applies a Cross-Encoder model to score and reorder an initial set of candidates.
+
+    The original ChromaDB vector distances are preserved; the cross-encoder adds a
+    new semantic similarity score to each chunk and reorders them by that score.
+    Only the top_k highest-scoring chunks are returned.
 
     Args:
-        query (str): The user's specific context or question.
-        results (RetrievalResults): The chunks initially retrieved from ChromaDB.
-        model_name (str | None): Reranker model identifier to use.
-        top_k (int | None): Maximum number of candidates to return after scoring.
+        query: The user's specific context or question.
+        results: The chunks initially retrieved from ChromaDB.
+        model_name: Reranker model identifier to use. Uses config default if None.
+        top_k: Maximum number of candidates to return after scoring. Uses config default if None.
 
     Returns:
-        RetrievalResults: A new sorted object containing only the top_k most relevant chunks.
+        A new RetrievalResults sorted by cross-encoder score, containing only the top_k chunks.
     """
     if results.is_empty():
         logger.warning("Reranker received no documents to score.")
@@ -69,6 +69,7 @@ def rerank(
     pairs = [[query, doc] for doc in results.documents]
     scores = reranker.predict(pairs)
 
+    # Tuple layout: (id, document, metadata, distance, score) — index 4 is the reranker score
     candidates = sorted(
         zip(results.ids, results.documents, results.metadatas, results.distances, scores),
         key=lambda c: c[4],
