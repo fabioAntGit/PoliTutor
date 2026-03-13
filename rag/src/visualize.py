@@ -5,26 +5,29 @@ embeddings stored in the ChromaDB cloud instance. It helps identifying clusters
 of similar documents and debugging embedding quality.
 """
 
-import logging
 import argparse
-import pandas as pd
+import logging
+
 import numpy as np
+import pandas as pd
 from renumics import spotlight
+
 from database import get_collection
 
 logger = logging.getLogger(__name__)
+
 
 def visualize(collection_name: str | None = None) -> None:
     """
     Fetches embedding data from ChromaDB and launches the Spotlight UI.
 
     Args:
-        collection_name (str | None): The specific ChromaDB collection to load. 
+        collection_name: The specific ChromaDB collection to load.
             If None, the default collection defined in config is used.
     """
     collection = get_collection(collection_name)
-    
-    results = collection.get(include=["documents", "embeddings", "metadatas"])    
+
+    results = collection.get(include=["documents", "embeddings", "metadatas"])
 
     if not results.get("ids"):
         logger.warning("The collection '%s' is empty. Nothing to visualize.", collection.name)
@@ -44,6 +47,7 @@ def visualize(collection_name: str | None = None) -> None:
 
     logger.info("Displaying %d documents in Spotlight.", len(df))
     spotlight.show(df, embed=["embedding"])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ChromaDB Spotlight Visualizer")

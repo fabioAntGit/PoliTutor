@@ -38,8 +38,14 @@ def apply_threshold(results: RetrievalResults, threshold: float) -> RetrievalRes
     if results.is_empty():
         return results
 
-    kept = [(i, d, m, dist, s) for i, d, m, dist, s in
-            zip(results.ids, results.documents, results.metadatas, results.distances, results.scores) if s >= threshold]
+    kept = [
+        (i, d, m, dist, s)
+        for i, d, m, dist, s in zip(
+            results.ids, results.documents, results.metadatas,
+            results.distances, results.scores,
+        )
+        if s >= threshold
+    ]
 
     if not kept:
         return RetrievalResults()

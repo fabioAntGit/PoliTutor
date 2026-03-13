@@ -133,6 +133,8 @@ BENCHMARK_PROMPT = (
     "\n\nContext:\n{context}"
 )
 
+# Each entry maps to BenchmarkConfig fields. Omitted fields use BenchmarkConfig defaults
+# (top_k=TOP_K_RESULTS, reranker_top_k=RERANKER_TOP_K, score_threshold=None).
 BENCHMARK_COMPARISON_CONFIGS = [
     {
         "name": "e5-large + mMiniLM",
