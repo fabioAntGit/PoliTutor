@@ -18,7 +18,7 @@ from config import (
 )
 from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from utils import extract_metadata_from_filename
-from retrieval import retrieve, retrieve_with_config
+from retrieval import retrieve_with_config
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def create_qa(context: str, page_number: int, filename: str) -> dict | None:
                 if data.get("type") == "message":
                     content = data["content"]["content"]
                     return json.loads(content)
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, KeyError, TypeError):
                 continue
     
     return None

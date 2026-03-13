@@ -77,13 +77,11 @@ def embed_chunks(
 
     texts, ids, metadatas = [], [], []
 
-    text_idx = 0
     for i, chunk in enumerate(valid_chunks):
         # --- Text chunk ---
         texts.append(chunk["text"])
-        ids.append(f"{file_stem}_{text_idx}")
+        ids.append(f"{file_stem}_{i}")
         metadatas.append(_build_meta(chunk, "text"))
-        text_idx += 1
 
         # --- Image chunks ---
         for j, image_path in enumerate(chunk.get("image_paths", [])):

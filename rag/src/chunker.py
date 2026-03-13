@@ -3,7 +3,6 @@ Document Chunking Service.
 Segments processed pages into embedding-ready chunks while preserving page context.
 """
 
-import hashlib
 import logging
 import re
 from typing import List, Dict, Any
