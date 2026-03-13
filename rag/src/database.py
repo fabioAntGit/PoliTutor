@@ -7,6 +7,7 @@ and collection accessor.
 
 import logging
 import os
+from typing import Optional
 
 import chromadb
 
@@ -20,8 +21,7 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
-_chroma_client: chromadb.CloudClient | None = None
-
+_chroma_client: Optional[chromadb.CloudClient] = None
 
 def get_client() -> chromadb.CloudClient:
     """
@@ -46,7 +46,7 @@ def get_client() -> chromadb.CloudClient:
     return _chroma_client
 
 
-def get_collection(name: str | None = None) -> chromadb.Collection:
+def get_collection(name: Optional[str] = None) -> chromadb.Collection:
     """
     Retrieves or creates a ChromaDB collection with the configured HNSW index parameters.
 
