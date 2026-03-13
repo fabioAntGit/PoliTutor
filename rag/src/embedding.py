@@ -57,7 +57,7 @@ def get_embedder(model_name: str | None = None) -> HuggingFaceEmbeddings:
     return _embedder_cache[model_name]
 
 
-def _build_meta(chunk: dict, doc_type: str, **extra) -> dict:
+def build_meta(chunk: dict, doc_type: str, **extra) -> dict:
     """
     Builds a ChromaDB-compatible metadata dict from a chunk.
 
@@ -117,7 +117,7 @@ def embed_chunks(
         # --- Text chunk ---
         texts.append(chunk["text"])
         ids.append(f"{file_stem}_{i}")
-        metadatas.append(_build_meta(chunk, "text"))
+        metadatas.append(build_meta(chunk, "text"))
 
         # --- Image chunks ---
         for j, image_path in enumerate(chunk.get("image_paths", [])):
@@ -127,7 +127,7 @@ def embed_chunks(
             if result and result.get("relevant"):
                 texts.append(result.get("summary", ""))
                 ids.append(f"{file_stem}_img_{i}_{j}")
-                metadatas.append(_build_meta(chunk, "image", image_path=image_path))
+                metadatas.append(build_meta(chunk, "image", image_path=image_path))
 
     try:
         embeddings = embedder.embed_documents(texts)

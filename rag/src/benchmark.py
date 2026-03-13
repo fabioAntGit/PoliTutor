@@ -155,7 +155,7 @@ def generate_benchmark_dataset() -> None:
 
 # ── Evaluation Core ─────────────────────────────────────────────────
 
-def _build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[dict, dict]:
+def build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[dict, dict]:
     """
     Reads a BenchmarkQA file and runs retrieval for each question.
 
@@ -237,7 +237,7 @@ def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> di
 
 # ── Result Persistence ──────────────────────────────────────────────
 
-def _save_results(data: dict, prefix: str) -> Path:
+def save_results(data: dict, prefix: str) -> Path:
     """
     Saves benchmark results to a timestamped JSON file.
 
@@ -266,7 +266,7 @@ def execute_retrieval_benchmark(benchmark_file: Path) -> None:
     logger.info("Evaluating: %s | Course: %s", benchmark_file.name, course_code)
 
     default_config = BenchmarkConfig(name="default")
-    qrels_dict, run_dict = _build_qrels_and_run(benchmark_file, default_config)
+    qrels_dict, run_dict = build_qrels_and_run(benchmark_file, default_config)
     evaluate_benchmark_retrieval_metrics(qrels_dict, run_dict)
 
 
@@ -293,7 +293,7 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
 
         for benchmark_file in benchmark_files:
             try:
-                qrels, run = _build_qrels_and_run(benchmark_file, config)
+                qrels, run = build_qrels_and_run(benchmark_file, config)
                 combined_qrels.update(qrels)
                 combined_run.update(run)
             except Exception as e:
@@ -309,7 +309,7 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
         else:
             logger.warning("No valid data for config '%s'. Skipping.", config.name)
 
-    _save_results({
+    save_results({
         "configs": {name: asdict(cfg) for name, cfg in config_map.items()},
         "metrics": all_results,
     }, prefix="comparison")
