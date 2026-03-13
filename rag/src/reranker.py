@@ -32,7 +32,7 @@ def get_reranker(model_name: str | None = None) -> CrossEncoder:
 
     if model_name not in _reranker_cache:
         logger.info("Loading reranker model: %s", model_name)
-        _reranker_cache[model_name] = CrossEncoder(model_name, activation_fct=nn.Sigmoid())
+        _reranker_cache[model_name] = CrossEncoder(model_name, activation_fn=nn.Sigmoid(), trust_remote_code=True)
         
     return _reranker_cache[model_name]
 
