@@ -1,12 +1,15 @@
 """
 File Management and Utilities Module.
 
-Provides robust utilities for extracting metadata from filenames based on the project's
-internal naming conventions, saving base64 images to the correct output directories, 
-and managing API calls with exponential backoff.
+Provides utilities for extracting metadata from filenames following the project's
+naming convention, and for saving base64-encoded images to structured output directories.
 
-Filename Convention Supported: 
+Filename convention:
     <source_type>.<course_code>.<description>.<extension>
+
+    Examples:
+        apontamentos.ed.cap1.pdf
+        slides.pp.aula3.pptx
 """
 
 import re
@@ -22,18 +25,21 @@ COURSE_CODE_PATTERN = re.compile(r'^[a-z]+$')
 
 def extract_metadata_from_filename(filename: str) -> tuple[str, str, str]:
     """
-    Extracts the source type, course code, and filename stem from a given filename.
+    Extracts the source type, course code, and stem from a filename.
+
+    Parses the filename stem by splitting on dots. source_type and course_code
+    are returned as lowercase.
 
     Args:
-        filename (str): The full filename or path (e.g., "Slides.ED.CAP1.pdf").
+        filename: Full filename including extension (e.g. 'Apontamentos.ED.CAP1.pdf').
 
     Returns:
-        tuple[str, str, str]: A tuple containing (source_type, course_code, stem), 
-            all converted to lowercase (except stem).
+        A tuple of (source_type, course_code, stem), where source_type and
+        course_code are lowercase and stem preserves the original casing.
 
     Raises:
-        ValueError: If the filename does not contain at least two parts separated by dots,
-            or if the course code contains invalid characters.
+        ValueError: If the filename has fewer than two dot-separated parts, or if
+                    course_code contains non-alphabetic characters.
     """
     stem = Path(filename).stem
     parts = stem.split(".")
@@ -62,20 +68,22 @@ def extract_metadata_from_filename(filename: str) -> tuple[str, str, str]:
 
 def save_image(image_b64: str, source_filename: str, page_num: int, img_index: int) -> str:
     """
-    Decodes a base64 string and saves the image to the appropriate output directory.
-    
-    The directory is determined by extracting metadata from the `source_filename`. If
-    metadata extraction fails, falls back to an 'unknown' directory structure but 
-    preserves the file stem to avoid data loss.
+    Decodes a base64 image and saves it to the structured output directory.
+
+    The output path is derived from the source filename metadata:
+        IMAGES_OUTPUT_DIR/<course_code>/<source_type>/<stem>/p<page>_img<index>.png
+
+    If metadata extraction fails, falls back to
+        IMAGES_OUTPUT_DIR/unknown/unknown/<stem>/... to avoid data loss.
 
     Args:
-        image_b64 (str): The base64 encoded image string.
-        source_filename (str): The original document filename where the image was found.
-        page_num (int): The page number containing the image.
-        img_index (int): A unique index for the image on that page.
+        image_b64:       Base64-encoded image string.
+        source_filename: Original document filename (used to derive the output path).
+        page_num:        Page number where the image was found.
+        img_index:       Index of the image within that page.
 
     Returns:
-        str: The absolute path to the newly saved image file.
+        Absolute path to the saved image file.
     """
     try:
         source_type, course_code, stem = extract_metadata_from_filename(source_filename)

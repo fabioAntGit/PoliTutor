@@ -1,17 +1,28 @@
 """
 Configuration settings for the Poli-Tutor RAG pipeline.
+
+Organised into sections:
+    1. Core & environment initialization
+    2. Path management
+    3. Document extraction (Unstructured API)
+    4. Chunking strategies
+    5. Embedding & image analysis
+    6. Vector database (ChromaDB)
+    7. Retrieval & reranking
+    8. Benchmarking & evaluation
 """
 
-import os
 import logging
+import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # 1. CORE & ENVIRONMENT INITIALIZATION
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -130,4 +141,3 @@ BENCHMARK_COMPARISON_CONFIGS = [
         "reranker_model": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
     }
 ]
-
