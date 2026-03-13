@@ -312,7 +312,7 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
                 )
 
     if results_list:
-        _save_results(results_list, prefix="comparison")
+        save_results(results_list, prefix="comparison")
     else:
         logger.warning("No valid results to save.")
 
