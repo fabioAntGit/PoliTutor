@@ -79,7 +79,9 @@ CHUNK_MIN_LENGTH = 100
 VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
 # 5. EMBEDDING & IMAGE ANALYSIS
-EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
+# bge-m3 produced the best benchmark results and is used for both ingestion and retrieval
+# to ensure query embeddings match the indexed document embeddings.
+EMBEDDING_MODEL = "BAAI/bge-m3"
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 EMBEDDING_NORMALIZE = True
 
@@ -102,7 +104,7 @@ IMAGE_EMBEDDING_PROMPT = (
 )
 
 # 6. VECTOR DATABASE (ChromaDB)
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs-e5-large"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs-bge-m3"
 
 # Low-level HNSW tuning
 CHROMA_HNSW_SPACE = "cosine"
@@ -112,7 +114,14 @@ CHROMA_HNSW_SEARCH_EF = 100
 
 # 7. RETRIEVAL & RERANKING
 TOP_K_RESULTS = 20
-RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+# Best reranker is chosen automatically based on hardware availability:
+#   GPU → jinaai/jina-reranker-v2-base-multilingual  (best benchmark results with GPU)
+#   CPU → Alibaba-NLP/gte-reranker-modernbert-base   (best benchmark results on CPU)
+RERANKER_MODEL = (
+    "jinaai/jina-reranker-v2-base-multilingual"
+    if torch.cuda.is_available()
+    else "Alibaba-NLP/gte-reranker-modernbert-base"
+)
 RERANKER_TOP_K = 5
 
 # 8. BENCHMARKING & EVALUATION
