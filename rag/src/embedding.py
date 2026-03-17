@@ -3,44 +3,76 @@ Embedding Service.
 
 Handles the loading of the HuggingFace embedding model and the generation
 and upsert of embeddings into ChromaDB via the database module.
+Supports multiple embedding models and collections for benchmarking.
 """
 
-import json
-import re
 import base64
+import json
 import logging
 import os
+import re
 import requests
 import time
-from config import EMBEDDING_MODEL, IMAGE_EMBEDDING_PROMPT, OPENROUTER_MODEL, MAX_IMAGE_API_CALLS, EMBEDDING_DEVICE, EMBEDDING_NORMALIZE, IMAGE_API_DELAY
-from typing import List, Dict, Any
 
 from langchain_huggingface import HuggingFaceEmbeddings
+
+from config import (
+    EMBEDDING_DEVICE,
+    EMBEDDING_MODEL,
+    EMBEDDING_NORMALIZE,
+    IMAGE_API_DELAY,
+    IMAGE_EMBEDDING_PROMPT,
+    MAX_IMAGE_API_CALLS,
+    OPENROUTER_MODEL,
+)
 from database import get_collection
 
 logger = logging.getLogger(__name__)
 
-_embedder: HuggingFaceEmbeddings | None = None
-_image_api_calls = 0
+_embedder_cache: dict[str, HuggingFaceEmbeddings] = {}
+_image_api_calls: int = 0
 
-def get_embedder() -> HuggingFaceEmbeddings:
+
+def get_embedder(model_name: str | None = None) -> HuggingFaceEmbeddings:
     """
-    Returns a singleton instance of the HuggingFace embedding model.
+    Returns a cached HuggingFace embedder for the given model name.
+
+    On first call for a given model, loads and caches the model to avoid
+    repeated expensive initializations across pipeline stages.
+
+    Args:
+        model_name: HuggingFace model identifier. Uses config default if None.
+
+    Returns:
+        A ready-to-use HuggingFaceEmbeddings instance.
     """
-    global _embedder
-    
-    if _embedder is None:
-        logger.info("Loading embedding model into memory: %s", EMBEDDING_MODEL)
-        _embedder = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
+    model_name = model_name or EMBEDDING_MODEL
+    if model_name not in _embedder_cache:
+        logger.info("Loading embedding model into memory: %s", model_name)
+        _embedder_cache[model_name] = HuggingFaceEmbeddings(
+            model_name=model_name,
             model_kwargs={"device": EMBEDDING_DEVICE},
             encode_kwargs={"normalize_embeddings": EMBEDDING_NORMALIZE},
         )
+    return _embedder_cache[model_name]
 
-    return _embedder
 
-def _build_meta(chunk: Dict[str, Any], doc_type: str, **extra) -> Dict[str, Any]:
-    """Builds a metadata dict from a chunk, converting pages to str."""
+def build_meta(chunk: dict, doc_type: str, **extra) -> dict:
+    """
+    Builds a ChromaDB-compatible metadata dict from a chunk.
+
+    Converts the 'pages' list to a string, since ChromaDB metadata values
+    must be scalar types. The 'type' field distinguishes text from image chunks.
+
+    Args:
+        chunk:    Chunk dict with a 'metadata' key.
+        doc_type: Either 'text' or 'image'.
+        **extra:  Additional key-value pairs merged into the metadata
+                  (e.g. image_path for image chunks).
+
+    Returns:
+        Flat metadata dict safe for ChromaDB upsert.
+    """
     meta = chunk["metadata"].copy()
     if "pages" in meta:
         meta["pages"] = str(meta["pages"])
@@ -49,11 +81,26 @@ def _build_meta(chunk: Dict[str, Any], doc_type: str, **extra) -> Dict[str, Any]
     return meta
 
 
-def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
+def embed_chunks(
+    chunks: list[dict],
+    file_stem: str,
+    model_name: str | None = None,
+    collection_name: str | None = None,
+) -> None:
     """
-    Generates embeddings and upserts chunks into ChromaDB.
-    For chunks with images, sends them to the LLM for classification/summarization
-    and creates separate image embeddings.
+    Generates embeddings for text chunks and relevant images, then upserts
+    everything into ChromaDB in a single batch call.
+
+    For each chunk's images, calls image_resume() to classify and summarize
+    them via OpenRouter. Only relevant images (relevant=True) are embedded.
+    Text chunk IDs follow the pattern '{file_stem}_{i}'; image IDs use
+    '{file_stem}_img_{i}_{j}'.
+
+    Args:
+        chunks:          List of chunk dicts with 'text', 'image_paths', and 'metadata'.
+        file_stem:       Source file identifier used as the ID prefix.
+        model_name:      HuggingFace embedding model. Uses config default if None.
+        collection_name: ChromaDB collection name. Uses config default if None.
     """
     valid_chunks = [c for c in chunks if c["text"].strip()]
 
@@ -61,18 +108,16 @@ def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
         logger.warning("No valid text found for '%s'. Skipping.", file_stem)
         return
 
-    embedder = get_embedder()
-    collection = get_collection()
+    embedder = get_embedder(model_name)
+    collection = get_collection(collection_name)
 
     texts, ids, metadatas = [], [], []
 
-    text_idx = 0
     for i, chunk in enumerate(valid_chunks):
         # --- Text chunk ---
         texts.append(chunk["text"])
-        ids.append(f"{file_stem}_{text_idx}")
-        metadatas.append(_build_meta(chunk, "text"))
-        text_idx += 1
+        ids.append(f"{file_stem}_{i}")
+        metadatas.append(build_meta(chunk, "text"))
 
         # --- Image chunks ---
         for j, image_path in enumerate(chunk.get("image_paths", [])):
@@ -82,19 +127,16 @@ def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
             if result and result.get("relevant"):
                 texts.append(result.get("summary", ""))
                 ids.append(f"{file_stem}_img_{i}_{j}")
-                metadatas.append(_build_meta(chunk, "image", image_path=image_path))
+                metadatas.append(build_meta(chunk, "image", image_path=image_path))
 
     try:
         embeddings = embedder.embed_documents(texts)
-
         collection.upsert(
             ids=ids,
             documents=texts,
             embeddings=embeddings,
             metadatas=metadatas,
         )
-        logger.info("Successfully upserted %d chunks for '%s'.", len(texts), file_stem)
-
         text_count = sum(1 for m in metadatas if m["type"] == "text")
         image_count = sum(1 for m in metadatas if m["type"] == "image")
         logger.info("Upserted %d text + %d image chunks for '%s'.", text_count, image_count, file_stem)
@@ -103,10 +145,25 @@ def embed_chunks(chunks: List[Dict[str, Any]], file_stem: str) -> None:
         logger.error("Failed to upsert embeddings for '%s': %s", file_stem, e)
         raise
 
+
 def image_resume(image_path: str, context: str) -> dict | None:
     """
-    Sends an image to OpenRouter for classification and summarization.
-    Returns dict with 'relevant' and 'summary' keys, or None on failure.
+    Classifies and summarizes an image via the OpenRouter API.
+
+    Sends the image as base64 alongside surrounding chunk text as context.
+    The model is expected to return JSON with 'relevant' (bool) and 'summary' (str).
+    Irrelevant images (logos, decorative elements) return relevant=False.
+
+    Retries up to 3 times with exponential backoff on HTTP 429 (rate limit).
+    Respects MAX_IMAGE_API_CALLS to cap total API usage per pipeline run.
+
+    Args:
+        image_path: Absolute path to the PNG image on disk.
+        context:    Surrounding chunk text sent as context to the model.
+
+    Returns:
+        Dict with 'relevant' (bool) and 'summary' (str), or None on failure
+        or if the API call limit has been reached.
     """
     global _image_api_calls
 
@@ -157,10 +214,8 @@ def image_resume(image_path: str, context: str) -> dict | None:
 
             content = response.json()["choices"][0]["message"]["content"]
             content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
+            return json.loads(content)
 
-            result = json.loads(content)
-            return result
-        
         logger.error("Max retries reached for '%s' due to rate limiting.", image_path)
         return None
 

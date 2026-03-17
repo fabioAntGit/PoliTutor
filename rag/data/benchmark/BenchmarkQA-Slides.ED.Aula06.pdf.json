@@ -1,0 +1,188 @@
+[
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "2",
+    "question": "O que distingue as listas de pilhas e filas?",
+    "answer": "As listas são mais flexíveis, permitindo a adição e remoção de elementos sem estarem limitadas à estrutura da colecção, ou seja, não têm de operar apenas numa ou noutra ponta (cabeça ou cauda)."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "4",
+    "question": "Como estão organizados os elementos numa lista ordenada?",
+    "answer": "Os elementos numa lista ordenada estão organizados por alguma característica intrínseca dos elementos, como nomes em ordem alfabética ou valores por ordem ascendente."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "6",
+    "question": "Quem determina a ordem dos elementos numa lista não ordenada?",
+    "answer": "O utilizador da lista determina a ordem dos elementos."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "8",
+    "question": "Como são referenciados os elementos numa lista indexada?",
+    "answer": "Os elementos numa lista indexada são referenciados pela sua posição numérica na lista."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "10",
+    "question": "Quais são as operações comuns aos três tipos de lista mencionadas no texto?",
+    "answer": "As operações comuns aos três tipos de lista incluem a remoção de elementos de várias maneiras e verificar o estado da lista."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "11",
+    "question": "Qual operação é utilizada para determinar se a lista está vazia?",
+    "answer": "A operação utilizada para determinar se a lista está vazia é 'isEmpty'."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "13",
+    "question": "Quais são as operações particulares de uma Lista Não Ordenada descritas no contexto?",
+    "answer": "As operações particulares de uma Lista Não Ordenada descritas são: adicionar um elemento à frente da lista, adicionar um elemento à traseira da lista (addToRear) e adicionar um elemento depois de um outro existente na lista (addAfter)."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "14",
+    "question": "Como são definidas as operações de colecção em listas no Java?",
+    "answer": "As operações de colecção em listas no Java são definidas através de interfaces Java, sendo que as interfaces podem ser definidas através de herança, derivando de outras interfaces."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "16",
+    "question": "Qual é o propósito do método 'removeFirst' na interface ListADT?",
+    "answer": "O método 'removeFirst' remove e devolve o primeiro elemento da lista."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "17",
+    "question": "O que o método 'first()' retorna?",
+    "answer": "O método 'first()' retorna uma referência para o primeiro elemento desta lista."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "18",
+    "question": "Qual é o propósito do método 'size()' na lista?",
+    "answer": "O método 'size()' retorna a representação inteira do número de elementos nesta lista."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "19",
+    "question": "Qual é o propósito do método 'add' na interface OrderedListADT?",
+    "answer": "O método 'add' tem como propósito adicionar o elemento especificado à lista na localização apropriada."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "20",
+    "question": "Quais são os métodos definidos na interface UnorderedListADT?",
+    "answer": "Os métodos definidos na interface UnorderedListADT são: addToFront(T element), que adiciona o elemento especificado ao início da lista; addToRear(T element), que adiciona o elemento especificado ao final da lista; e addAfter(T element, T target), que adiciona o elemento especificado após o elemento alvo na lista."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "22",
+    "question": "Quais são as estratégias mencionadas para implementar uma lista com base num array?",
+    "answer": "As estratégias mencionadas são fixar uma ponta da lista no índice 0 e fazer um shift quando necessário ao adicionar ou remover elementos, ou usar um array circular para evitar a mudança numa extremidade."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "26",
+    "question": "O que acontece quando se tenta remover um elemento de uma LinkedList vazia utilizando o método remove?",
+    "answer": "É lançada uma exceção do tipo EmptyCollectionException com a mensagem 'List'."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "27",
+    "question": "O que acontece se o tamanho da lista for igual a 1 no código apresentado?",
+    "answer": "Se o tamanho da lista for igual a 1, as variáveis 'head' e 'tail' são definidas como null."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "29",
+    "question": "Quais são as referências que cada nó de uma lista duplamente ligada possui?",
+    "answer": "Cada nó de uma lista duplamente ligada possui duas referências: uma para o próximo elemento (next) e outra para o elemento anterior (previous)."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "30",
+    "question": "O que representa a classe DoubleNode?",
+    "answer": "A classe DoubleNode representa um nó numa lista duplamente ligada."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "31",
+    "question": "O que o método getNext() retorna?",
+    "answer": "O método getNext() retorna o nó que segue o nó atual."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "32",
+    "question": "Qual é o método utilizado para definir o nó que precede o nó atual?",
+    "answer": "O método utilizado é o 'setPrevious', que recebe como parâmetro um nó do tipo 'DoubleNode<E>' e o define como o nó que precede o nó atual."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "34",
+    "question": "Qual é o custo associado à elegância do código na implementação de uma lista duplamente ligada?",
+    "answer": "A sobrecarga associada ao armazenamento e gestão de links adicionais."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "35",
+    "question": "Qual é a eficiência da maioria das operações em implementações de array e listas ligadas?",
+    "answer": "A maioria das operações em implementações de array e listas ligadas são O(1), excepto no shift ou na pesquisa, caso em que são O(n)."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "36",
+    "question": "Qual é o problema que o padrão de software Iterator procura resolver?",
+    "answer": "A necessidade de percorrer os elementos de uma colecção de uma forma comum para todos os tipos de colecções."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "39",
+    "question": "Qual é o comportamento esperado se um método opcional não for totalmente suportado por uma classe que implementa a interface Iterator<E>?",
+    "answer": "Se um método opcional não for totalmente suportado por uma classe que implementa a interface Iterator<E>, ele deve lançar uma UnsupportedOperationException."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "40",
+    "question": "O que é necessário para que um iterador tenha acesso aos elementos de uma coleção?",
+    "answer": "O iterador precisa ter conhecimento interno da implementação da coleção."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "42",
+    "question": "O que é o problema de modificação concorrente em iterações?",
+    "answer": "O problema de modificação concorrente ocorre quando a colecção é modificada estruturalmente a partir do objecto collection enquanto uma iteração está em curso."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "43",
+    "question": "O que acontece quando um elemento é adicionado à colecção antes da posição do cursor da sequência de iteração em curso?",
+    "answer": "A alteração será passada despercebida."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "44",
+    "question": "O que é a variável modcount e qual é a sua função numa colecção?",
+    "answer": "A variável modcount é utilizada para manter um registo das modificações estruturais (adições/remoções) numa colecção. É incrementada sempre que o objecto da colecção é estruturalmente modificado através dos métodos add ou remove."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "45",
+    "question": "O que acontece se a variável expectedModCount for diferente de modCount durante a iteração?",
+    "answer": "Será lançada uma excepção."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "46",
+    "question": "Quais são as duas cláusulas do método Iterator.remove()?",
+    "answer": "O elemento a remover é o último elemento a ser retornado pelo next() e o Iterator.remove() apenas pode ser invocado uma vez por chamada ao next()."
+  },
+  {
+    "filename": "Slides.ED.Aula06.pdf",
+    "page": "47",
+    "question": "Como o problema é resolvido na classe BasicIterator?",
+    "answer": "O problema é resolvido com recurso a uma flag okToRemove que é inicializada a false, colocada a true pelo método next() e colocada a false pelo método Iterator.remove(), garantindo que cada chamada ao remove() está coordenada com o método next()."
+  }
+]

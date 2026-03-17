@@ -1,0 +1,230 @@
+[
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "2",
+    "question": "O que é a pesquisa e o que ela exige?",
+    "answer": "A pesquisa é o processo de encontrar um elemento-alvo num grupo de itens, ou então determinar que não está presente. Essa tarefa exige comparar repetidamente o alvo pelos candidatos de entre o grupo de pesquisa."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "4",
+    "question": "O que retorna o método compareTo quando obj1 é superior a obj2?",
+    "answer": "O método compareTo retorna um número superior a 0 quando obj1 é superior a obj2."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "5",
+    "question": "Que tipo genérico é utilizado nos métodos da classe SortingandSearching?",
+    "answer": "O tipo genérico utilizado é T, que será uma subclasse de Comparable (T extends Comparable)."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "6",
+    "question": "O que significa o requisito de que o array do tipo T deve conter objetos comparáveis entre si?",
+    "answer": "Significa que os objetos no array devem ser da mesma classe ou descendentes do mesmo ancestral."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "7",
+    "question": "O que é a pesquisa linear e quais são as suas características principais?",
+    "answer": "A pesquisa linear examina cada item do grupo de pesquisa, um de cada vez, até que o alvo seja encontrado ou o grupo de pesquisa seja esgotado. Não assume que os itens estejam em alguma ordem específica, apenas requer a capacidade de analisar cada elemento de forma linear. É fácil de entender, mas não muito eficiente."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "9",
+    "question": "Qual é o objetivo do método linearSearch apresentado no contexto?",
+    "answer": "O objetivo do método linearSearch é procurar um elemento específico num array de objetos utilizando um algoritmo de pesquisa linear e retornar true se o elemento desejado for encontrado."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "10",
+    "question": "O que torna a pesquisa binária mais eficiente do que a pesquisa linear?",
+    "answer": "A pesquisa binária elimina grande parte do grupo de pesquisa com cada comparação, começando a pesquisa no meio em vez de numa extremidade."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "11",
+    "question": "O que acontece se o alvo não for encontrado durante a pesquisa binária?",
+    "answer": "Se o alvo não for encontrado, sabemos que, se estiver no grupo de pesquisa, estará numa ou noutra metade, permitindo saltar para o meio dessa outra metade e continuar a pesquisa."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "13",
+    "question": "Qual é o próximo número com o qual se deve comparar o alvo 29 após eliminar metade dos dados ao compará-lo com 54?",
+    "answer": "O próximo número com o qual se deve comparar o alvo 29 é 22."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "14",
+    "question": "Qual é o caso base da recursão no algoritmo de pesquisa binária?",
+    "answer": "O caso base da recursão é o acabarem os candidatos viáveis à pesquisa, o que significa que o alvo não está no grupo de pesquisa."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "15",
+    "question": "Qual é o objetivo do método 'binarySearch' apresentado no código?",
+    "answer": "O objetivo do método 'binarySearch' é procurar um elemento específico num array de objetos utilizando o algoritmo de pesquisa binária, retornando 'true' se o elemento desejado for encontrado."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "16",
+    "question": "Quantos elementos, em média, uma pesquisa linear examinaria antes de encontrar o alvo?",
+    "answer": "Em média, uma pesquisa linear examinaria n/2 elementos antes de encontrar o alvo."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "17",
+    "question": "Qual é a complexidade de tempo da pesquisa binária?",
+    "answer": "A complexidade de tempo da pesquisa binária é O(log2N)."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "18",
+    "question": "O que é a ordenação e quantas comparações são necessárias em ordenações sequenciais e logarítmicas?",
+    "answer": "A ordenação é o processo de organizar um grupo de itens numa ordem definida com base em critérios específicos. Ordenações sequenciais requerem aproximadamente N/2 comparações para ordenar N elementos, enquanto ordenações logarítmicas normalmente requerem nlog2n comparações para ordenar N elementos."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "19",
+    "question": "O que é necessário para definir um problema de ordenação genérico?",
+    "answer": "É necessário que qualquer um dos algoritmos de ordenação possa ajudar a resolver o problema e que seja possível comparar um elemento com outro."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "20",
+    "question": "O que o método main da classe SortPhoneList faz?",
+    "answer": "O método main da classe SortPhoneList cria um array de objetos Contact, ordena-os e, em seguida, imprime-os."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "21",
+    "question": "Qual é o número de telefone de Bruce Wayne antes da ordenação?",
+    "answer": "215-555-3827"
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "22",
+    "question": "Qual é o propósito do método 'Contact' na classe apresentada?",
+    "answer": "O método 'Contact' é utilizado para configurar um contacto com as informações especificadas, incluindo o primeiro nome, o último nome e o número de telefone."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "23",
+    "question": "O que o método toString() retorna na classe Contact?",
+    "answer": "O método toString() retorna uma descrição do contacto como uma string no formato 'lastName, firstName\\tphone'."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "24",
+    "question": "Como o algoritmo Selection Sort organiza uma lista de valores?",
+    "answer": "O Selection Sort ordena uma lista de valores ao colocar repetidamente os valores nas suas posições finais, encontrando o menor valor da lista, fazendo a troca com o valor na primeira posição, encontrando o próximo menor valor da lista, fazendo a troca com o valor na segunda posição e repetindo até que todos os valores estejam nos seus devidos lugares."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "26",
+    "question": "Como é dividido logicamente o array de input no algoritmo Selection Sort?",
+    "answer": "O array de input é logicamente dividido em duas partes: ordenada e não ordenada."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "27",
+    "question": "Qual é o algoritmo utilizado para ordenar o array de inteiros no código apresentado?",
+    "answer": "O algoritmo utilizado é o 'selection sort'."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "28",
+    "question": "Como o algoritmo Insertion Sort ordena uma lista de valores?",
+    "answer": "O Insertion Sort ordena uma lista de valores ao inserir repetidamente um determinado valor num subconjunto da lista, começando com o primeiro valor como uma sublista ordenada de tamanho 1 e inserindo os itens subsequentes na sublista ordenada, deslocando os itens conforme necessário, até que todos os valores estejam nas suas posições correctas."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "29",
+    "question": "Como é dividido logicamente o array de input na configuração inicial do Insertion Sort?",
+    "answer": "O array de input é logicamente dividido em duas partes: ordenada e não ordenada."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "30",
+    "question": "Qual é o propósito do método 'insertionSort' apresentado no contexto?",
+    "answer": "O propósito do método 'insertionSort' é ordenar um array especificado de objetos utilizando o algoritmo de ordenação por inserção."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "31",
+    "question": "Como o algoritmo Bubble Sort ordena uma lista de valores?",
+    "answer": "O Bubble Sort ordena uma lista de valores ao comparar repetidamente os elementos vizinhos e trocando suas posições, se necessário. Ele examina a lista, trocando elementos adjacentes se estes não estiverem ordenados, fazendo com que o maior valor seja empurrado para o topo. Em seguida, examina a lista novamente para obter o segundo maior valor, repetindo o processo até que todos os elementos estejam na sua devida ordem."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "32",
+    "question": "Qual é o algoritmo utilizado para ordenar o array especificado no código apresentado?",
+    "answer": "O algoritmo utilizado é o bubble sort."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "33",
+    "question": "Quais são os três algoritmos de ordenação mencionados no texto?",
+    "answer": "Selection Sort, Insertion Sort e Bubble Sort."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "34",
+    "question": "Como o algoritmo Quick Sort organiza os elementos de uma lista?",
+    "answer": "O Quick Sort organiza os elementos de uma lista escolhendo um elemento como partição, colocando os elementos menores que a partição à esquerda e os maiores à direita, e aplicando o algoritmo recursivamente a ambas as partições."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "35",
+    "question": "Qual é o objetivo do método findPartition no algoritmo descrito?",
+    "answer": "O método findPartition reorganiza os elementos em duas partições."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "36",
+    "question": "Qual é o propósito do método quickSort apresentado no contexto?",
+    "answer": "O propósito do método quickSort é ordenar um array especificado de objetos utilizando o algoritmo de ordenação rápida (quick sort)."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "37",
+    "question": "Qual é o propósito do método 'findPartition' no algoritmo quick sort?",
+    "answer": "O método 'findPartition' é utilizado pelo algoritmo quick sort para encontrar a partição do array a ser ordenado."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "38",
+    "question": "O que acontece quando o elemento à direita é maior que o elemento de partição?",
+    "answer": "Quando o elemento à direita é maior que o elemento de partição, o índice 'right' é decrementado."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "40",
+    "question": "Qual é o processo descrito para dividir e ordenar uma lista?",
+    "answer": "O processo consiste em dividir a lista em duas partes iguais, dividir recursivamente cada parte ao meio até que cada parte contenha apenas um elemento, juntar as duas partes numa lista ordenada e continuar a juntar as partes à medida que a recursão se desdobra."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "41",
+    "question": "Como é dividida e ordenada a lista no processo descrito?",
+    "answer": "A lista é dividida em duas partes iguais, depois cada parte é dividida recursivamente ao meio até que cada parte contenha apenas um elemento. Em seguida, as partes são juntadas numa lista ordenada e o processo continua à medida que a recursão se desdobra."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "44",
+    "question": "Qual é o algoritmo utilizado para ordenar o array especificado no código apresentado?",
+    "answer": "O algoritmo utilizado é o merge sort."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "45",
+    "question": "Qual é o propósito do método mergeSort no contexto apresentado?",
+    "answer": "O propósito do método mergeSort é ordenar uma lista dividindo-a em duas metades, ordenando cada metade separadamente e, em seguida, fundindo as duas listas ordenadas numa única lista ordenada."
+  },
+  {
+    "filename": "Slides.ED.Aula08.pdf",
+    "page": "46",
+    "question": "Qual é a complexidade dos algoritmos quickSort e mergeSort?",
+    "answer": "Ambos os algoritmos quickSort e mergeSort têm uma complexidade de O(nlogn)."
+  }
+]

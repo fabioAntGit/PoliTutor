@@ -1,24 +1,46 @@
 """
-Configuration settings for the RAG pipeline.
+Configuration settings for the Poli-Tutor RAG pipeline.
+
+Organised into sections:
+    1. Core & environment initialization
+    2. Path management
+    3. Document extraction (Unstructured API)
+    4. Chunking strategies
+    5. Embedding & image analysis
+    6. Vector database (ChromaDB)
+    7. Retrieval & reranking
+    8. Benchmarking & evaluation
 """
 
+import logging
 import os
+import torch
 from pathlib import Path
+
 from dotenv import load_dotenv
 
-# --- Path Management ---
+# 1. CORE & ENVIRONMENT INITIALIZATION
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
 BASE_DIR = Path(__file__).resolve().parent
+# Load environment variables from the root .env file
 load_dotenv(BASE_DIR.parent / ".env")
 
-# Default paths
+# 2. PATH MANAGEMENT
 DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
 RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
+COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
 IMAGES_OUTPUT_DIR = BASE_DIR.parent / "data" / "processed" / "images"
 
-# Specific course directory
-COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
+# 3. DOCUMENT EXTRACTION (Unstructured API)
+SUPPORTED_EXTENSIONS = ["*.pdf", "*.pptx", "*.md"]
 
-# --- Extraction & Filtering Settings ---
+# Text elements and phrases to ignore during ingestion
+ELEMENT_TYPES_TO_EXCLUDE = ["Footer", "Header", "FigureCaption", "UncategorizedText"]
 KEYWORDS_TO_EXCLUDE = [
     "Ricardo Santos",
     "rjs@estg.ipp.pt",
@@ -26,38 +48,18 @@ KEYWORDS_TO_EXCLUDE = [
     "ESTRUTURAS DE DADOS 2024/2025",
 ]
 
-# Unstructured elements to ignore
-ELEMENT_TYPES_TO_EXCLUDE = [
-    "Footer",
-    "Header",
-    "FigureCaption",
-    "UncategorizedText"
-]
-
-# --- File Discovery ---
-SUPPORTED_EXTENSIONS = ["*.pdf", "*.pptx", "*.md"]
-
-# --- Unstructured Partitioning Configuration ---
+# Unstructured API parameters
 FILE_PROCESSING_CONFIG = {
     "strategy": "hi_res",
     "languages": ["por", "eng"],
     "infer_table_structure": True,
     "extract_image_block_types": ["Image"],
     "extract_image_block_to_payload": True,
-    "chunking_strategy": None, 
+    "chunking_strategy": None,
     "skip_infer_table_types": ["md"],
 }
 
-# --- Chroma DB Collection
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs5"
-
-# --- ChromaDB HNSW Index ---
-CHROMA_HNSW_SPACE = "cosine"
-CHROMA_HNSW_M = 32
-CHROMA_HNSW_CONSTRUCTION_EF = 200
-CHROMA_HNSW_SEARCH_EF = 100
-
-# --- Chunking & Source Mapping ---
+# 4. CHUNKING STRATEGIES
 CHUNKING_STRATEGIES = {
     "apontamentos": {
         "chunk_size": 1000,
@@ -72,16 +74,21 @@ CHUNKING_STRATEGIES = {
         "chunk_overlap": 100,
     }
 }
-
-CHUNK_MIN_LENGTH = 100
 CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
-
+CHUNK_MIN_LENGTH = 100
 VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
-# --- Embedding Configuration ---
-EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
-EMBEDDING_DEVICE = "cpu"
+# 5. EMBEDDING & IMAGE ANALYSIS
+# bge-m3 produced the best benchmark results and is used for both ingestion and retrieval
+# to ensure query embeddings match the indexed document embeddings.
+EMBEDDING_MODEL = "BAAI/bge-m3"
+EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 EMBEDDING_NORMALIZE = True
+
+# Image summarization (OpenRouter/Gemini)
+OPENROUTER_MODEL = "google/gemini-2.5-flash-lite"
+MAX_IMAGE_API_CALLS = None  # No limit
+IMAGE_API_DELAY = 1.5
 
 IMAGE_EMBEDDING_PROMPT = (
     "Analyze this image from an educational document. "
@@ -96,22 +103,32 @@ IMAGE_EMBEDDING_PROMPT = (
     "\n\nContext:\n{context}"
 )
 
-# --- OpenRouter Image API ---
-OPENROUTER_MODEL = "google/gemini-2.5-flash-lite"
-MAX_IMAGE_API_CALLS = None  # Limite para testes (None = sem limite)
-IMAGE_API_DELAY = 1.5
+# 6. VECTOR DATABASE (ChromaDB)
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs-bge-m3"
 
-# --- Retrieval ---
-TOP_K_RESULTS: int = 20
+# Low-level HNSW tuning
+CHROMA_HNSW_SPACE = "cosine"
+CHROMA_HNSW_M = 32
+CHROMA_HNSW_CONSTRUCTION_EF = 200
+CHROMA_HNSW_SEARCH_EF = 100
 
-# --- Reranker ---
-RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
-RERANKER_TOP_K: int = 5
+# 7. RETRIEVAL & RERANKING
+TOP_K_RESULTS = 20
+# Best reranker is chosen automatically based on hardware availability:
+#   GPU → jinaai/jina-reranker-v2-base-multilingual  (best benchmark results with GPU)
+#   CPU → Alibaba-NLP/gte-reranker-modernbert-base   (best benchmark results on CPU)
+RERANKER_MODEL = (
+    "jinaai/jina-reranker-v2-base-multilingual"
+    if torch.cuda.is_available()
+    else "Alibaba-NLP/gte-reranker-modernbert-base"
+)
+RERANKER_TOP_K = 5
 
-# --- Benchmark ---
+# 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
 BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"]
+
 BENCHMARK_PROMPT = (
     "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
     "Your task is to create a Q&A pair based on the following context. "
@@ -124,3 +141,26 @@ BENCHMARK_PROMPT = (
     'Use this exact format: {{"filename": "...", "page": "...", "question": "...", "answer": "..."}}'
     "\n\nContext:\n{context}"
 )
+
+# Each entry maps to BenchmarkConfig fields. Omitted fields use BenchmarkConfig defaults
+# (top_k=TOP_K_RESULTS, reranker_top_k=RERANKER_TOP_K).
+BENCHMARK_COMPARISON_CONFIGS = [
+    {
+        "name": "bge-m3 + jinaai jina-reranker-v2-base-multilingual",
+        "embedding_model": "BAAI/bge-m3",
+        "collection_name": "PoliTutor-Docs-bge-m3",
+        "reranker_model": "jinaai/jina-reranker-v2-base-multilingual",
+    },
+    {
+        "name": "bge-m3 +  BAAI bge-reranker-base",
+        "embedding_model": "BAAI/bge-m3",
+        "collection_name": "PoliTutor-Docs-bge-m3",
+        "reranker_model": "BAAI/bge-reranker-base",
+    },
+    {
+        "name": "bge-m3 + Alibaba-NLP gte-reranker-modernbert-base",
+        "embedding_model": "BAAI/bge-m3",
+        "collection_name": "PoliTutor-Docs-bge-m3",
+        "reranker_model": "Alibaba-NLP/gte-reranker-modernbert-base",
+    }
+]

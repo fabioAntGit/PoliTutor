@@ -1,0 +1,140 @@
+[
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "2",
+    "question": "O que é uma Stack e como funciona a remoção de elementos nela?",
+    "answer": "Uma Stack representa uma colecção em que os elementos são colocados pela ordem em que são inseridos. Em qualquer momento, apenas um elemento da Stack pode ser removido, e esse é o elemento que menos tempo esteve na Stack."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "3",
+    "question": "Como é organizada uma coleção de pilha (Stack)?",
+    "answer": "Uma coleção de pilha (Stack) organiza os elementos de forma Last-in-First-Out (LIFO), ou seja, o último a entrar é o primeiro a sair."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "5",
+    "question": "Quais são algumas das operações gerais disponíveis para interagir com uma colecção?",
+    "answer": "As operações gerais incluem adicionar e remover elementos, determinar se a colecção está vazia e determinar o tamanho da colecção."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "6",
+    "question": "Qual é a função da operação 'push' na stack?",
+    "answer": "Adiciona um elemento ao topo da pilha."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "8",
+    "question": "Qual é o propósito do método 'push' na interface StackADT?",
+    "answer": "O método 'push' adiciona um elemento ao topo da pilha."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "9",
+    "question": "O que o método isEmpty() verifica numa pilha?",
+    "answer": "O método isEmpty() verifica se a pilha não contém elementos e retorna um valor booleano indicando se a pilha está vazia ou não."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "10",
+    "question": "Para que tipo de problemas as pilhas (Stacks) são particularmente úteis?",
+    "answer": "As pilhas (Stacks) são particularmente úteis na resolução de certos tipos de problemas, como a operação de voltar atrás de uma operação numa aplicação, mantendo o controlo das operações mais recentes em ordem inversa."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "11",
+    "question": "O que é uma expressão postfix?",
+    "answer": "Numa expressão postfix, o operador vem depois dos seus dois operandos."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "12",
+    "question": "Qual é a vantagem de usar a notação postfix?",
+    "answer": "A vantagem de usar a notação postfix é que não é necessária nenhuma regra de precedência nem parêntesis."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "13",
+    "question": "Como é avaliada a expressão utilizando uma pilha?",
+    "answer": "A expressão é avaliada da esquerda para a direita com recurso a uma pilha. Quando for encontrado um operando, faz-se o push. Quando for encontrado um operador, faz-se o pop de dois operandos, avalia-se o resultado e, de seguida, faz-se o push do resultado."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "16",
+    "question": "Qual é o índice onde está localizado o fundo da pilha?",
+    "answer": "O fundo da pilha está no índice 0."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "18",
+    "question": "Qual é a capacidade padrão representada pela constante DEFAULT_CAPACITY na classe ArrayStack?",
+    "answer": "A capacidade padrão representada pela constante DEFAULT_CAPACITY na classe ArrayStack é 100."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "19",
+    "question": "Como é criada uma pilha vazia com a capacidade padrão na classe ArrayStack?",
+    "answer": "Uma pilha vazia com a capacidade padrão é criada utilizando o construtor 'public ArrayStack()', que inicializa 'top' a 0 e 'stack' como um novo array de objetos com a capacidade padrão definida por 'DEFAULT_CAPACITY'."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "20",
+    "question": "O que acontece quando o método push é chamado e o array da stack está cheio?",
+    "answer": "Quando o método push é chamado e o array da stack está cheio, a capacidade do array da stack é expandida utilizando o método expandCapacity()."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "22",
+    "question": "O que acontece se o método 'pop' for chamado numa pilha vazia?",
+    "answer": "Se o método 'pop' for chamado numa pilha vazia, será lançada uma exceção do tipo EmptyCollectionException com a mensagem 'Stack'."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "24",
+    "question": "O que acontece quando o método 'peek' é chamado numa pilha vazia?",
+    "answer": "O método 'peek' lança uma exceção do tipo EmptyCollectionException se for chamado numa pilha vazia."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "25",
+    "question": "O que faz a operação isEmpty numa Stack?",
+    "answer": "A operação isEmpty retorna true se a Stack estiver vazia e false caso contrário."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "26",
+    "question": "Qual é a complexidade das operações push e pop na implementação em array de uma stack?",
+    "answer": "As operações push e pop para a implementação em array são O(1)."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "29",
+    "question": "O que é armazenado na classe LinearNode?",
+    "answer": "A classe LinearNode armazena uma referência para o próximo nó na lista (next) e um elemento do tipo genérico T (element)."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "30",
+    "question": "Qual é o método utilizado para obter o nó que segue o nó atual?",
+    "answer": "O método utilizado para obter o nó que segue o nó atual é o 'getNext()'."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "37",
+    "question": "O que a operação isEmpty retorna na implementação em lista ligada?",
+    "answer": "A operação isEmpty retorna true se o contador de elementos é 0, e falso caso contrário."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "39",
+    "question": "Qual é a complexidade das operações push e pop na implementação em lista ligada da LinkedStack?",
+    "answer": "As operações push e pop na implementação em lista ligada da LinkedStack têm complexidade O(1)."
+  },
+  {
+    "filename": "Slides.ED.Aula04.pdf",
+    "page": "40",
+    "question": "Qual é a relação entre a classe java.util.Stack e a classe Vector?",
+    "answer": "A classe java.util.Stack deriva da classe Vector."
+  }
+]
