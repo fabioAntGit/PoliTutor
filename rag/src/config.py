@@ -10,6 +10,7 @@ Organised into sections:
     6. Vector database (ChromaDB)
     7. Retrieval & reranking
     8. Benchmarking & evaluation
+    9. Tutor generation
 """
 
 import logging
@@ -164,3 +165,19 @@ BENCHMARK_COMPARISON_CONFIGS = [
         "reranker_model": "Alibaba-NLP/gte-reranker-modernbert-base",
     }
 ]
+
+# 9. TUTOR GENERATION
+# System prompt instructing the LLM to act as a Socratic tutor for programming course units.
+# The tutor never gives direct solutions or ready-made code — it guides the student
+# through questions and hints, grounded exclusively in the retrieved course material.
+TUTOR_SYSTEM_PROMPT = (
+    " "
+)
+
+# Fallback message returned to the student when retrieval finds no relevant content
+# in the course materials for the given question.
+TUTOR_FALLBACK_MESSAGE = (
+    "Não encontrei conteúdo relevante nos materiais desta unidade curricular "
+    "para responder à sua pergunta. "
+    "Tente reformular a questão ou consulte diretamente os slides da UC."
+)

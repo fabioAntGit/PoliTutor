@@ -6,7 +6,7 @@
 
 ## Description
 
-Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding and retrieving documents (slides, notes) from polytechnic course units. The system supports PDF, PPTX and Markdown files, multimodal image processing, cross-encoder reranking, and a full evaluation benchmark.
+Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding and retrieving documents (slides, notes) from polytechnic course units. The system supports PDF, PPTX and Markdown files, multimodal image processing, cross-encoder reranking, Socratic tutor generation, and a full evaluation benchmark.
 
 **Key features:**
 - Multi-format extraction via Unstructured API (PDF, PPTX, MD — hi-res, table and image aware)
@@ -14,7 +14,8 @@ Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding 
 - Source-type aware chunking strategies (slides vs. notes)
 - Multilingual embeddings stored in ChromaDB Cloud
 - Cross-encoder reranking
-- `retrieve()` function callable by a backend integrating seamlessly into downstream endpoints
+- Socratic tutor generation via IAEdu API (GPT-4o) — guides students through questions and hints, never gives direct answers
+- `ask()` function callable by a backend integrating seamlessly into downstream endpoints
 - Automated benchmark generation and evaluation (Hit Rate, MRR, NDCG, MAP, Precision, Recall)
 - Embedding visualisation via Renumics Spotlight
 
@@ -36,13 +37,15 @@ Poli-Tutor/
     ├── src/
     │   ├── config.py                   # All configuration and constants
     │   ├── utils.py                    # Filename parsing and metadata extraction
-    │   ├── models.py                   # Shared data structures (RetrievalResults)
+    │   ├── models.py                   # Shared data structures
+    │   ├── iaedu.py                    # Reusable IAEdu API client
     │   ├── extractor.py                # File partitioning and page grouping
     │   ├── chunker.py                  # Text splitting with page tracking
     │   ├── embedding.py                # HuggingFace embedder + image LLM summarisation
     │   ├── database.py                 # ChromaDB Cloud client
     │   ├── reranker.py                 # Cross-encoder reranker
-    │   ├── retrieval.py                # Core search logic for backend integration
+    │   ├── retrieval.py                # Core search logic + ask() entry point
+    │   ├── generator.py                # Socratic tutor response generation (IAEdu/GPT-4o)
     │   ├── pipeline.py                 # Main ingestion pipeline (entry point)
     │   ├── benchmark.py                # Benchmark generation and evaluation
     │   └── visualize.py                # Spotlight embedding visualiser
@@ -193,6 +196,7 @@ python src/visualize.py
 
 ## Pipeline Overview
 
+### Ingestion
 ```
 Document Files (PDF / PPTX / MD)
       |
@@ -206,15 +210,50 @@ extractor.py    →  Partitions documents via Unstructured API (Tables, Images, 
 chunker.py      →  Segments elements into chunks while preserving page context
       |
       v
-embedding.py    →  Summarizes relevant images (LLM) and generates vector 
+embedding.py    →  Summarizes relevant images (LLM) and generates vector
                    embeddings for storage in ChromaDB Cloud
+```
+
+### Query (backend integration)
+```
+Student question
+      |
+      v
+retrieval.py    →  ask(course, query)
+      |                    |
+      |           retrieve() — embeds query, searches ChromaDB, reranks results
+      |                    |
+      v           generator.py — builds context from chunks, calls IAEdu API (GPT-4o)
+                             |
+                             v
+                   TutorResponse(answer, sources, is_fallback)
 ```
 
 ---
 
+## Tutor
+
+`retrieval.py` exposes an `ask(course, query)` function as the primary backend integration point:
+
+```python
+from retrieval import ask
+
+response = ask(course="ed", query="O que é uma árvore AVL?")
+
+print(response.answer)       # Socratic guidance from the tutor
+print(response.is_fallback)  # True if no relevant content was found
+
+for source in response.sources:
+    print(source.filename, source.pages, source.score)
+```
+
+It queries ChromaDB filtered by course unit, reranks the results, then calls the IAEdu API (GPT-4o) to generate a Socratic tutoring response grounded exclusively in the retrieved course material. The tutor never gives direct answers or ready-made code — it guides the student through questions and hints.
+
+When no relevant content is found, a fallback `TutorResponse` is returned without calling the generation API.
+
 ## Retrieval
 
-`retrieval.py` exposes a `retrieve(course, query)` function intended to be called by a backend service:
+For direct access to the retrieval layer without generation (e.g. for benchmarking), use `retrieve()`:
 
 ```python
 from retrieval import retrieve

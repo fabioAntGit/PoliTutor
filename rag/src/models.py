@@ -3,10 +3,14 @@ Shared Data Models.
 
 Defines the core data structures used to pass information safely and
 consistently between different components of the RAG pipeline.
+
+Classes:
+    RetrievalResults: Output of ChromaDB query + reranking stage.
+    TutorSource:      A single source chunk cited in a tutor response.
+    TutorResponse:    Final output of the tutor generation pipeline.
 """
 
 from dataclasses import dataclass, field
-
 
 @dataclass
 class RetrievalResults:
@@ -52,3 +56,32 @@ class RetrievalResults:
     def is_empty(self) -> bool:
         """Returns True if the result set contains no documents."""
         return len(self.ids) == 0
+
+
+@dataclass
+class TutorSource:
+    """
+    Represents a single source chunk cited in a tutor response.
+
+    Attributes:
+        filename: Name of the source document (e.g. 'slides.ED.CAP3.pdf').
+        pages:    List of page numbers covered by this chunk.
+        score:    Reranker relevance score in [0, 1].
+    """
+    filename: str
+    pages: list[int]
+    score: float
+
+@dataclass
+class TutorResponse:
+    """
+    Final output of the tutor generation pipeline.
+
+    Attributes:
+        answer:      The tutor's response text (Socratic guidance or fallback message).
+        sources:     List of source chunks used to ground the response.
+        is_fallback: True if no relevant context was found and a fallback message was returned.
+    """
+    answer: str
+    sources: list[TutorSource]
+    is_fallback: bool
