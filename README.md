@@ -226,13 +226,15 @@ It queries ChromaDB filtered by course unit, then applies cross-encoder rerankin
 
 ### Reranker scoring
 
-The cross-encoder reranker (`mmarco-mMiniLMv2-L12-H384-v1`) is initialised with a **sigmoid activation**, so all scores are in the range [0, 1]:
+The cross-encoder reranker is initialised with a **sigmoid activation**, so all scores are in the range [0, 1]:
 
 - `0.0` — the model considers the chunk completely irrelevant to the query
 - `0.5` — neutral (model is uncertain)
 - `1.0` — the model considers the chunk highly relevant
 
-The default score threshold (`RERANKER_SCORE_THRESHOLD = 0.5`) discards any result the model considers less likely relevant than not. This value can be adjusted in `config.py` to trade off precision against recall.
+The best available reranker is selected automatically based on hardware:
+- **GPU** → `jinaai/jina-reranker-v2-base-multilingual`
+- **CPU** → `Alibaba-NLP/gte-reranker-modernbert-base`
 
 ---
 
@@ -294,10 +296,9 @@ For each Q&A pair in the dataset:
 
 1. The question is sent to ChromaDB (filtered by course unit) to retrieve `top_k` candidate chunks.
 2. If a reranker is configured, chunks are re-scored by the cross-encoder (sigmoid output) and truncated to `reranker_top_k`.
-3. If a `score_threshold` is set, chunks scoring below it are discarded.
-4. A **relevance key** `<filename>_p<page>` is built for each page covered by each returned chunk. When a chunk spans multiple pages, all of them are registered with the same score so that a match on any page counts.
-5. The ground-truth relevant document is `<filename>_p<page>` from the QA pair (binary relevance = 1).
-6. `ranx` computes the final metrics by comparing the ranked run against the ground-truth qrels.
+3. A **relevance key** `<filename>_p<page>` is built for each page covered by each returned chunk. When a chunk spans multiple pages, all of them are registered with the same score so that a match on any page counts.
+4. The ground-truth relevant document is `<filename>_p<page>` from the QA pair (binary relevance = 1).
+5. `ranx` computes the final metrics by comparing the ranked run against the ground-truth qrels.
 
 **Reported metrics** (via `ranx` at `@5`): Hit Rate, MRR, NDCG, MAP, Precision, Recall.
 
