@@ -58,7 +58,6 @@ class BenchmarkConfig:
     top_k: int = TOP_K_RESULTS
     reranker_model: str | None = RERANKER_MODEL
     reranker_top_k: int = RERANKER_TOP_K
-    score_threshold: float | None = None
 
 
 def create_qa(context: str, page_number: int, filename: str) -> dict | None:
@@ -194,7 +193,6 @@ def build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[
             top_k=config.top_k,
             reranker_model=config.reranker_model,
             reranker_top_k=config.reranker_top_k,
-            score_threshold=config.score_threshold,
         )
 
         run_dict[q_id] = {}

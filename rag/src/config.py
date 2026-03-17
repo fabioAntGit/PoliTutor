@@ -114,7 +114,6 @@ CHROMA_HNSW_SEARCH_EF = 100
 TOP_K_RESULTS = 20
 RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
 RERANKER_TOP_K = 5
-RERANKER_SCORE_THRESHOLD = 0.5
 
 # 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
@@ -135,7 +134,7 @@ BENCHMARK_PROMPT = (
 )
 
 # Each entry maps to BenchmarkConfig fields. Omitted fields use BenchmarkConfig defaults
-# (top_k=TOP_K_RESULTS, reranker_top_k=RERANKER_TOP_K, score_threshold=None).
+# (top_k=TOP_K_RESULTS, reranker_top_k=RERANKER_TOP_K).
 BENCHMARK_COMPARISON_CONFIGS = [
     {
         "name": "bge-m3 + jinaai jina-reranker-v2-base-multilingual",
