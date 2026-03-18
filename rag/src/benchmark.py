@@ -12,14 +12,11 @@ Two main workflows:
 
 import json
 import logging
-import os
 import sys
-import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 
-import requests
 from dotenv import load_dotenv
 from ranx import Qrels, Run, evaluate
 
@@ -39,6 +36,7 @@ from config import (
     TOP_K_RESULTS,
 )
 from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
+from iaedu import call_iaedu
 from retrieval import retrieve_with_config
 from utils import extract_metadata_from_filename
 
@@ -73,35 +71,14 @@ def create_qa(context: str, page_number: int, filename: str) -> dict | None:
         A dict with 'filename', 'page', 'question', and 'answer' keys, or None on failure.
     """
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    thread_id = uuid.uuid4().hex[:20]
-    url = os.getenv("IAEDU_API_ENDPOINT")
-
-    files = {
-        "channel_id": (None, os.getenv("IAEDU_API_CHANNEL")),
-        "thread_id": (None, thread_id),
-        "user_info": (None, "{}"),
-        "message": (None, prompt),
-    }
-    headers = {"x-api-key": os.getenv("IAEDU_API_KEY")}
-
-    response = requests.post(url, files=files, headers=headers)
-
-    if not response.ok:
-        logger.error("IAEdu API error %d: %s", response.status_code, response.text)
+    content = call_iaedu(prompt)
+    if content is None:
         return None
-
-    for line in response.iter_lines():
-        if line:
-            decoded = line.decode("utf-8")
-            try:
-                data = json.loads(decoded)
-                if data.get("type") == "message":
-                    content = data["content"]["content"]
-                    return json.loads(content)
-            except (json.JSONDecodeError, KeyError, TypeError):
-                continue
-
-    return None
+    try:
+        return json.loads(content)
+    except (json.JSONDecodeError, TypeError):
+        logger.error("Failed to parse IAEdu response as JSON: %s", content)
+        return None
 
 
 def generate_benchmark_dataset() -> None:

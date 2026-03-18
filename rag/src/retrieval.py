@@ -4,6 +4,11 @@ Retrieval Module.
 This is the primary search execution component of the RAG system. It exposes
 functions to fetch and rerank information chunks corresponding
 to the user's queries against the ChromaDB document store.
+
+Functions:
+    retrieve_with_config: Flexible retrieval for benchmarking with custom parameters.
+    retrieve:             Default retrieval using config values. Called by the backend.
+    ask:                  End-to-end pipeline: retrieve → generate. Primary backend entry point.
 """
 
 import logging
@@ -17,7 +22,8 @@ from config import (
 )
 from embedding import get_embedder
 from database import get_collection
-from models import RetrievalResults
+from generator import generate
+from models import RetrievalResults, TutorResponse
 from reranker import rerank
 
 logger = logging.getLogger(__name__)
@@ -79,3 +85,21 @@ def retrieve(course: str, query: str) -> RetrievalResults:
         Structured RetrievalResults object.
     """
     return retrieve_with_config(course, query)
+
+
+def ask(course: str, query: str) -> TutorResponse:
+    """
+    End-to-end tutor pipeline: retrieve relevant chunks then generate a Socratic response.
+
+    This is the primary entry point for backend integration, replacing direct calls
+    to retrieve(). It composes retrieval and generation into a single call.
+
+    Args:
+        course: Course unit identifier (e.g., 'ed', 'pp').
+        query:  The student's question.
+
+    Returns:
+        A TutorResponse with the tutor's answer, cited sources, and fallback flag.
+    """
+    results = retrieve(course, query)
+    return generate(query, results)
