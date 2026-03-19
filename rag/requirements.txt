@@ -11,6 +11,7 @@ ranx
 torch
 numpy
 pandas
+matplotlib
 accelerate
 einops
 transformers==4.44.2

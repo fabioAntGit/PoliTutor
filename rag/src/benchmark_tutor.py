@@ -1,0 +1,405 @@
+"""
+Tutor Benchmark Module.
+
+Evaluates the quality of the Socratic tutor's generation stage independently
+from retrieval. Given a student question, does the tutor produce a
+pedagogically sound Socratic response?
+
+Unlike the retrieval benchmark (benchmark.py), this module does not measure
+whether the right chunks were retrieved — it measures the quality of the
+response itself using LLM-as-judge (GPT-4o via IAEdu).
+
+Two main workflows:
+    - Dataset generation (--generate): for each document page, calls the IAEdu
+      API to produce 2 questions — one regular student question and one
+      adversarial question designed to pressure the tutor into bypassing the
+      Socratic method.
+    - Evaluation (--evaluate): runs the full tutor pipeline (ask()) for each
+      question, scores each response with LLM-as-judge on defined criterias, and saves a
+      visual report (PNG) to data/benchmark/results/.
+
+Output:
+    data/benchmark/BenchmarkTutor-{filename}.json           — dataset files
+    data/benchmark/results/benchmark_tutor_{timestamp}.png  — visual report
+"""
+
+import json
+import logging
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from dotenv import load_dotenv
+
+from config import (
+    BENCHMARK_MIN_CONTEXT_LENGTH,
+    BENCHMARK_OUTPUT_DIR,
+    COURSE_PATH,
+    KEYWORDS_TO_EXCLUDE,
+    SUPPORTED_EXTENSIONS,
+    TUTOR_BENCHMARK_CRITERIA,
+    TUTOR_BENCHMARK_GENERATION_PROMPT,
+    TUTOR_BENCHMARK_JUDGE_PROMPT,
+)
+from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
+from iaedu import call_iaedu
+from models import TutorBenchmarkEntry, TutorEvaluationResult
+from retrieval import ask
+from utils import extract_metadata_from_filename
+
+logger = logging.getLogger(__name__)
+
+load_dotenv()
+
+def parse_json(content: str) -> any:
+    """Parses JSON from a string, stripping markdown code blocks if present."""
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.MULTILINE)
+    return json.loads(cleaned)
+
+def create_questions(context: str, page_number: int, filename: str) -> list[dict] | None:
+    """
+    Calls the IAEdu API to generate 2 questions from the given page context:
+    one regular student question and one adversarial question designed to
+    pressure the tutor into bypassing the Socratic method.
+
+    Args:
+        context:     Page text to use as generation context.
+        page_number: Page number within the source document.
+        filename:    Source document filename.
+
+    Returns:
+        A list of 2 dicts, each with keys 'filename', 'page', 'question',
+        'question_type', and 'context'. Returns None on failure.
+    """
+    prompt = TUTOR_BENCHMARK_GENERATION_PROMPT.format(
+        page_number=page_number,
+        filename=filename,
+        context=context,
+    )
+
+    content = call_iaedu(prompt)
+
+    if content is None:
+        return None
+    try:
+        questions = parse_json(content)
+        for q in questions:
+            q["context"] = context
+        return questions
+    except (json.JSONDecodeError, TypeError):
+        logger.error("Failed to parse IAEdu response as JSON: %s", content)
+        return None
+
+
+def generate_tutor_benchmark_dataset() -> None:
+    """
+    Generates BenchmarkTutor JSON files from all course documents in COURSE_PATH.
+
+    For each document page with sufficient context, calls create_questions() to
+    produce 2 questions (regular + adversarial). Output files are saved to
+    BENCHMARK_OUTPUT_DIR as 'BenchmarkTutor-{filename}.json'.
+    """
+    docs = [f for ext in SUPPORTED_EXTENSIONS for f in Path(COURSE_PATH).rglob(ext)]
+
+    for file_path in docs:
+        file_name = file_path.name
+        all_questions: list[dict] = []
+
+        try:
+            source_type, course_code, _ = extract_metadata_from_filename(file_name)
+        except ValueError:
+            continue
+
+        elements = extract_elements_from_file(str(file_path))
+
+        filtered_elements = filter_elements(elements, KEYWORDS_TO_EXCLUDE)
+
+        grouped_pages = group_elements_by_page(
+            filtered_elements,
+            source_filename=file_name,
+            source_type=source_type,
+            course_code=course_code,
+            skip_pages=1,
+        )
+
+        for page in grouped_pages:
+            page_number = page["metadata"]["page_number"]
+            context = page["text"].strip()
+
+            if len(context) < BENCHMARK_MIN_CONTEXT_LENGTH:
+                continue
+
+            questions = create_questions(context, page_number, file_name)
+
+            if questions:
+                all_questions.extend(questions)
+
+        if all_questions:
+            BENCHMARK_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+            output_file = BENCHMARK_OUTPUT_DIR / f"BenchmarkTutor-{file_path.name}.json"
+
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(all_questions, f, ensure_ascii=False, indent=2)
+
+            logger.info("Saved %d questions to %s", len(all_questions), output_file.name)
+
+
+def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> dict | None:
+    """
+    Calls the IAEdu API (GPT-4o) to score an actual tutor response against
+    the four Socratic quality criteria.
+
+    Args:
+        entry:           The benchmark entry with context and question.
+        actual_response: The response actually generated by the tutor pipeline.
+
+    Returns:
+        A dict with integer scores for each criterion and an 'overall_comment',
+        or None on failure.
+    """
+    prompt = TUTOR_BENCHMARK_JUDGE_PROMPT.format(
+        question_type=entry.question_type,
+        context=entry.context,
+        question=entry.question,
+        actual_response=actual_response,
+    )
+
+    content = call_iaedu(prompt)
+
+    if content is None:
+        return None
+    try:
+        return parse_json(content)
+    except (json.JSONDecodeError, TypeError):
+        logger.error("Failed to parse judge response as JSON: %s", content)
+        return None
+
+
+def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult]:
+    """
+    Reads a BenchmarkTutor JSON file, runs the full tutor pipeline for each
+    question, then scores each response with the LLM-as-judge.
+
+    Args:
+        benchmark_file: Path to a BenchmarkTutor-*.json file.
+
+    Returns:
+        A list of TutorEvaluationResult, one per evaluated entry.
+    """
+    with open(benchmark_file, encoding="utf-8") as f:
+        raw_entries = json.load(f)
+
+    results: list[TutorEvaluationResult] = []
+
+    for raw in raw_entries:
+        entry = TutorBenchmarkEntry(
+            filename=raw.get("filename", ""),
+            page=str(raw.get("page", "")),
+            context=raw.get("context", ""),
+            question=raw.get("question", ""),
+            question_type=raw.get("question_type", "regular"),
+        )
+
+        try:
+            _, course_code, _ = extract_metadata_from_filename(entry.filename)
+        except ValueError:
+            logger.warning("Skipping entry with invalid filename: %s", entry.filename)
+            continue
+
+        logger.info(
+            "Evaluating [%s]: %s | page %s",
+            entry.question_type, entry.filename, entry.page,
+        )
+
+        tutor_response = ask(course_code, entry.question)
+
+        # Fallback responses score 0 on all criteria — the pipeline found nothing.
+        if tutor_response.is_fallback:
+            results.append(TutorEvaluationResult(
+                filename=entry.filename,
+                page=entry.page,
+                question=entry.question,
+                question_type=entry.question_type,
+                actual_response=tutor_response.answer,
+                faithfulness=0,
+                non_directiveness=0,
+                scaffolding=0,
+                clarity=0,
+                guardrail_robustness=0,
+                overall_comment="Fallback — no retrieval results.",
+                is_fallback=True,
+            ))
+            continue
+
+        scores = judge_response(entry, tutor_response.answer)
+
+        if scores is None:
+            logger.warning("Judge returned no scores for question: %s", entry.question[:60])
+            continue
+
+        results.append(TutorEvaluationResult(
+            filename=entry.filename,
+            page=entry.page,
+            question=entry.question,
+            question_type=entry.question_type,
+            actual_response=tutor_response.answer,
+            faithfulness=int(scores.get("faithfulness", 0)),
+            non_directiveness=int(scores.get("non_directiveness", 0)),
+            scaffolding=int(scores.get("scaffolding", 0)),
+            clarity=int(scores.get("clarity", 0)),
+            guardrail_robustness=int(scores.get("guardrail_robustness", 0)),
+            overall_comment=scores.get("overall_comment", ""),
+            is_fallback=False,
+        ))
+
+    return results
+
+
+def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
+    """
+    Generates a 2×2 matplotlib figure and saves it as a timestamped PNG.
+
+    Subplots:
+        1. Bar chart — mean std per criterion (all non-fallback results).
+        2. Box plot — score distribution per criterion.
+        3. Histogram — distribution of overall mean score.
+        4. Scatter — Non-directiveness vs. Guardrail robustness, coloured by
+           question_type (blue = regular, red = adversarial).
+
+    Args:
+        results: List of evaluated tutor responses.
+
+    Returns:
+        Path to the written PNG file, or None if no plottable results.
+    """
+    results_dir = BENCHMARK_OUTPUT_DIR / "results"
+
+    non_fallback = [r for r in results if not r.is_fallback]
+
+    if not non_fallback:
+        logger.warning("No non-fallback results to plot.")
+        return None
+
+    labels = ["Faithfulness", "Non-\ndirectiveness", "Scaffolding", "Clarity", "Guardrail\nRobustness"]
+
+    scores_by_criterion = [
+        [getattr(r, c) for r in non_fallback] for c in TUTOR_BENCHMARK_CRITERIA
+    ]
+
+    means = [np.mean(s) for s in scores_by_criterion]
+    stds = [np.std(s) for s in scores_by_criterion]
+    overall_scores = [
+        np.mean([getattr(r, c) for c in TUTOR_BENCHMARK_CRITERIA]) for r in non_fallback
+    ]
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 9))
+    fig.suptitle("Tutor Benchmark — Avaliação da Qualidade da Resposta Socrática", fontsize=13)
+
+    # 1 — Bar chart: mean std per criterion
+    ax = axes[0, 0]
+    bars = ax.bar(labels, means, yerr=stds, capsize=5, color="#4C72B0", alpha=0.85)
+    ax.set_ylim(0, 5.5)
+    ax.set_ylabel("Score médio (1-5)")
+    ax.set_title("Score médio por critério")
+    ax.axhline(y=3, color="gray", linestyle="--", linewidth=0.8, label="Score neutro (3)")
+    for bar, mean in zip(bars, means):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1,
+            f"{mean:.2f}", ha="center", fontsize=9,
+        )
+    ax.legend(fontsize=8)
+
+    # 2 — Box plot: score distribution per criterion
+    ax = axes[0, 1]
+    bp = ax.boxplot(scores_by_criterion, labels=labels, patch_artist=True)
+    for patch in bp["boxes"]:
+        patch.set_facecolor("#4C72B0")
+        patch.set_alpha(0.6)
+    ax.set_ylim(0, 5.5)
+    ax.set_ylabel("Score (1-5)")
+    ax.set_title("Distribuição de scores por critério")
+    ax.axhline(y=3, color="gray", linestyle="--", linewidth=0.8)
+
+    # 3 — Histogram: distribution of overall mean score
+    ax = axes[1, 0]
+    ax.hist(overall_scores, bins=10, range=(0, 5), color="#55A868", alpha=0.85, edgecolor="white")
+    ax.set_xlabel("Score médio global")
+    ax.set_ylabel("Nº de respostas")
+    ax.set_title("Distribuição do score médio global")
+    ax.axvline(
+        x=np.mean(overall_scores), color="red", linestyle="--", linewidth=1.2,
+        label=f"Média: {np.mean(overall_scores):.2f}",
+    )
+    ax.legend(fontsize=8)
+
+    # 4 — Scatter: Non-directiveness vs. Guardrail robustness, coloured by question_type
+    ax = axes[1, 1]
+    colors = {"regular": "#4C72B0", "adversarial": "#C44E52"}
+    for qtype, color in colors.items():
+        subset = [r for r in non_fallback if r.question_type == qtype]
+        if subset:
+            ax.scatter(
+                [r.non_directiveness for r in subset],
+                [r.guardrail_robustness for r in subset],
+                alpha=0.7, color=color, edgecolors="white", linewidths=0.5, label=qtype,
+            )
+    ax.set_xlabel("Non-directiveness")
+    ax.set_ylabel("Guardrail Robustness")
+    ax.set_title("Non-directiveness vs. Guardrail Robustness")
+    ax.set_xlim(0, 5.5)
+    ax.set_ylim(0, 5.5)
+    ax.axhline(y=3, color="gray", linestyle="--", linewidth=0.8)
+    ax.axvline(x=3, color="gray", linestyle="--", linewidth=0.8)
+    ax.legend(fontsize=8)
+
+    plt.tight_layout()
+
+    results_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    output_file = results_dir / f"benchmark_tutor_{timestamp}.png"
+    plt.savefig(output_file, dpi=150)
+    plt.close()
+    logger.info("Visual report saved to %s", output_file)
+    return output_file
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        if arg == "--generate":
+            generate_tutor_benchmark_dataset()
+        elif arg == "--evaluate":
+            if len(sys.argv) > 2:
+                benchmark_files = [Path(sys.argv[2])]
+            else:
+                benchmark_files = list(Path(BENCHMARK_OUTPUT_DIR).rglob("BenchmarkTutor-*.json"))
+
+            if not benchmark_files:
+                logger.warning("No BenchmarkTutor-*.json files found in %s", BENCHMARK_OUTPUT_DIR)
+                sys.exit(1)
+
+            all_results: list[TutorEvaluationResult] = []
+            for bf in benchmark_files:
+                logger.info("=== Evaluating: %s ===", bf.name)
+                all_results.extend(evaluate_tutor_benchmark(bf))
+
+            if all_results:
+                save_visual_report(all_results)
+        else:
+            logger.error("Unknown argument: %s. Use --generate or --evaluate.", arg)
+            sys.exit(1)
+    else:
+        benchmark_files = list(Path(BENCHMARK_OUTPUT_DIR).rglob("BenchmarkTutor-*.json"))
+        if not benchmark_files:
+            logger.warning("No BenchmarkTutor-*.json files found. Run --generate first.")
+            sys.exit(1)
+
+        all_results = []
+        for bf in benchmark_files:
+            logger.info("=== Evaluating: %s ===", bf.name)
+            all_results.extend(evaluate_tutor_benchmark(bf))
+
+        if all_results:
+            save_visual_report(all_results)
