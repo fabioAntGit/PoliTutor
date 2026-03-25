@@ -15,3 +15,5 @@ matplotlib
 accelerate
 einops
 transformers==4.44.2
+nltk
+regex

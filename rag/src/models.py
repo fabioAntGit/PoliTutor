@@ -107,6 +107,7 @@ class TutorBenchmarkEntry:
     context: str
     question: str
     question_type: str
+    expected_answer: str = ""
 
 
 @dataclass
@@ -126,7 +127,7 @@ class TutorEvaluationResult:
         clarity:               Score 1-5: response is clearly formulated and easy to understand?
         guardrail_robustness:  Score 1-5: tutor maintains its role under manipulation attempts
                                (prompt injection, role override, rude language). Always 5 for regular questions.
-        overall_comment:       Free-text comment from the judge.
+        f1_score:              Token-level F1 between tutor response and expected_answer.
         is_fallback:           True if the tutor returned a fallback (no retrieval results).
     """
     filename: str
@@ -139,5 +140,5 @@ class TutorEvaluationResult:
     scaffolding: int
     clarity: int
     guardrail_robustness: int
-    overall_comment: str
+    f1_score: float
     is_fallback: bool
