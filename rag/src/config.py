@@ -128,18 +128,17 @@ RERANKER_TOP_K = 5
 # 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
-BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "ndcg@5", "map@5", "precision@5", "recall@5"]
+BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "recall@5"]
 
 BENCHMARK_PROMPT = (
     "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
-    "Your task is to create a Q&A pair based on the following context. "
-    "You MUST base your question and answer SOLELY on the provided context. "
+    "Your task is to generate a question based on the following context. "
+    "You MUST base your question SOLELY on the provided context. "
     "Do NOT use any prior memory, or information outside of the given context. "
-    "The Q&A pair should be answerable using only the text provided. "
-    "Generate the question and answer in Portuguese. "
+    "Generate the question in Portuguese. "
     "The content is from page {page_number} of {filename} "
     "Reply ONLY with raw JSON, no markdown, no code blocks, no extra text. "
-    'Use this exact format: {{"filename": "...", "page": "...", "question": "...", "answer": "..."}}'
+    'Use this exact format: {{"filename": "...", "page": "...", "question": "..."}}'
     "\n\nContext:\n{context}"
 )
 

@@ -16,7 +16,7 @@ Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding 
 - Cross-encoder reranking
 - Socratic tutor generation via IAEdu API (GPT-4o) — guides students through questions and hints, never gives direct answers
 - `ask()` function callable by a backend integrating seamlessly into downstream endpoints
-- Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, NDCG, MAP, Precision, Recall)
+- Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, Recall)
 - Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity, Guardrail Robustness) with visual report
 - Interactive CLI chat for local testing (`chat.py`)
 - Embedding visualisation via Renumics Spotlight
@@ -296,13 +296,13 @@ The benchmark module generates Q&A pairs from page content and evaluates ChromaD
 
 ### Dataset generation
 
-Requires IAEdu API. For each document in `COURSE_PATH`, the module extracts page content and sends it to the LLM to generate a Q&A pair. Results are saved to `rag/data/benchmark/`.
+Requires IAEdu API. For each document in `COURSE_PATH`, the module extracts page content and sends it to the LLM to generate a question. Results are saved to `rag/data/benchmark/`.
 
 ```bash
 python src/benchmark.py --generate
 ```
 
-Output: `BenchmarkQA-<filename>.json` — one file per ingested document.
+Output: `BenchmarkQA-<filename>.json` — one file per ingested document. Each entry contains `filename`, `page`, and `question`.
 
 ### Evaluation
 
@@ -321,12 +321,12 @@ All comparison results are persisted to `data/benchmark/results/` as timestamped
 
 Example comparison output:
 ```
--------------------------------------------------------------------------------------------------------
-Config                     hit_rate@5         mrr@5        ndcg@5         map@5  precision@5      recall@5
--------------------------------------------------------------------------------------------------------
-e5-large + mMiniLM             0.8400        0.7100        0.7600        0.7000       0.1680        0.8400
-e5-base + mMiniLM              0.8200        0.7000        0.7400        0.6800       0.1640        0.8200
--------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------
+Config                     hit_rate@5         mrr@5      recall@5
+-------------------------------------------------------------
+e5-large + mMiniLM             0.8400        0.7100        0.8400
+e5-base + mMiniLM              0.8200        0.7000        0.8200
+-------------------------------------------------------------
 ```
 
 ### Multi-model ingestion
@@ -352,7 +352,7 @@ For each Q&A pair in the dataset:
 4. The ground-truth relevant document is `<filename>_p<page>` from the QA pair (binary relevance = 1).
 5. `ranx` computes the final metrics by comparing the ranked run against the ground-truth qrels.
 
-**Reported metrics** (via `ranx` at `@5`): Hit Rate, MRR, NDCG, MAP, Precision, Recall.
+**Reported metrics** (via `ranx` at `@5`): Hit Rate, MRR, Recall.
 
 ### Customising configurations
 
