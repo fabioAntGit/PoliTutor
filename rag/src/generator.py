@@ -11,8 +11,11 @@ student through questions and hints based exclusively on the course material.
 
 import json
 import logging
+import re
 
-from config import TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
+from config import SOCRATIC_REDIRECT, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
+
+from guardrails import detect_direct_answer
 from iaedu import call_iaedu
 from models import RetrievalResults, TutorResponse, TutorSource
 
@@ -55,7 +58,7 @@ def build_sources(results: RetrievalResults) -> list[TutorSource]:
         filename = meta.get("filename", "Desconhecido")
         pages_raw = meta.get("pages", "[]")
         pages = json.loads(pages_raw) if isinstance(pages_raw, str) else pages_raw
-        sources.append(TutorSource(filename=filename, pages=pages, score=float(score)))
+        sources.append(TutorSource(filename=filename, pages=pages))
     return sources
 
 def generate(query: str, results: RetrievalResults) -> TutorResponse:
@@ -74,23 +77,51 @@ def generate(query: str, results: RetrievalResults) -> TutorResponse:
         A TutorResponse with the tutor's answer, cited sources, and fallback flag.
     """
     if results.is_empty():
-        logger.warning("No retrieval results — returning fallback response.")
+        logger.warning("[GENERATE] FALLBACK REASON: No retrieval results (0 chunks).")
         return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
 
     context = build_context(results)
     sources = build_sources(results)
 
-    prompt = (
-        f"{TUTOR_SYSTEM_PROMPT}\n\n"
-        f"Contexto dos materiais da UC:\n{context}\n\n"
-        f"Pergunta do aluno:\n{query}"
-    )
+    prompt = TUTOR_SYSTEM_PROMPT.format(user_question=query, rag_context=context)
 
-    answer = call_iaedu(prompt)
+    raw_answer = call_iaedu(prompt)
 
-    if answer is None:
-        logger.error("IAEdu API returned no answer — returning fallback response.")
+    if raw_answer is None:
+        logger.error("[GENERATE] FALLBACK REASON: IAEdu API returned no answer")
         return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=sources, is_fallback=True)
 
-    logger.info("Tutor response generated from %d source chunks.", len(sources))
-    return TutorResponse(answer=answer, sources=sources, is_fallback=False)
+    logger.debug("[GENERATE] Raw LLM response (first 500 chars):\n%s", raw_answer[:500])
+
+    # Parse the JSON response from the LLM
+    clean = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_answer.strip())
+    try:
+        data = json.loads(clean)
+    except (json.JSONDecodeError, TypeError) as exc:
+        logger.warning("[GENERATE] LLM response is not valid JSON (%s) — using raw text.", exc)
+        return TutorResponse(answer=raw_answer, sources=sources, is_fallback=False)
+
+    # Handle the case where the LLM itself decided the context is not relevant
+    if data.get("is_fallback", False):
+        logger.warning("[GENERATE] FALLBACK REASON: LLM set is_fallback=true.")
+        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
+
+    answer = data.get("answer", "")
+    if not answer:
+        logger.warning("[GENERATE] FALLBACK REASON: LLM returned empty answer string.")
+        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
+
+    # Use sources from LLM response (only the ones it actually cited)
+    llm_sources = [
+        TutorSource(filename=s.get("filename", ""), pages=s.get("pages", []))
+        for s in data.get("sources", [])
+        if s.get("filename")
+    ]
+
+    # Output guardrail: verify the response is Socratic
+    if detect_direct_answer(answer):
+        logger.warning("[GENERATE] Output guardrail triggered — replacing with Socratic redirect.")
+        return TutorResponse(answer=SOCRATIC_REDIRECT, sources=llm_sources, is_fallback=False)
+
+    logger.info("Tutor response generated from %d source chunks.", len(llm_sources))
+    return TutorResponse(answer=answer, sources=llm_sources, is_fallback=False)

@@ -43,7 +43,7 @@ def run_chat(course: str) -> None:
                     continue
                 seen.add(key)
                 pages_str = ", ".join(str(p) for p in src.pages)
-                print(f"  • {src.filename} — p.{pages_str}  (score: {src.score:.2f})")
+                print(f"  • {src.filename} — p.{pages_str}")
 
         print()
 

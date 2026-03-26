@@ -23,6 +23,12 @@ from config import (
 from embedding import get_embedder
 from database import get_collection
 from generator import generate
+from guardrails import (
+    detect_code_request,
+    detect_prompt_injection,
+    sanitize_input,
+    validate_input,
+)
 from models import RetrievalResults, TutorResponse
 from reranker import rerank
 
@@ -91,8 +97,9 @@ def ask(course: str, query: str) -> TutorResponse:
     """
     End-to-end tutor pipeline: retrieve relevant chunks then generate a Socratic response.
 
-    This is the primary entry point for backend integration, replacing direct calls
-    to retrieve(). It composes retrieval and generation into a single call.
+    Applies input guardrails before retrieval. If the query is blocked
+    (empty, too short/long, prompt-injection detected, or explicit code
+    request), returns early with a rejection message and never hits the LLM.
 
     Args:
         course: Course unit identifier (e.g., 'ed', 'pp').
@@ -101,5 +108,23 @@ def ask(course: str, query: str) -> TutorResponse:
     Returns:
         A TutorResponse with the tutor's answer, cited sources, and fallback flag.
     """
+    # 1. Sanitize
+    query = sanitize_input(query)
+
+    # 2. Basic length validation
+    is_valid, reason = validate_input(query)
+    if not is_valid:
+        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+
+    # 3. Prompt injection detection
+    is_injection, reason = detect_prompt_injection(query)
+    if is_injection:
+        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+
+    # 4. Code request detection
+    is_code_req, reason = detect_code_request(query)
+    if is_code_req:
+        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+
     results = retrieve(course, query)
     return generate(query, results)

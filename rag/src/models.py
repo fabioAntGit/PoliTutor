@@ -70,7 +70,6 @@ class TutorSource:
     """
     filename: str
     pages: list[int]
-    score: float
 
 @dataclass
 class TutorResponse:

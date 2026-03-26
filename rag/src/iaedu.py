@@ -46,13 +46,13 @@ def call_iaedu(prompt: str) -> str | None:
     headers = {"x-api-key": api_key}
 
     try:
-        response = requests.post(url, files=files, headers=headers)
+        response = requests.post(url, files=files, headers=headers, timeout=60)
     except requests.RequestException as e:
         logger.error("IAEdu API request failed: %s", e)
         return None
 
     if not response.ok:
-        logger.error("IAEdu API error %d: %s", response.status_code, response.text)
+        logger.error("[IAEDU] API error %d: %s", response.status_code, response.text[:500])
         return None
 
     import json
@@ -61,9 +61,14 @@ def call_iaedu(prompt: str) -> str | None:
             try:
                 data = json.loads(line.decode("utf-8"))
                 if data.get("type") == "message":
-                    return data["content"]["content"]
-            except (json.JSONDecodeError, KeyError, TypeError):
+                    content = data["content"]["content"]
+                    return content
+                elif data.get("type") == "error":
+                    logger.error("[IAEDU] API returned error event: %s", data.get("content", "unknown error"))
+                    return None
+            except (json.JSONDecodeError, KeyError, TypeError) as exc:
+                logger.debug("[IAEDU] Could not parse line: %s", exc)
                 continue
 
-    logger.warning("IAEdu API returned no parseable message.")
+    logger.warning("[IAEDU] No parseable 'message' event found in response stream.")
     return None
