@@ -49,7 +49,7 @@ from config import (
     TUTOR_BENCHMARK_JUDGE_PROMPT,
 )
 from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from iaedu import call_iaedu
+from call_model import call_iaedu
 from models import TutorBenchmarkEntry, TutorEvaluationResult
 from retrieval import ask
 from utils import extract_metadata_from_filename

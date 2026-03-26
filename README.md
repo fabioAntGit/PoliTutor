@@ -40,7 +40,7 @@ Poli-Tutor/
     │   ├── config.py                   # All configuration and constants
     │   ├── utils.py                    # Filename parsing and metadata extraction
     │   ├── models.py                   # Shared data structures
-    │   ├── iaedu.py                    # Reusable IAEdu API client
+    │   ├── call_model.py               # LLM API clients (IAEdu, OpenRouter)
     │   ├── extractor.py                # File partitioning and page grouping
     │   ├── chunker.py                  # Text splitting with page tracking
     │   ├── embedding.py                # HuggingFace embedder + image LLM summarisation

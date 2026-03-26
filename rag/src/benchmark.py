@@ -35,7 +35,8 @@ from config import (
     TOP_K_RESULTS,
 )
 from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from iaedu import call_iaedu
+# from call_model import call_iaedu
+from call_model import call_openrouter
 from retrieval import retrieve_with_config
 from utils import extract_metadata_from_filename
 
@@ -70,7 +71,8 @@ def create_qa(context: str, page_number: int, filename: str) -> dict | None:
         A dict with 'filename', 'page', and 'question' keys, or None on failure.
     """
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    content = call_iaedu(prompt)
+    # content = call_iaedu(prompt)
+    content = call_openrouter(prompt)
     if content is None:
         return None
     try:
