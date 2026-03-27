@@ -13,10 +13,10 @@ export function ChatGuard({ project }: ChatGuardProps) {
   const router = useRouter();
 
   useEffect(() => {
-    const config = loadConfig();
-
-    if (!config) router.replace("/");
-  }, [router]);
+    if (project.configType === "iaedu" && !loadConfig()) {
+      router.replace(`/setup/${project.id}`);
+    }
+  }, [router, project]);
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6">

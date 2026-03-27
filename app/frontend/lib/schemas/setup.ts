@@ -18,8 +18,6 @@ export const setupSchema = z.object({
     .min(1, "O ID do canal é obrigatório.")
     .regex(/^[a-z0-9]+$/, "O ID do canal só pode conter letras minúsculas e números.")
     .min(10, "O ID do canal parece demasiado curto."),
-
-  projectId: z.string().min(1, "Selecione um projeto."),
 });
 
 export type SetupFormValues = z.infer<typeof setupSchema>;

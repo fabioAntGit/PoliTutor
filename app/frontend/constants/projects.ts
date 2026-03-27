@@ -2,11 +2,11 @@ import type { Project } from "@/types/project";
 
 export const PROJECTS: Project[] = [
   {
-    id: "ed-estg-ipp",
-    name: "Estruturas de Dados",
-    subject: "ED",
+    id: "politutor",
+    name: "Poli Tutor",
     description:
-      "Unidade curricular de Estruturas de Dados do curso de Engenharia Informática. Abrange listas, árvores, grafos, algoritmos de ordenação e pesquisa.",
+      "Tutor socrático baseado em RAG que guia o estudante através de perguntas e pistas, sem nunca dar respostas diretas. Atualmente com conhecimento sobre a UC de Estruturas de Dados (ESTG/IPP) — listas, árvores, grafos, algoritmos de ordenação e pesquisa.",
     institution: "ESTG — Instituto Politécnico do Porto",
+    configType: "iaedu",
   },
 ];
