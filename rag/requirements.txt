@@ -1,3 +1,5 @@
+fastapi
+uvicorn[standard]
 langchain-text-splitters
 langchain-huggingface
 unstructured
@@ -14,6 +16,6 @@ pandas
 matplotlib
 accelerate
 einops
-transformers==4.44.2
+transformers==4.48.0
 nltk
 regex

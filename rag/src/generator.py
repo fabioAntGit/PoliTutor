@@ -61,7 +61,14 @@ def build_sources(results: RetrievalResults) -> list[TutorSource]:
         sources.append(TutorSource(filename=filename, pages=pages))
     return sources
 
-def generate(query: str, results: RetrievalResults) -> TutorResponse:
+def generate(
+    query: str,
+    results: RetrievalResults,
+    *,
+    iaedu_url: str | None = None,
+    iaedu_channel_id: str | None = None,
+    iaedu_api_key: str | None = None,
+) -> TutorResponse:
     """
     Generates a Socratic tutoring response grounded in the retrieved course material.
 
@@ -70,8 +77,11 @@ def generate(query: str, results: RetrievalResults) -> TutorResponse:
     On API failure, also returns the fallback response.
 
     Args:
-        query:   The student's question.
-        results: Ranked chunks retrieved from ChromaDB.
+        query:            The student's question.
+        results:          Ranked chunks retrieved from ChromaDB.
+        iaedu_url:        IAEdu endpoint. Falls back to env var if not provided.
+        iaedu_channel_id: IAEdu channel ID. Falls back to env var if not provided.
+        iaedu_api_key:    IAEdu API key. Falls back to env var if not provided.
 
     Returns:
         A TutorResponse with the tutor's answer, cited sources, and fallback flag.
@@ -85,7 +95,7 @@ def generate(query: str, results: RetrievalResults) -> TutorResponse:
 
     prompt = TUTOR_SYSTEM_PROMPT.format(user_question=query, rag_context=context)
 
-    raw_answer = call_iaedu(prompt)
+    raw_answer = call_iaedu(prompt, url=iaedu_url, channel_id=iaedu_channel_id, api_key=iaedu_api_key)
 
     if raw_answer is None:
         logger.error("[GENERATE] FALLBACK REASON: IAEdu API returned no answer")

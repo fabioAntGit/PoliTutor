@@ -14,22 +14,32 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-def call_iaedu(prompt: str) -> str | None:
+def call_iaedu(
+    prompt: str,
+    *,
+    url: str | None = None,
+    channel_id: str | None = None,
+    api_key: str | None = None,
+) -> str | None:
     """
     Sends a prompt to the IAEdu API and returns the response content.
 
-    Uses a unique thread_id per call so each invocation is independent.
-    Streams the response and parses the first message event found.
+    Credentials can be passed directly or fall back to environment variables,
+    allowing both per-request credentials (API usage) and env-based usage
+    (benchmark scripts).
 
     Args:
-        prompt: The full prompt to send to the LLM.
+        prompt:     The full prompt to send to the LLM.
+        url:        IAEdu endpoint URL. Falls back to IAEDU_API_ENDPOINT env var.
+        channel_id: IAEdu channel ID. Falls back to IAEDU_API_CHANNEL env var.
+        api_key:    IAEdu API key. Falls back to IAEDU_API_KEY env var.
 
     Returns:
         The text content of the model's response, or None on failure.
     """
-    url = os.getenv("IAEDU_API_ENDPOINT")
-    channel_id = os.getenv("IAEDU_API_CHANNEL")
-    api_key = os.getenv("IAEDU_API_KEY")
+    url = url or os.getenv("IAEDU_API_ENDPOINT")
+    channel_id = channel_id or os.getenv("IAEDU_API_CHANNEL")
+    api_key = api_key or os.getenv("IAEDU_API_KEY")
 
     if not all([url, channel_id, api_key]):
         logger.error("IAEdu environment variables are not fully configured.")

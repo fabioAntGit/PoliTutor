@@ -79,21 +79,30 @@ def retrieve_with_config(
     return results
 
 
-def retrieve(course: str, query: str) -> RetrievalResults:
+def retrieve(course: str, query: str, collection_name: str = CHROMA_COLLECTION_NAME) -> RetrievalResults:
     """
     Query ChromaDB and rerank results. Called by the backend.
 
     Args:
-        course: Course unit identifier (e.g., 'ed', 'pp').
-        query:  The user's question.
+        course:          Course unit identifier (e.g., 'ed', 'pp').
+        query:           The user's question.
+        collection_name: ChromaDB collection to query. Defaults to config value.
 
     Returns:
         Structured RetrievalResults object.
     """
-    return retrieve_with_config(course, query)
+    return retrieve_with_config(course, query, collection_name=collection_name)
 
 
-def ask(course: str, query: str) -> TutorResponse:
+def ask(
+    course: str,
+    query: str,
+    *,
+    collection_name: str = CHROMA_COLLECTION_NAME,
+    iaedu_url: str | None = None,
+    iaedu_channel_id: str | None = None,
+    iaedu_api_key: str | None = None,
+) -> TutorResponse:
     """
     End-to-end tutor pipeline: retrieve relevant chunks then generate a Socratic response.
 
@@ -102,8 +111,12 @@ def ask(course: str, query: str) -> TutorResponse:
     request), returns early with a rejection message and never hits the LLM.
 
     Args:
-        course: Course unit identifier (e.g., 'ed', 'pp').
-        query:  The student's question.
+        course:           Course unit identifier (e.g., 'ed', 'pp').
+        query:            The student's question.
+        collection_name:  ChromaDB collection to query. Defaults to config value.
+        iaedu_url:        IAEdu endpoint. Falls back to env var if not provided.
+        iaedu_channel_id: IAEdu channel ID. Falls back to env var if not provided.
+        iaedu_api_key:    IAEdu API key. Falls back to env var if not provided.
 
     Returns:
         A TutorResponse with the tutor's answer, cited sources, and fallback flag.
@@ -126,5 +139,5 @@ def ask(course: str, query: str) -> TutorResponse:
     if is_code_req:
         return TutorResponse(answer=reason, sources=[], is_fallback=True)
 
-    results = retrieve(course, query)
-    return generate(query, results)
+    results = retrieve(course, query, collection_name)
+    return generate(query, results, iaedu_url=iaedu_url, iaedu_channel_id=iaedu_channel_id, iaedu_api_key=iaedu_api_key)
