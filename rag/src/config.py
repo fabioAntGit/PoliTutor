@@ -63,16 +63,16 @@ FILE_PROCESSING_CONFIG = {
 # 4. CHUNKING STRATEGIES
 CHUNKING_STRATEGIES = {
     "apontamentos": {
-        "chunk_size": 1000,
+        "chunk_size": 300,
         "chunk_overlap": 150,
     },
     "slides": {
-        "chunk_size": 600,
-        "chunk_overlap": 100,
+        "chunk_size": 300,
+        "chunk_overlap": 250,
     },
     "default": {
-        "chunk_size": 700,
-        "chunk_overlap": 100,
+        "chunk_size": 300,
+        "chunk_overlap": 200,
     }
 }
 CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
@@ -105,30 +105,27 @@ IMAGE_EMBEDDING_PROMPT = (
 )
 
 # 6. VECTOR DATABASE (ChromaDB)
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs-bge-m3"
-
-# Low-level HNSW tuning
-CHROMA_HNSW_SPACE = "cosine"
-CHROMA_HNSW_M = 32
-CHROMA_HNSW_CONSTRUCTION_EF = 200
-CHROMA_HNSW_SEARCH_EF = 100
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
 # 7. RETRIEVAL & RERANKING
 TOP_K_RESULTS = 20
 # Best reranker is chosen automatically based on hardware availability:
 #   GPU → jinaai/jina-reranker-v2-base-multilingual  (best benchmark results with GPU)
 #   CPU → Alibaba-NLP/gte-reranker-modernbert-base   (best benchmark results on CPU)
-RERANKER_MODEL = (
-    "jinaai/jina-reranker-v2-base-multilingual"
-    if torch.cuda.is_available()
-    else "Alibaba-NLP/gte-reranker-modernbert-base"
-)
+RERANKER_MODEL = "Alibaba-NLP/gte-reranker-modernbert-base"
 RERANKER_TOP_K = 5
 
 # 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
-BENCHMARK_EVAL_METRICS = ["hit_rate@5", "mrr@5", "recall@5"]
+BENCHMARK_EVAL_METRICS = [
+    "hit_rate@5",
+    "mrr@5",
+    "ndcg@5",
+    "map@5",
+    "precision@5",
+    "recall@5",
+]
 
 BENCHMARK_PROMPT = (
     "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
