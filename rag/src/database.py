@@ -10,20 +10,16 @@ import os
 from typing import Optional
 
 import chromadb
+from chromadb.api import ClientAPI
 
-from config import (
-    CHROMA_COLLECTION_NAME,
-    CHROMA_HNSW_CONSTRUCTION_EF,
-    CHROMA_HNSW_M,
-    CHROMA_HNSW_SEARCH_EF,
-    CHROMA_HNSW_SPACE,
-)
+from config import CHROMA_COLLECTION_NAME
+
 
 logger = logging.getLogger(__name__)
 
-_chroma_client: Optional[chromadb.CloudClient] = None
+_chroma_client: Optional[ClientAPI] = None
 
-def get_client() -> chromadb.CloudClient:
+def get_client() -> ClientAPI:
     """
     Returns the singleton ChromaDB Cloud client, initializing it on first call.
 
@@ -64,11 +60,5 @@ def get_collection(name: Optional[str] = None) -> chromadb.Collection:
     collection_name = name or CHROMA_COLLECTION_NAME
 
     return client.get_or_create_collection(
-        name=collection_name,
-        metadata={
-            "hnsw:space":           CHROMA_HNSW_SPACE,
-            "hnsw:M":               CHROMA_HNSW_M,
-            "hnsw:construction_ef": CHROMA_HNSW_CONSTRUCTION_EF,
-            "hnsw:search_ef":       CHROMA_HNSW_SEARCH_EF,
-        },
+        name=collection_name
     )
