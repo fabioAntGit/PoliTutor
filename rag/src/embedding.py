@@ -23,7 +23,7 @@ from config import (
     IMAGE_API_DELAY,
     IMAGE_EMBEDDING_PROMPT,
     MAX_IMAGE_API_CALLS,
-    OPENROUTER_MODEL,
+    OPENROUTER_MODEL_IMAGE_SUMMARIZATION,
 )
 from database import get_collection
 
@@ -186,7 +186,7 @@ def image_resume(image_path: str, context: str) -> dict | None:
                 "https://openrouter.ai/api/v1/chat/completions",
                 headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_KEY')}"},
                 json={
-                    "model": OPENROUTER_MODEL,
+                    "model": OPENROUTER_MODEL_IMAGE_SUMMARIZATION,
                     "messages": [{
                         "role": "user",
                         "content": [
