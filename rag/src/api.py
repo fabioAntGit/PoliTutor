@@ -80,3 +80,4 @@ def ask_endpoint(body: AskRequest):
         is_fallback=response.is_fallback,
         guardrail_triggered=(response.answer == SOCRATIC_REDIRECT),
     )
+#falta fazer o endpoint de get messages de uma conversa
