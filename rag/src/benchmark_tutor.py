@@ -38,7 +38,7 @@ import regex
 from dotenv import load_dotenv
 from nltk.stem import PorterStemmer
 
-from config import (
+from .config import (
     BENCHMARK_MIN_CONTEXT_LENGTH,
     BENCHMARK_OUTPUT_DIR,
     COURSE_PATH,
@@ -48,11 +48,11 @@ from config import (
     TUTOR_BENCHMARK_GENERATION_PROMPT,
     TUTOR_BENCHMARK_JUDGE_PROMPT,
 )
-from extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from iaedu import call_iaedu
-from models import TutorBenchmarkEntry, TutorEvaluationResult
-from retrieval import ask
-from utils import extract_metadata_from_filename
+from .extractor import extract_elements_from_file, filter_elements, group_elements_by_page
+from .iaedu import call_iaedu
+from .models import TutorBenchmarkEntry, TutorEvaluationResult
+from .retrieval import ask
+from .utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
 

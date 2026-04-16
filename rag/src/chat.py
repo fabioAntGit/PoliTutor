@@ -10,7 +10,7 @@ import logging
 
 logging.disable(logging.CRITICAL)
 
-from retrieval import ask
+from .retrieval import ask
 
 def run_chat(course: str) -> None:
     print(f"\nPoli-Tutor — UC: {course.upper()}")

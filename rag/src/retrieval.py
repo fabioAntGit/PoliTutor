@@ -13,24 +13,24 @@ Functions:
 
 import logging
 
-from config import (
+from .config import (
     CHROMA_COLLECTION_NAME,
     EMBEDDING_MODEL,
     RERANKER_MODEL,
     RERANKER_TOP_K,
     TOP_K_RESULTS,
 )
-from embedding import get_embedder
-from database import get_collection
-from generator import generate
-from guardrails import (
+from .embedding import get_embedder
+from .database import get_collection
+from .generator import generate
+from .guardrails import (
     detect_code_request,
     detect_prompt_injection,
     sanitize_input,
     validate_input,
 )
-from models import RetrievalResults, TutorResponse
-from reranker import rerank
+from .models import RetrievalResults, TutorResponse
+from .reranker import rerank
 
 logger = logging.getLogger(__name__)
 

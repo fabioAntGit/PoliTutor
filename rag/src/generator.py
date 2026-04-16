@@ -13,11 +13,11 @@ import json
 import logging
 import re
 
-from config import SOCRATIC_REDIRECT, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
+from .config import SOCRATIC_REDIRECT, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
 
-from guardrails import detect_direct_answer
-from iaedu import call_iaedu
-from models import RetrievalResults, TutorResponse, TutorSource
+from .guardrails import detect_direct_answer
+from .iaedu import call_iaedu
+from .models import RetrievalResults, TutorResponse, TutorSource
 
 logger = logging.getLogger(__name__)
 

@@ -16,8 +16,8 @@ import re
 import logging
 import base64
 from pathlib import Path
-from config import VALID_SOURCE_TYPES
-from config import IMAGES_OUTPUT_DIR
+from .config import VALID_SOURCE_TYPES
+from .config import IMAGES_OUTPUT_DIR
 
 logger = logging.getLogger(__name__)
 

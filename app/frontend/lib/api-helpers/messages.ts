@@ -1,3 +1,5 @@
+import { getApiUrl } from "@/lib/api-helpers/api-config";
+
 export async function sendMessage(body: {
   conversation_id: string;
   question: string;
@@ -5,7 +7,7 @@ export async function sendMessage(body: {
   iaedu_api_key: string;
   iaedu_channel_id: string;
 }) {
-  const response = await fetch("/chat/api/messages", {
+  const response = await fetch(getApiUrl("/ask"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -25,7 +27,7 @@ export async function sendMessage(body: {
 export async function getMessages(body: {
   conversation_id: string;
 }) {
-  const response = await fetch("/chat/api/messages", {
+  const response = await fetch(getApiUrl("/messages"), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -36,9 +38,8 @@ export async function getMessages(body: {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data?.detail ?? "Erro ao enviar mensagem.");
+    throw new Error(data?.detail ?? "Erro ao obter mensagens.");
   }
 
   return data;
 }
-

@@ -17,7 +17,7 @@ OUTPUT guardrails (applied after generation):
 import re
 import logging
 
-from config import (
+from .config import (
     CODE_REQUEST_PATTERNS,
     DIRECT_ANSWER_SIGNALS,
     INJECTION_PATTERNS,

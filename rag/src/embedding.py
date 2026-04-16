@@ -16,7 +16,7 @@ import time
 
 from langchain_huggingface import HuggingFaceEmbeddings
 
-from config import (
+from .config import (
     EMBEDDING_DEVICE,
     EMBEDDING_MODEL,
     EMBEDDING_NORMALIZE,
@@ -25,7 +25,7 @@ from config import (
     MAX_IMAGE_API_CALLS,
     OPENROUTER_MODEL,
 )
-from database import get_collection
+from .database import get_collection
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from renumics import spotlight
 
-from database import get_collection
+from .database import get_collection
 
 logger = logging.getLogger(__name__)
 

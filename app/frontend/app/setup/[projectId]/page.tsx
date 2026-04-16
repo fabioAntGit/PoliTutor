@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { PROJECTS } from "@/constants/projects";
+import { getProject } from "@/lib/api-helpers/projects";
 import { SetupForm } from "./setup-form";
 
 type SetupPageProps = {
@@ -9,7 +9,7 @@ type SetupPageProps = {
 
 export default async function SetupPage({ params }: SetupPageProps) {
   const { projectId } = await params;
-  const project = PROJECTS.find((p) => p.id === projectId);
+  const project = await getProject(projectId);
 
   if (!project || project.configType !== "iaedu") notFound();
 

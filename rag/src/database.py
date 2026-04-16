@@ -11,7 +11,7 @@ from typing import Optional
 
 import chromadb
 
-from config import (
+from .config import (
     CHROMA_COLLECTION_NAME,
     CHROMA_HNSW_CONSTRUCTION_EF,
     CHROMA_HNSW_M,

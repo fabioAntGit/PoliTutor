@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 import { ProjectCard } from "@/components/project-card";
-import { PROJECTS } from "@/constants/projects";
+import { getProjects } from "@/lib/api-helpers/projects";
 
-export default function Home() {
+export default async function Home() {
+  const projects = await getProjects();
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xl space-y-8">
@@ -15,7 +16,7 @@ export default function Home() {
         </div>
 
         <div className="grid gap-3">
-          {PROJECTS.map((project) => (
+          {projects.map((project) => (
             <Link
               key={project.id}
               href={

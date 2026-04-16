@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import type { Project } from "@/types/project";
 import { useEffect, useRef, useState } from "react";
 import type { Message } from "@/types/message";
-import { sendMessage } from "@/app/chat/api/messages/messages";
+import { sendMessage } from "@/lib/api-helpers/messages";
 import { ArrowUp } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 import { ChatBubble } from "@/components/ui/chat-bubble";

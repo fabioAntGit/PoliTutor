@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { PROJECTS } from "@/constants/projects";
+import { getProject } from "@/lib/api-helpers/projects";
 import { ChatGuard } from "./chat-guard";
 
 interface ChatPageProps {
@@ -8,7 +8,7 @@ interface ChatPageProps {
 
 export default async function ChatPage({ params }: ChatPageProps) {
   const { projectId } = await params;
-  const project = PROJECTS.find((p) => p.id === projectId);
+  const project = await getProject(projectId);
 
   if (!project) notFound();
 
