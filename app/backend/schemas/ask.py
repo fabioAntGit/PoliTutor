@@ -8,7 +8,7 @@ from app.backend.core.config import QUERY_MAX_LENGTH
 
 
 class AskRequest(BaseModel):
-    project_id: str = Field(pattern=r"^[a-z0-9\-]+$", max_length=64)
+    conversation_id: str = Field(pattern=r"^[a-z0-9\-]+$", max_length=64)
     question: str = Field(min_length=1, max_length=QUERY_MAX_LENGTH)
     iaedu_endpoint: AnyHttpUrl
     iaedu_api_key: str = Field(pattern=r"^sk-usr-[a-z0-9]+$", max_length=128)

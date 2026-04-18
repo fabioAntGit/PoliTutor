@@ -138,7 +138,7 @@ def detect_direct_answer(answer: str) -> bool:
             logger.warning("[GUARDRAIL] Direct answer signal detected in output.")
             return True
 
-    if "?" not in answer and len(answer) > 100:
+    if "?" not in answer and len(answer) > 500:
         logger.warning("[GUARDRAIL] Output has no guiding questions (len=%d).", len(answer))
         return True
 

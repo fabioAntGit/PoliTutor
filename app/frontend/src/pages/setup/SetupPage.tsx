@@ -1,66 +1,22 @@
-import { useNavigate, Link, useParams } from "react-router";
-import { useEffect, useState } from "react";
-import { ProjectService } from "@/services/project.service";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/password-input";
-import { setupSchema } from "@/schemas/setup";
-import type { SetupFormValues } from "@/schemas/setup";
-import { saveConfig } from "@/services/session.service";
-import type { Project } from "@/types/project";
+import { useSetup } from "@/hooks/setup/useSetup";
+import { PageState } from "@/components/ui/page-state";
 
 export default function SetupPage() {
   const navigate = useNavigate();
-  const { projectId } = useParams();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!projectId) {
-      setLoading(false);
-      return;
-    }
-
-    ProjectService.getProjectById(projectId).then((res) => {
-      if (res) {
-        setProject(res);
-      }
-      setLoading(false);
-    });
-  }, [projectId]);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid, isSubmitting },
-  } = useForm<SetupFormValues>({
-    resolver: zodResolver(setupSchema),
-    mode: "onBlur",
-  });
-
-  function onSubmit(data: SetupFormValues) {
-    saveConfig(data);
-    if (project) {
-        navigate(`/chat/${project.id}`);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center p-6">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const { project, loading, error, form, onSubmit } = useSetup();
+  const { register, formState: { errors, isValid, isSubmitting } } = form;
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
+    <PageState loading={loading} error={error}>
+      <main className="min-h-screen flex items-center justify-center p-6">
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={onSubmit}
         className="w-full max-w-xl space-y-8"
       >
         {/* Header */}
@@ -72,7 +28,7 @@ export default function SetupPage() {
             <ArrowLeft className="size-3" />
             Projetos
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{project?.name}</h1>
           <p className="text-sm text-muted-foreground">
             Aceda a{" "}
             <a
@@ -164,5 +120,6 @@ export default function SetupPage() {
         </Button>
       </form>
     </main>
+    </PageState>
   );
 }

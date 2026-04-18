@@ -1,18 +1,12 @@
 import * as messagesApi from "@/api/messages";
-// import type { Message } from "@/types/message";
+import type { AskRequest, AskResponse } from "@/types/ask";
 
 export const MessageService = {
   /**
    * Sends a message to the IAEdu agent and processes the API response.
    */
-  async sendMessage(params: {
-    conversation_id: string;
-    question: string;
-    iaedu_endpoint: string;
-    iaedu_api_key: string;
-    iaedu_channel_id: string;
-  }) {
-    return await messagesApi.sendMessage(params);
+  async sendMessage(params: AskRequest, signal?: AbortSignal): Promise<AskResponse> {
+    return await messagesApi.sendMessage(params, signal);
   },
 
   /**

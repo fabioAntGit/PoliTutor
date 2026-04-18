@@ -105,7 +105,7 @@ IMAGE_EMBEDDING_PROMPT = (
 )
 
 # 6. VECTOR DATABASE (ChromaDB)
-CHROMA_COLLECTION_NAME = "PoliTutor-Docs-bge-m3"
+CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
 # Low-level HNSW tuning
 CHROMA_HNSW_SPACE = "cosine"

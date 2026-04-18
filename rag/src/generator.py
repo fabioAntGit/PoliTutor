@@ -99,7 +99,7 @@ def generate(
 
     if raw_answer is None:
         logger.error("[GENERATE] FALLBACK REASON: IAEdu API returned no answer")
-        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=sources, is_fallback=True)
+        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
 
     logger.debug("[GENERATE] Raw LLM response (first 500 chars):\n%s", raw_answer[:500])
 
@@ -131,7 +131,7 @@ def generate(
     # Output guardrail: verify the response is Socratic
     if detect_direct_answer(answer):
         logger.warning("[GENERATE] Output guardrail triggered — replacing with Socratic redirect.")
-        return TutorResponse(answer=SOCRATIC_REDIRECT, sources=llm_sources, is_fallback=False)
+        return TutorResponse(answer=SOCRATIC_REDIRECT, sources=llm_sources, is_fallback=False, guardrail_triggered=True)
 
     logger.info("Tutor response generated from %d source chunks.", len(llm_sources))
     return TutorResponse(answer=answer, sources=llm_sources, is_fallback=False)

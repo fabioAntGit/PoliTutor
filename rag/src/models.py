@@ -86,6 +86,7 @@ class TutorResponse:
     answer: str
     sources: list[TutorSource]
     is_fallback: bool
+    guardrail_triggered: bool = False
 
 
 @dataclass

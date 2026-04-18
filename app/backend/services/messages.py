@@ -7,14 +7,16 @@ def ask_message(body: AskRequest):
 
     #conversation = get_conversation(body.conversation_id)
 
-    ask(
-        conversation.project_id.course_code,
+    response = ask(
+        #conversation.project_id.course_code,
+        "ed",
         body.question,
-        collection_name=conversation.project_id.collection_name,
         iaedu_url=str(body.iaedu_endpoint),
         iaedu_channel_id=body.iaedu_channel_id,
         iaedu_api_key=body.iaedu_api_key,
     )
+
+    return response
 
 def get_messages(body: AskRequest):
     pass
