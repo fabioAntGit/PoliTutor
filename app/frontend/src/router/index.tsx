@@ -20,7 +20,7 @@ export const router = createBrowserRouter([
         element: <SetupPage />,
       },
       {
-        path: "chat/:projectId",
+        path: "chat/:conversationId",
         element: <ChatGuard />,
         children: [
           {

@@ -1,4 +1,4 @@
-import type { SetupFormValues } from "@/schemas/setup";
+import type { IAEduConfig } from "@/types/iaedu";
 
 const STORAGE_KEY = "poli-tutor-config";
 
@@ -6,22 +6,20 @@ export const sessionService = {
   /**
    * Saves the configuration to sessionStorage.
    */
-  saveConfig(data: SetupFormValues): void {
+  saveConfig(data: IAEduConfig): void {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   },
 
   /**
    * Loads the configuration from sessionStorage.
    */
-  loadConfig(): SetupFormValues | null {
+  loadConfig(): IAEduConfig | null {
     if (typeof window === "undefined") return null;
 
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    console.log(raw);
-
     if (!raw) return null;
     try {
-      return JSON.parse(raw) as SetupFormValues;
+      return JSON.parse(raw) as IAEduConfig;
     } catch {
       return null;
     }

@@ -1,35 +1,20 @@
-from typing import List
-from fastapi import APIRouter, HTTPException
-from app.backend.repositories.projects import PROJECT_REGISTRY
-from app.backend.schemas.project import ProjectOut
+from fastapi import APIRouter, Depends
+
+from app.backend.schemas.project.response import ProjectRead
+from app.backend.services.interfaces.project_service import IProjectService
+from app.backend.api.deps import get_project_service
 
 router = APIRouter()
 
-@router.get("/projects", response_model=List[ProjectOut])
-def get_projects():
-    projects = []
-    for project_id, project_config in PROJECT_REGISTRY.items():
-        projects.append(
-            ProjectOut(
-                id=project_config.id,
-                name=project_config.name,
-                description=project_config.description,
-                institution=project_config.institution,
-                configType=project_config.configType,
-            )
-        )
-    return projects
 
-@router.get("/projects/{project_id}", response_model=ProjectOut)
-def get_project(project_id: str):
-    project_config = PROJECT_REGISTRY.get(project_id)
-    if not project_config:
-        raise HTTPException(status_code=404, detail="Projeto não encontrado")
-    
-    return ProjectOut(
-        id=project_config.id,
-        name=project_config.name,
-        description=project_config.description,
-        institution=project_config.institution,
-        configType=project_config.configType,
-    )
+@router.get("/projects", response_model=list[ProjectRead])
+async def list_projects(service: IProjectService = Depends(get_project_service)):
+    return await service.list_projects()
+
+
+@router.get("/projects/{project_id}", response_model=ProjectRead)
+async def get_project(
+    project_id: str,
+    service: IProjectService = Depends(get_project_service)
+):
+    return await service.get_project(project_id)

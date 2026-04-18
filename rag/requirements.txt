@@ -19,3 +19,5 @@ einops
 transformers==4.48.0
 nltk
 regex
+redis
+pymongo

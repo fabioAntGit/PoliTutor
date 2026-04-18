@@ -1,8 +1,13 @@
-import type { Source } from "./source";
+export type Role = "user" | "assistant";
+
+export interface Source {
+  filename: string;
+  pages?: number[];
+}
 
 export interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: Role;
   content: string;
   createdAt: string;
   sources?: Source[];

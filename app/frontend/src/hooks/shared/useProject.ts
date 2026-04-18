@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { ProjectService } from "@/services/project.service";
-import type { Project } from "@/types/project";
+import type { ProjectRead } from "@/types/project";
 
 export function useProject() {
   const { projectId } = useParams();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<ProjectRead | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

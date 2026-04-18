@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-class ProjectOut(BaseModel):
+class ProjectRead(BaseModel):
     id: str
     name: str
     description: str

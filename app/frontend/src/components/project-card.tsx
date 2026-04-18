@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Project } from "@/types/project";
+import type { ProjectRead } from "@/types/project";
 
 interface ProjectCardProps {
-  project: Project;
+  project: ProjectRead;
   selected: boolean;
-  onSelect?: (project: Project) => void;
+  onSelect?: (project: ProjectRead) => void;
 }
 
 export function ProjectCard({ project, selected, onSelect }: ProjectCardProps) {

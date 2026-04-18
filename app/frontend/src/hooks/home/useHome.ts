@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { ProjectService } from "@/services/project.service";
-import type { Project } from "@/types/project";
+import type { ProjectRead } from "@/types/project";
 
 export function useHome() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

@@ -1,14 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import type { Message } from "@/types/message";
 import { MessageService } from "@/services/message.service";
 import { sessionService } from "@/services/session.service";
-import { useProject } from "@/hooks/shared/useProject";
 import type { SubmitEvent } from "react";
+import { ChatService } from "@/services/chat.service";
+import type { ChatRead } from "@/types/chat";
 
 export function useChat() {
   const navigate = useNavigate();
-  const { projectId, project, loading, error } = useProject();
+  const { conversationId } = useParams();
+  const [chat, setChat] = useState<ChatRead | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -17,13 +21,29 @@ export function useChat() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (!loading && project) {
-      const config = sessionService.loadConfig();
-      if (!config) {
-        navigate(`/setup/${project.id}`);
-      }
+    if (!conversationId) {
+      setError("Chat nao encontrado.");
+      setLoading(false);
+      return;
     }
-  }, [loading, project, navigate]);
+
+    ChatService.getChat(conversationId)
+      .then((chatResponse) => {
+        setChat(chatResponse);
+        setMessages(chatResponse.messages);
+
+        const config = sessionService.loadConfig();
+        if (!config) {
+          navigate(`/setup/${chatResponse.project_id}`, { replace: true });
+        }
+      })
+      .catch(() => {
+        setError("Erro ao carregar os dados do chat.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [conversationId, navigate]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,8 +66,12 @@ export function useChat() {
     if (!trimmed) return;
 
     const config = sessionService.loadConfig();
-    if (!config) {
-      navigate(`/setup/${projectId}`);
+    if (!config || !conversationId || !chat) {
+      if (chat) {
+        navigate(`/setup/${chat.project_id}`, { replace: true });
+      } else {
+        navigate("/");
+      }
       return;
     }
 
@@ -66,12 +90,12 @@ export function useChat() {
     abortControllerRef.current = controller;
 
     try {
-      const response = await MessageService.sendMessage({
+      const response = await MessageService.sendMessage(conversationId, {
         question: trimmed,
-        conversation_id: "demo",
-        iaedu_api_key: config.apiKey,
-        iaedu_endpoint: config.endpoint,
-        iaedu_channel_id: config.channelId
+      }, {
+        apiKey: config.apiKey,
+        endpoint: config.endpoint,
+        channelId: config.channelId
       }, controller.signal);
 
       const assistantMsg: Message = {
@@ -104,7 +128,8 @@ export function useChat() {
   };
 
   return {
-    project,
+    conversationId,
+    chat,
     loading,
     error,
     messages,

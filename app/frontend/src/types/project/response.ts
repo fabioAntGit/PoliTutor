@@ -1,6 +1,6 @@
 export type ProjectConfigType = "iaedu" | "none";
 
-export interface Project {
+export interface ProjectRead {
   id: string;
   name: string;
   description: string;
