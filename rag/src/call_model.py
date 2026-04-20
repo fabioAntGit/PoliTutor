@@ -15,32 +15,43 @@ import uuid
 import requests
 from dotenv import load_dotenv
 
-from config import OPENROUTER_MODEL
+from config import OPENROUTER_MODEL_GENERATOR
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 
-def call_iaedu(prompt: str) -> str | None:
+def call_iaedu(
+    prompt: str,
+    url: str | None = None,
+    channel_id: str | None = None,
+    api_key: str | None = None,
+) -> str | None:
     """
     Sends a prompt to the IAEdu API and returns the response content.
 
     Uses a unique thread_id per call so each invocation is independent.
     Streams the response and parses the first message event found.
 
+    Credentials can be passed explicitly (per-request, from student frontend)
+    or fall back to environment variables (for benchmarks/dev).
+
     Args:
-        prompt: The full prompt to send to the LLM.
+        prompt:     The full prompt to send to the LLM.
+        url:        IAEdu API endpoint. Defaults to IAEDU_API_ENDPOINT env var.
+        channel_id: IAEdu channel ID. Defaults to IAEDU_API_CHANNEL env var.
+        api_key:    IAEdu API key. Defaults to IAEDU_API_KEY env var.
 
     Returns:
         The text content of the model's response, or None on failure.
     """
-    url = os.getenv("IAEDU_API_ENDPOINT")
-    channel_id = os.getenv("IAEDU_API_CHANNEL")
-    api_key = os.getenv("IAEDU_API_KEY")
+    url = url or os.getenv("IAEDU_API_ENDPOINT")
+    channel_id = channel_id or os.getenv("IAEDU_API_CHANNEL")
+    api_key = api_key or os.getenv("IAEDU_API_KEY")
 
     if not all([url, channel_id, api_key]):
-        logger.error("IAEdu environment variables are not fully configured.")
+        logger.error("IAEdu credentials are not configured (neither passed nor set in environment).")
         return None
 
     thread_id = uuid.uuid4().hex[:20]
@@ -80,7 +91,7 @@ def call_iaedu(prompt: str) -> str | None:
     return None
 
 
-def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.2) -> str | None:
+def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.2, model: str | None = None) -> str | None:
     """
     Sends a prompt to the OpenRouter chat completions API and returns the response.
 
@@ -90,10 +101,12 @@ def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.
         prompt:      The full prompt to send to the LLM.
         max_tokens:  Maximum tokens in the response.
         temperature: Sampling temperature.
+        model:       OpenRouter model ID. Defaults to OPENROUTER_MODEL_GENERATOR.
 
     Returns:
         The text content of the model's response, or None on failure.
     """
+    model = model or OPENROUTER_MODEL_GENERATOR
     api_key = (os.getenv("OPENROUTER_KEY") or "").strip()
     if not api_key:
         logger.error("OPENROUTER_KEY environment variable is not set.")
@@ -112,7 +125,7 @@ def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.
                     "Content-Type": "application/json",
                 },
                 data=json.dumps({
-                    "model": "openai/gpt-4o",
+                    "model": model,
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": max_tokens,
                     "temperature": temperature,
@@ -135,6 +148,21 @@ def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.
         if not response.ok:
             logger.error("[OpenRouter] API error %d: %s", response.status_code, response.text[:500])
             return None
+
+        # log dos usos
+        resp_json = response.json()
+        usage = resp_json.get("usage", {})
+
+        total_cost = usage.get("cost", 0)
+
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+        total_tokens = usage.get("total_tokens", 0)
+
+        logger.info(
+            "[OpenRouter Usage] Model: %s | Tokens: %d prompt, %d completion (%d total) | Est. Cost: $%f",
+            model, prompt_tokens, completion_tokens, total_tokens, total_cost
+        )
 
         return response.json()["choices"][0]["message"]["content"]
 

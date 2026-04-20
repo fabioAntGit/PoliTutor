@@ -29,7 +29,7 @@ from guardrails import (
     sanitize_input,
     validate_input,
 )
-from models import RetrievalResults, TutorResponse
+from models import IaEduCredentials, RetrievalResults, TutorResponse
 from reranker import rerank
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,11 @@ def retrieve(course: str, query: str) -> RetrievalResults:
     return retrieve_with_config(course, query)
 
 
-def ask(course: str, query: str) -> TutorResponse:
+def ask(
+    course: str,
+    query: str,
+    iaedu_creds: IaEduCredentials | None = None,
+) -> TutorResponse:
     """
     End-to-end tutor pipeline: retrieve relevant chunks then generate a Socratic response.
 
@@ -102,8 +106,10 @@ def ask(course: str, query: str) -> TutorResponse:
     request), returns early with a rejection message and never hits the LLM.
 
     Args:
-        course: Course unit identifier (e.g., 'ed', 'pp').
-        query:  The student's question.
+        course:       Course unit identifier (e.g., 'ed', 'pp').
+        query:        The student's question.
+        iaedu_creds:  Per-request IAEdu credentials forwarded from the student's
+                      frontend session. Required when GENERATOR_BACKEND == "iaedu".
 
     Returns:
         A TutorResponse with the tutor's answer, cited sources, and fallback flag.
@@ -114,17 +120,17 @@ def ask(course: str, query: str) -> TutorResponse:
     # 2. Basic length validation
     is_valid, reason = validate_input(query)
     if not is_valid:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
     # 3. Prompt injection detection
     is_injection, reason = detect_prompt_injection(query)
     if is_injection:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
     # 4. Code request detection
     is_code_req, reason = detect_code_request(query)
     if is_code_req:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
     results = retrieve(course, query)
-    return generate(query, results)
+    return generate(query, results, iaedu_creds=iaedu_creds)
