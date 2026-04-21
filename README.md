@@ -19,6 +19,10 @@ Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding 
 - `ask()` function callable by a backend, accepting per-student IAEdu credentials for production use
 - Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, Recall)
 - Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring and layered robustness metrics
+- Three-layer defence system: input guardrails (regex) → LLM system prompt → output guardrail
+- `ask()` function callable by a backend, accepting per-student IAEdu credentials for production use
+- Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, Recall)
+- Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring and layered robustness metrics
 - Interactive CLI chat for local testing (`chat.py`)
 - Embedding visualisation via Renumics Spotlight
 

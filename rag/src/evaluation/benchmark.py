@@ -1,12 +1,11 @@
 """
 Benchmark Module.
 
-Provides tools to generate Q&A datasets from course documents and evaluate
-retrieval quality using standard IR metrics (Hit Rate, MRR, NDCG, MAP,
-Precision, Recall) via the ranx library.
+Provides tools to generate question datasets from course documents and evaluate
+retrieval quality using IR metrics (Hit Rate, MRR, Recall) via the ranx library.
 
 Two main workflows:
-    - Dataset generation: calls the IAEdu LLM API to produce Q&A pairs per page.
+    - Dataset generation: calls the IAEdu LLM API to produce questions per page.
     - Evaluation: runs retrieval for each question and computes ranx metrics.
 """
 
@@ -37,7 +36,7 @@ from ..shared.config import (
     TOP_K_RESULTS,
 )
 from ..ingestion.extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from ..shared.call_model import call_iaedu, call_openrouter
+from ..shared.call_model import call_openrouter
 from ..runtime.retrieval import retrieve_with_config
 from ..shared.utils import extract_metadata_from_filename
 
@@ -69,10 +68,11 @@ def create_qa(context: str, page_number: int, filename: str) -> dict | None:
         filename: Source document filename, included in the prompt for attribution.
 
     Returns:
-        A dict with 'filename', 'page', 'question', and 'answer' keys, or None on failure.
+        A dict with 'filename', 'page', and 'question' keys, or None on failure.
     """
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    content = call_openrouter(prompt, OPENROUTER_MODEL_BENCHMARK)
+    # content = call_iaedu(prompt)
+    content = call_openrouter(prompt, model=OPENROUTER_MODEL_BENCHMARK)
     if content is None:
         return None
     try:

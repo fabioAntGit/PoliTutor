@@ -6,7 +6,7 @@ grounded context prompt, and calls the configured LLM backend to generate a
 Socratic tutoring response in Portuguese.
 
 The tutor never gives direct answers or ready-made code — it guides the
-student through questions and hints based exclusively on the course material.
+student via questions and scaffolding.
 
 Backends (GENERATOR_BACKEND in config):
     - "iaedu"      — IAEdu streaming API (GPT-4o via institutional endpoint)
@@ -146,7 +146,7 @@ def generate(
     # Output guardrail: verify the response is Socratic
     if detect_direct_answer(answer):
         logger.warning("[GENERATE] Output guardrail triggered — replacing with Socratic redirect.")
-        return TutorResponse(answer=SOCRATIC_REDIRECT, sources=llm_sources, is_fallback=False, guardrail_triggered=True)
+        return TutorResponse(answer=SOCRATIC_REDIRECT, sources=llm_sources, is_fallback=False, is_output_guardrail=True)
 
     logger.info("Tutor response generated from %d source chunks.", len(llm_sources))
     return TutorResponse(answer=answer, sources=llm_sources, is_fallback=False)

@@ -63,16 +63,16 @@ FILE_PROCESSING_CONFIG = {
 # 4. CHUNKING STRATEGIES
 CHUNKING_STRATEGIES = {
     "apontamentos": {
-        "chunk_size": 1000,
+        "chunk_size": 300,
         "chunk_overlap": 150,
     },
     "slides": {
-        "chunk_size": 600,
-        "chunk_overlap": 100,
+        "chunk_size": 300,
+        "chunk_overlap": 250,
     },
     "default": {
-        "chunk_size": 700,
-        "chunk_overlap": 100,
+        "chunk_size": 300,
+        "chunk_overlap": 200,
     }
 }
 CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
@@ -119,27 +119,15 @@ IMAGE_EMBEDDING_PROMPT = (
 # 6. VECTOR DATABASE (ChromaDB)
 CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 
-# Low-level HNSW tuning
-CHROMA_HNSW_SPACE = "cosine"
-CHROMA_HNSW_M = 32
-CHROMA_HNSW_CONSTRUCTION_EF = 200
-CHROMA_HNSW_SEARCH_EF = 100
-
 # 7. RETRIEVAL & RERANKING
 TOP_K_RESULTS = 20
-# Best reranker is chosen automatically based on hardware availability:
 #   GPU → jinaai/jina-reranker-v2-base-multilingual  (best benchmark results with GPU)
 #   CPU → Alibaba-NLP/gte-reranker-modernbert-base   (best benchmark results on CPU)
-RERANKER_MODEL = (
-    "jinaai/jina-reranker-v2-base-multilingual"
-    if torch.cuda.is_available()
-    else "Alibaba-NLP/gte-reranker-modernbert-base"
-)
+RERANKER_MODEL = "Alibaba-NLP/gte-reranker-modernbert-base"
 RERANKER_TOP_K = 5
 
 # 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
-
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
 TUTOR_BENCHMARK_MAX_QUESTIONS = 200  # Max questions to generate (2 per sampled page: 1 regular + 1 adversarial)
 
@@ -154,14 +142,13 @@ BENCHMARK_EVAL_METRICS = [
 
 BENCHMARK_PROMPT = (
     "You are an AI engineer specialized in creating benchmark datasets for RAG systems. "
-    "Your task is to create a Q&A pair based on the following context. "
-    "You MUST base your question and answer SOLELY on the provided context. "
+    "Your task is to generate a question based on the following context. "
+    "You MUST base your question SOLELY on the provided context. "
     "Do NOT use any prior memory, or information outside of the given context. "
-    "The Q&A pair should be answerable using only the text provided. "
-    "Generate the question and answer in Portuguese. "
+    "Generate the question in Portuguese. "
     "The content is from page {page_number} of {filename} "
     "Reply ONLY with raw JSON, no markdown, no code blocks, no extra text. "
-    'Use this exact format: {{"filename": "...", "page": "...", "question": "...", "answer": "..."}}'
+    'Use this exact format: {{"filename": "...", "page": "...", "question": "..."}}'
     "\n\nContext:\n{context}"
 )
 

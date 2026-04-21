@@ -42,6 +42,7 @@ def retrieve_with_config(
     top_k: int = TOP_K_RESULTS,
     reranker_model: str | None = RERANKER_MODEL,
     reranker_top_k: int = RERANKER_TOP_K,
+    collection_name: str = CHROMA_COLLECTION_NAME,
 ) -> RetrievalResults:
     """
     Flexible retrieval for benchmarking. Supports custom embedding models,
@@ -59,7 +60,7 @@ def retrieve_with_config(
     Returns:
         Structured RetrievalResults with aligned arrays of ids, documents, metadatas, distances, scores.
     """
-    collection = get_collection(CHROMA_COLLECTION_NAME)
+    collection = get_collection(collection_name)
     embedder = get_embedder(embedding_model)
 
     query_vector = embedder.embed_query(query)
@@ -123,17 +124,17 @@ def ask(
     # 2. Basic length validation
     is_valid, reason = validate_input(query)
     if not is_valid:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True, guardrail_triggered=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
     # 3. Prompt injection detection
     is_injection, reason = detect_prompt_injection(query)
     if is_injection:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True, guardrail_triggered=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
     # 4. Code request detection
     is_code_req, reason = detect_code_request(query)
     if is_code_req:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True, guardrail_triggered=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
     results = retrieve(course, query)
     return generate(

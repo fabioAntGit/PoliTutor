@@ -92,15 +92,17 @@ class TutorResponse:
     Final output of the tutor generation pipeline.
 
     Attributes:
-        answer:      The tutor's response text (Socratic guidance or fallback message).
-        sources:     List of source chunks used to ground the response.
-        is_fallback: True if no relevant context was found and a fallback message was returned.
-        guardrail_triggered: True if an output guardrail blocked the query before reaching the LLM.
+        answer:       The tutor's response text (Socratic guidance or fallback message).
+        sources:      List of source chunks used to ground the response.
+        is_fallback:  True if no relevant context was found and a fallback message was returned.
+        is_guardrail: True if an input guardrail blocked the query before reaching the LLM.
     """
     answer: str
     sources: list[TutorSource]
     is_fallback: bool
-    guardrail_triggered: bool = False
+    is_guardrail: bool = False
+    is_output_guardrail: bool = False
+
 
 @dataclass
 class TutorBenchmarkEntry:

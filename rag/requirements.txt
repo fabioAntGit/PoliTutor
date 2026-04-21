@@ -11,12 +11,12 @@ requests
 ranx
 # CUDA: pip install torch --index-url https://download.pytorch.org/whl/cu124
 torch
-numpy
+numpy>=2.1.0
 pandas
 matplotlib
 accelerate
 einops
-transformers==4.48.0
+transformers==4.44.2
 nltk
 regex
 redis
