@@ -7,16 +7,18 @@ class MessageRepository:
         self.collection = get_db()["messages"]
 
     async def create(self, message: Message) -> str:
-        await self.collection.insert_one(message.model_dump())
+        data = message.model_dump(by_alias=True, exclude={"id"})
+        result = await self.collection.insert_one(data)
+        message.id = str(result.inserted_id)
         return message.conversation_id
 
     async def get_messages(self, conversation_id: str) -> list[Message]:
-        query = self.collection.find({"conversation_id": conversation_id})
+        query = self.collection.find({"conversation_id": conversation_id}).sort("_id", 1)
         documents = await query.to_list(length=None)
         return [Message.model_validate(document) for document in documents]
 
     async def get_recent_messages(self, conversation_id: str, limit: int = 16) -> list[Message]:
-        query = self.collection.find({"conversation_id": conversation_id}).sort("created_at", -1)
+        query = self.collection.find({"conversation_id": conversation_id}).sort("_id", -1)
         documents = await query.to_list(length=limit)
         documents.reverse()
         return [Message.model_validate(document) for document in documents]

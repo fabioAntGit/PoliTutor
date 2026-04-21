@@ -26,39 +26,28 @@ Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding 
 
 ## Project Structure
 
-```
+```text
 Poli-Tutor/
-└── rag/
-    ├── data/
-    │   ├── raw/                        # Raw documents organised by course unit
-    │   │   └── ED/
-    │   ├── processed/
-    │   │   └── images/                 # Images extracted from documents
-    │   └── benchmark/                  # Generated benchmark JSON files
-    │       └── results/                # Persisted benchmark metric results
-    │
-    ├── src/
-    │   ├── config.py                   # All configuration and constants
-    │   ├── utils.py                    # Filename parsing and metadata extraction
-    │   ├── models.py                   # Shared data structures
-    │   ├── call_model.py               # LLM API clients (IAEdu, OpenRouter)
-    │   ├── extractor.py                # File partitioning and page grouping
-    │   ├── chunker.py                  # Text splitting with page tracking
-    │   ├── embedding.py                # HuggingFace embedder + image LLM summarisation
-    │   ├── database.py                 # ChromaDB Cloud client
-    │   ├── reranker.py                 # Cross-encoder reranker
-    │   ├── retrieval.py                # Core search logic + ask() entry point
-    │   ├── generator.py                # Socratic tutor response generation
-    │   ├── guardrails.py               # Input and output guardrail functions
-    │   ├── pipeline.py                 # Main ingestion pipeline (entry point)
-    │   ├── benchmark.py                # Retrieval benchmark: dataset generation and IR evaluation
-    │   ├── benchmark_tutor.py          # Tutor benchmark: Socratic quality evaluation (LLM-as-judge)
-    │   ├── chat.py                     # Interactive CLI for local tutor testing
-    │   └── visualize.py                # Spotlight embedding visualiser
-    │
-    ├── .env                            # Environment variables (not committed)
-    ├── Dockerfile
-    └── requirements.txt
+|-- app/
+|   |-- backend/                  # FastAPI app, repositories, services, schemas
+|   `-- frontend/                 # React/Vite client
+|-- docker/
+|   |-- backend.Dockerfile
+|   `-- frontend.Dockerfile
+|-- rag/
+|   |-- data/
+|   |   |-- raw/                  # Source documents by course
+|   |   |-- processed/            # Extracted image artifacts and derived assets
+|   |   `-- benchmark/            # Benchmark datasets and results
+|   |-- src/
+|   |   |-- ingestion/            # Extraction, chunking, embedding pipeline
+|   |   |-- runtime/              # Retrieval, guardrails, generation
+|   |   |-- evaluation/           # Retrieval and tutor benchmarks
+|   |   `-- shared/               # Config, models, database helpers, utilities
+|   |-- Dockerfile
+|   `-- requirements.txt
+|-- docker-compose.yml
+`-- README.md
 ```
 
 ---
@@ -476,4 +465,4 @@ Both generation and judge prompts are configurable via `TUTOR_BENCHMARK_GENERATI
 
 ```bash
 python src/chat.py --course ed
-```
+`````

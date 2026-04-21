@@ -1,3 +1,4 @@
+from rag.src.shared.models import IaEduCredentials
 from rag.src.runtime.retrieval import ask
 from app.backend.repositories.chats import ChatRepository
 from app.backend.core.exceptions import ChatNotFoundError
@@ -43,14 +44,18 @@ class MessageService(IMessageService):
 
         summary, messages = await self.context_service.get_or_load_context(conversation_id)
 
+        iaedu_creds = IaEduCredentials(
+            url=iaedu_endpoint,
+            channel_id=iaedu_channel_id,
+            api_key=iaedu_api_key
+        )
+
         response = ask(
             conversation.course,
             question,
-            summary=summary or "",
-            history=messages,
-            iaedu_url=iaedu_endpoint,
-            iaedu_channel_id=iaedu_channel_id,
-            iaedu_api_key=iaedu_api_key,
+            summary,
+            messages,
+            iaedu_creds=iaedu_creds,
         )
 
         assistant_msg = Message(

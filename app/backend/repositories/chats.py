@@ -1,3 +1,4 @@
+from bson import ObjectId
 from datetime import datetime, timezone
 from app.backend.core.database import get_db
 from app.backend.schemas.chat.models import Chat
@@ -42,7 +43,7 @@ class ChatRepository:
             {
                 "$set": {
                     "summary": summary,
-                    "last_summarized_message_id": last_message_id,
+                    "last_summarized_message_id": ObjectId(last_message_id),
                     "updated_at": datetime.now(timezone.utc)
                 }
             }
@@ -53,4 +54,5 @@ class ChatRepository:
             {"conversation_id": conversation_id},
             {"last_summarized_message_id": 1, "_id": 0}
         )
-        return document.get("last_summarized_message_id") if document else None
+        res = document.get("last_summarized_message_id") if document else None
+        return str(res) if res else None

@@ -57,6 +57,7 @@ class RedisRepository:
         return int(count) if count else 0
 
     async def reset_message_count(self, session_id: str):
+        key = f"chat:{session_id}:message_count"
         await self.client.delete(key)
 
     async def get_context(self, session_id: str) -> tuple[str | None, list[Message]]:

@@ -29,7 +29,7 @@ from .guardrails import (
     sanitize_input,
     validate_input,
 )
-from ..shared.models import RetrievalResults, TutorResponse
+from ..shared.models import IaEduCredentials, RetrievalResults, TutorResponse
 from .reranker import rerank
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,6 @@ def retrieve_with_config(
     query: str,
     *,
     embedding_model: str = EMBEDDING_MODEL,
-    collection_name: str = CHROMA_COLLECTION_NAME,
     top_k: int = TOP_K_RESULTS,
     reranker_model: str | None = RERANKER_MODEL,
     reranker_top_k: int = RERANKER_TOP_K,
@@ -60,7 +59,7 @@ def retrieve_with_config(
     Returns:
         Structured RetrievalResults with aligned arrays of ids, documents, metadatas, distances, scores.
     """
-    collection = get_collection(collection_name)
+    collection = get_collection(CHROMA_COLLECTION_NAME)
     embedder = get_embedder(embedding_model)
 
     query_vector = embedder.embed_query(query)
@@ -79,31 +78,26 @@ def retrieve_with_config(
     return results
 
 
-def retrieve(course: str, query: str, collection_name: str = CHROMA_COLLECTION_NAME) -> RetrievalResults:
+def retrieve(course: str, query: str) -> RetrievalResults:
     """
     Query ChromaDB and rerank results. Called by the backend.
 
     Args:
         course:          Course unit identifier (e.g., 'ed', 'pp').
         query:           The user's question.
-        collection_name: ChromaDB collection to query. Defaults to config value.
 
     Returns:
         Structured RetrievalResults object.
     """
-    return retrieve_with_config(course, query, collection_name=collection_name)
+    return retrieve_with_config(course, query)
 
 
 def ask(
     course: str,
     query: str,
-    *,
     summary: str = "",
     history: str = "",
-    collection_name: str = CHROMA_COLLECTION_NAME,
-    iaedu_url: str | None = None,
-    iaedu_channel_id: str | None = None,
-    iaedu_api_key: str | None = None,
+    iaedu_creds: IaEduCredentials | None = None,
 ) -> TutorResponse:
     """
     End-to-end tutor pipeline: retrieve relevant chunks then generate a Socratic response.
@@ -117,10 +111,8 @@ def ask(
         query:            The student's question.
         summary:          Pre-formatted summary of the conversation.
         history:          Pre-formatted string of the chat history.
-        collection_name:  ChromaDB collection to query. Defaults to config value.
-        iaedu_url:        IAEdu endpoint. Falls back to env var if not provided.
-        iaedu_channel_id: IAEdu channel ID. Falls back to env var if not provided.
-        iaedu_api_key:    IAEdu API key. Falls back to env var if not provided.
+        iaedu_creds:  Per-request IAEdu credentials forwarded from the student's
+                      frontend session. Required when GENERATOR_BACKEND == "iaedu".
 
     Returns:
         A TutorResponse with the tutor's answer, cited sources, and fallback flag.
@@ -131,25 +123,23 @@ def ask(
     # 2. Basic length validation
     is_valid, reason = validate_input(query)
     if not is_valid:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, guardrail_triggered=True)
 
     # 3. Prompt injection detection
     is_injection, reason = detect_prompt_injection(query)
     if is_injection:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, guardrail_triggered=True)
 
     # 4. Code request detection
     is_code_req, reason = detect_code_request(query)
     if is_code_req:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True)
+        return TutorResponse(answer=reason, sources=[], is_fallback=True, guardrail_triggered=True)
 
-    results = retrieve(course, query, collection_name)
+    results = retrieve(course, query)
     return generate(
         query, 
         results, 
-        summary=summary, 
-        history=history, 
-        iaedu_url=iaedu_url, 
-        iaedu_channel_id=iaedu_channel_id, 
-        iaedu_api_key=iaedu_api_key
+        summary, 
+        history, 
+        iaedu_creds
     )

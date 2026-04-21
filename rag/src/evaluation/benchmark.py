@@ -30,13 +30,14 @@ from ..shared.config import (
     COURSE_PATH,
     EMBEDDING_MODEL,
     KEYWORDS_TO_EXCLUDE,
+    OPENROUTER_MODEL_BENCHMARK,
     RERANKER_MODEL,
     RERANKER_TOP_K,
     SUPPORTED_EXTENSIONS,
     TOP_K_RESULTS,
 )
 from ..ingestion.extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from ..shared.iaedu import call_iaedu
+from ..shared.call_model import call_iaedu, call_openrouter
 from ..runtime.retrieval import retrieve_with_config
 from ..shared.utils import extract_metadata_from_filename
 
@@ -71,7 +72,7 @@ def create_qa(context: str, page_number: int, filename: str) -> dict | None:
         A dict with 'filename', 'page', 'question', and 'answer' keys, or None on failure.
     """
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    content = call_iaedu(prompt)
+    content = call_openrouter(prompt, OPENROUTER_MODEL_BENCHMARK)
     if content is None:
         return None
     try:

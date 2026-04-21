@@ -30,7 +30,7 @@ def run_chat(course: str) -> None:
             print("Session ended.")
             break
 
-        response = ask(course=course, query=query)
+        response = ask(course, query)
 
         print(f"\nTutor: {response.answer}")
 
