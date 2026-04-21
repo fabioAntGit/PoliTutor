@@ -74,7 +74,7 @@ class MessageService(IMessageService):
             answer=response.answer,
             sources=[Source(filename=s.filename, pages=s.pages) for s in response.sources],
             is_fallback=response.is_fallback,
-            guardrail_triggered=response.guardrail_triggered,
+            guardrail_triggered=response.is_guardrail or response.is_output_guardrail,
         )
 
     async def get_chat_messages(self, conversation_id: str) -> list[Message]:

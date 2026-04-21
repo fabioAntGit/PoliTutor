@@ -91,7 +91,7 @@ def call_iaedu(
     return None
 
 
-def call_openrouter(prompt: str, max_tokens: int = 1000, model: str | None = None) -> str | None:
+def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.2, model: str | None = None) -> str | None:
     """
     Sends a prompt to the OpenRouter chat completions API and returns the response.
 
@@ -128,6 +128,7 @@ def call_openrouter(prompt: str, max_tokens: int = 1000, model: str | None = Non
                     "model": model,
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": max_tokens,
+                    "temperature": temperature,
                 }),
                 timeout=(10, 120),
             )
