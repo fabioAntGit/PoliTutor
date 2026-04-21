@@ -21,7 +21,7 @@ import re
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from .config import CHUNKING_STRATEGIES, CHUNK_SEPARATORS, CHUNK_MIN_LENGTH
+from ..shared.config import CHUNKING_STRATEGIES, CHUNK_SEPARATORS, CHUNK_MIN_LENGTH
 
 logger = logging.getLogger(__name__)
 

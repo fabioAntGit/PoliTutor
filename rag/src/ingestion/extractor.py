@@ -16,9 +16,9 @@ from collections import defaultdict
 from unstructured.cleaners.core import clean, replace_unicode_quotes
 from unstructured.partition.api import partition_via_api
 from unstructured.staging.base import convert_to_dict
-from .utils import save_image
+from ..shared.utils import save_image
 
-from .config import (
+from ..shared.config import (
     FILE_PROCESSING_CONFIG,
     ELEMENT_TYPES_TO_EXCLUDE,
 )

@@ -1,3 +1,4 @@
+from bson import ObjectId
 from app.backend.core.database import get_db
 from app.backend.schemas.message.models import Message
 
@@ -13,3 +14,19 @@ class MessageRepository:
         query = self.collection.find({"conversation_id": conversation_id})
         documents = await query.to_list(length=None)
         return [Message.model_validate(document) for document in documents]
+
+    async def get_recent_messages(self, conversation_id: str, limit: int = 16) -> list[Message]:
+        query = self.collection.find({"conversation_id": conversation_id}).sort("created_at", -1)
+        documents = await query.to_list(length=limit)
+        documents.reverse()
+        return [Message.model_validate(document) for document in documents]
+
+    async def get_number_of_messages_after_summary(self, conversation_id: str, last_summarized_message_id: str | None) -> int:
+        if not last_summarized_message_id:
+            return await self.collection.count_documents({"conversation_id": conversation_id})
+
+        query_filter = {
+            "conversation_id": conversation_id,
+            "_id": {"$gt": ObjectId(last_summarized_message_id)}
+        }
+        return await self.collection.count_documents(query_filter)

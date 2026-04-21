@@ -11,8 +11,8 @@ import torch.nn as nn
 
 from sentence_transformers import CrossEncoder
 
-from .config import RERANKER_MODEL, RERANKER_TOP_K, EMBEDDING_DEVICE
-from .models import RetrievalResults
+from ..shared.config import RERANKER_MODEL, RERANKER_TOP_K, EMBEDDING_DEVICE
+from ..shared.models import RetrievalResults
 
 logger = logging.getLogger(__name__)
 

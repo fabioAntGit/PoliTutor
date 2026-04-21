@@ -20,7 +20,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from ranx import Qrels, Run, evaluate
 
-from .config import (
+from ..shared.config import (
     BENCHMARK_COMPARISON_CONFIGS,
     BENCHMARK_MIN_CONTEXT_LENGTH,
     BENCHMARK_OUTPUT_DIR,
@@ -35,10 +35,10 @@ from .config import (
     SUPPORTED_EXTENSIONS,
     TOP_K_RESULTS,
 )
-from .extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from .iaedu import call_iaedu
-from .retrieval import retrieve_with_config
-from .utils import extract_metadata_from_filename
+from ..ingestion.extractor import extract_elements_from_file, filter_elements, group_elements_by_page
+from ..shared.iaedu import call_iaedu
+from ..runtime.retrieval import retrieve_with_config
+from ..shared.utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
 

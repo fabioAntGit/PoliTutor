@@ -13,15 +13,15 @@ Functions:
 
 import logging
 
-from .config import (
+from ..shared.config import (
     CHROMA_COLLECTION_NAME,
     EMBEDDING_MODEL,
     RERANKER_MODEL,
     RERANKER_TOP_K,
     TOP_K_RESULTS,
 )
-from .embedding import get_embedder
-from .database import get_collection
+from ..ingestion.embedding import get_embedder
+from ..shared.database import get_collection
 from .generator import generate
 from .guardrails import (
     detect_code_request,
@@ -29,7 +29,7 @@ from .guardrails import (
     sanitize_input,
     validate_input,
 )
-from .models import RetrievalResults, TutorResponse
+from ..shared.models import RetrievalResults, TutorResponse
 from .reranker import rerank
 
 logger = logging.getLogger(__name__)
@@ -98,6 +98,8 @@ def ask(
     course: str,
     query: str,
     *,
+    summary: str = "",
+    history: str = "",
     collection_name: str = CHROMA_COLLECTION_NAME,
     iaedu_url: str | None = None,
     iaedu_channel_id: str | None = None,
@@ -113,6 +115,8 @@ def ask(
     Args:
         course:           Course unit identifier (e.g., 'ed', 'pp').
         query:            The student's question.
+        summary:          Pre-formatted summary of the conversation.
+        history:          Pre-formatted string of the chat history.
         collection_name:  ChromaDB collection to query. Defaults to config value.
         iaedu_url:        IAEdu endpoint. Falls back to env var if not provided.
         iaedu_channel_id: IAEdu channel ID. Falls back to env var if not provided.
@@ -140,4 +144,12 @@ def ask(
         return TutorResponse(answer=reason, sources=[], is_fallback=True)
 
     results = retrieve(course, query, collection_name)
-    return generate(query, results, iaedu_url=iaedu_url, iaedu_channel_id=iaedu_channel_id, iaedu_api_key=iaedu_api_key)
+    return generate(
+        query, 
+        results, 
+        summary=summary, 
+        history=history, 
+        iaedu_url=iaedu_url, 
+        iaedu_channel_id=iaedu_channel_id, 
+        iaedu_api_key=iaedu_api_key
+    )

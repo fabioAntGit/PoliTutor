@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from app.backend.core.database import get_db
 from app.backend.schemas.chat.models import Chat
 
@@ -27,3 +28,29 @@ class ChatRepository:
         query = self.collection.find({"user_id": user_id})
         documents = await query.to_list(length=None)
         return [Chat.model_validate(document) for document in documents]
+
+    async def get_summary(self, conversation_id: str) -> str | None:
+        document = await self.collection.find_one(
+            {"conversation_id": conversation_id},
+            {"summary": 1, "_id": 0}
+        )
+        return document.get("summary") if document else None
+
+    async def set_summary(self, conversation_id: str, summary: str, last_message_id: str):
+        await self.collection.update_one(
+            {"conversation_id": conversation_id},
+            {
+                "$set": {
+                    "summary": summary,
+                    "last_summarized_message_id": last_message_id,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+    
+    async def get_last_summarized_message_id(self, conversation_id: str) -> str | None:
+        document = await self.collection.find_one(
+            {"conversation_id": conversation_id},
+            {"last_summarized_message_id": 1, "_id": 0}
+        )
+        return document.get("last_summarized_message_id") if document else None

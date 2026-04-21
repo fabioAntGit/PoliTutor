@@ -17,7 +17,7 @@ OUTPUT guardrails (applied after generation):
 import re
 import logging
 
-from .config import (
+from ..shared.config import (
     CODE_REQUEST_PATTERNS,
     DIRECT_ANSWER_SIGNALS,
     INJECTION_PATTERNS,
@@ -137,10 +137,6 @@ def detect_direct_answer(answer: str) -> bool:
         if re.search(pattern, answer_lower):
             logger.warning("[GUARDRAIL] Direct answer signal detected in output.")
             return True
-
-    if "?" not in answer and len(answer) > 500:
-        logger.warning("[GUARDRAIL] Output has no guiding questions (len=%d).", len(answer))
-        return True
 
     return False
 

@@ -16,3 +16,6 @@ class IMessageService(Protocol):
 
     async def get_chat_messages(self, conversation_id: str) -> list[Message]:
         ...
+
+    async def get_or_load_context(self, conversation_id: str) -> tuple[str | None, list[Message]]:
+        ...

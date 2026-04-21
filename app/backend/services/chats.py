@@ -3,6 +3,8 @@ from app.backend.core.exceptions import (
     ProjectNotFoundError,
 )
 from app.backend.repositories.chats import ChatRepository
+from app.backend.repositories.messages import MessageRepository
+from app.backend.repositories.redis import RedisRepository
 from app.backend.repositories.projects import PROJECT_REGISTRY
 from app.backend.schemas.chat.models import Chat
 from app.backend.schemas.chat.response import ChatRead, ChatCreated
@@ -14,9 +16,13 @@ class ChatService(IChatService):
     def __init__(
         self,
         chat_repository: ChatRepository,
+        message_repository: MessageRepository,
+        redis_repository: RedisRepository,
         message_service: IMessageService,
     ) -> None:
         self.chat_repository = chat_repository
+        self.message_repository = message_repository
+        self.redis_repository = redis_repository
         self.message_service = message_service
 
     async def create_chat(self, project_id: str, user_id: str) -> tuple[ChatCreated, bool]:

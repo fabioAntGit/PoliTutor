@@ -13,11 +13,11 @@ import json
 import logging
 import re
 
-from .config import SOCRATIC_REDIRECT, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
+from ..shared.config import SOCRATIC_REDIRECT, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
 
 from .guardrails import detect_direct_answer
-from .iaedu import call_iaedu
-from .models import RetrievalResults, TutorResponse, TutorSource
+from ..shared.iaedu import call_iaedu
+from ..shared.models import RetrievalResults, TutorResponse, TutorSource
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,8 @@ def generate(
     query: str,
     results: RetrievalResults,
     *,
+    summary: str = "",
+    history: str = "",
     iaedu_url: str | None = None,
     iaedu_channel_id: str | None = None,
     iaedu_api_key: str | None = None,
@@ -79,6 +81,8 @@ def generate(
     Args:
         query:            The student's question.
         results:          Ranked chunks retrieved from ChromaDB.
+        summary:          Pre-formatted summary of previous conversation.
+        history:          Pre-formatted string of recent chat history.
         iaedu_url:        IAEdu endpoint. Falls back to env var if not provided.
         iaedu_channel_id: IAEdu channel ID. Falls back to env var if not provided.
         iaedu_api_key:    IAEdu API key. Falls back to env var if not provided.
@@ -93,7 +97,12 @@ def generate(
     context = build_context(results)
     sources = build_sources(results)
 
-    prompt = TUTOR_SYSTEM_PROMPT.format(user_question=query, rag_context=context)
+    prompt = TUTOR_SYSTEM_PROMPT.format(
+        chat_summary=summary or "Não há resumo disponível.",
+        chat_history=history or "Não há histórico anterior.",
+        user_question=query,
+        rag_context=context
+    )
 
     raw_answer = call_iaedu(prompt, url=iaedu_url, channel_id=iaedu_channel_id, api_key=iaedu_api_key)
 
