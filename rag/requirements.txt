@@ -1,3 +1,5 @@
+fastapi
+uvicorn[standard]
 langchain-text-splitters
 langchain-huggingface
 unstructured
@@ -14,6 +16,8 @@ pandas
 matplotlib
 accelerate
 einops
-transformers
+transformers==4.44.2
 nltk
 regex
+redis
+pymongo

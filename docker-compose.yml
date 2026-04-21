@@ -1,11 +1,50 @@
 services:
-  rag:
-    build: ./rag
-    working_dir: /app
+  # Redis: Short-term conversation memory
+  redis:
+    image: redis:alpine
+    container_name: poli-tutor-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # Backend: FastAPI application
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: poli-tutor-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - app/backend/.env
+      - rag/.env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     volumes:
-      - ./rag:/app
+      - ./app:/app/app
+      - ./rag:/app/rag
       - huggingface_cache:/root/.cache/huggingface
-    command: python src/pipeline.py
+
+  # Frontend: React/Vite UI
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: poli-tutor-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   huggingface_cache:
