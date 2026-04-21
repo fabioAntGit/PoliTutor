@@ -1,5 +1,5 @@
 import type { Message } from "@/types/message";
-import { Copy, Check, Flag, BookOpen } from "lucide-react";
+import { Copy, Check, Flag, BookOpen, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
@@ -12,11 +12,33 @@ export function ChatBubble({ message }: ChatBubbleProps) {
     const [copied, setCopied] = useState(false);
     const [reported, setReported] = useState(false);
     const [showSources, setShowSources] = useState(false);
+    const [speaking, setSpeaking] = useState(false);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleSpeak = () => {
+        if (speaking) {
+            window.speechSynthesis.cancel();
+            setSpeaking(false);
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(message.content);
+        utterance.lang = "pt-PT";
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        
+        utterance.onend = () => setSpeaking(false);
+        utterance.onerror = () => setSpeaking(false);
+        
+        setSpeaking(true);
+        window.speechSynthesis.speak(utterance);
     };
 
     const handleReport = (id: string, text: string) => {
@@ -40,7 +62,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                         ? "border-red-500/30 bg-gradient-to-br from-red-500/5 to-transparent shadow-red-500/10 text-foreground"
                         : isUser
                             ? "bg-primary text-primary-foreground border-primary/20"
-                            : "bg-card"
+                            : "bg-card shadow-sm"
                     } ${isUser ? "rounded-br-sm" : "rounded-bl-sm"}`}
             >
                 <div className="text-sm leading-relaxed [overflow-wrap:anywhere]">
@@ -89,10 +111,21 @@ export function ChatBubble({ message }: ChatBubbleProps) {
             <div className={`flex gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
                 <button
                     onClick={handleCopy}
+                    title="Copiar"
                     className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
-                    {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
                 </button>
+
+                {!isUser && (
+                    <button
+                        onClick={handleSpeak}
+                        title={speaking ? "Parar leitura" : "Ouvir"}
+                        className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors hover:bg-muted hover:text-foreground ${speaking ? "text-primary animate-pulse" : "text-muted-foreground"}`}
+                    >
+                        {speaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                    </button>
+                )}
 
                 {isUser && (
                     <button
