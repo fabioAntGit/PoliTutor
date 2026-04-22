@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import type { Message } from "@/types/message";
 import { MessageService } from "@/services/message.service";
-import { sessionService } from "@/services/session.service";
 import type { SubmitEvent } from "react";
 import { ChatService } from "@/services/chat.service";
 import type { ChatRead } from "@/types/chat";
 
 export function useChat() {
-  const navigate = useNavigate();
   const { conversationId } = useParams();
   const [chat, setChat] = useState<ChatRead | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,19 +29,14 @@ export function useChat() {
       .then((chatResponse) => {
         setChat(chatResponse);
         setMessages(chatResponse.messages);
-
-        const config = sessionService.loadConfig();
-        if (!config) {
-          navigate(`/setup/${chatResponse.project_id}`, { replace: true });
-        }
       })
-      .catch(() => {
-        setError("Erro ao carregar os dados do chat.");
+      .catch((err) => {
+        setError(err.message || "Erro ao carregar os dados do chat.");
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [conversationId, navigate]);
+  }, [conversationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -65,15 +58,7 @@ export function useChat() {
     const trimmed = input.trim();
     if (!trimmed) return;
 
-    const config = sessionService.loadConfig();
-    if (!config || !conversationId || !chat) {
-      if (chat) {
-        navigate(`/setup/${chat.project_id}`, { replace: true });
-      } else {
-        navigate("/");
-      }
-      return;
-    }
+    if (!conversationId || !chat) return;
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -90,16 +75,14 @@ export function useChat() {
     abortControllerRef.current = controller;
 
     try {
-      const response = await MessageService.sendMessage(conversationId, {
-        question: trimmed,
-      }, {
-        apiKey: config.apiKey,
-        endpoint: config.endpoint,
-        channelId: config.channelId
-      }, controller.signal);
+      const response = await MessageService.sendMessage(
+        conversationId,
+        { question: trimmed },
+        controller.signal
+      );
 
       const assistantMsg: Message = {
-        id: `${Date.now()}-assistant`,
+        id: response.assistant_message_id,
         role: "assistant",
         content: response.answer,
         sources: response.sources,
@@ -107,7 +90,12 @@ export function useChat() {
         createdAt: new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => {
+        const updated = prev.map((m) =>
+          m.id === userMsg.id ? { ...m, id: response.user_message_id } : m
+        );
+        return [...updated, assistantMsg];
+      });
     } catch (error: any) {
       if (error.name === "CanceledError" || error.name === "AbortError" || error.message === "canceled") {
         return;

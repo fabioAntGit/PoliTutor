@@ -1,7 +1,7 @@
 from rag.src.shared.models import IaEduCredentials
 from rag.src.runtime.retrieval import ask
 from app.backend.repositories.chats import ChatRepository
-from app.backend.core.exceptions import ChatNotFoundError
+from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
 from app.backend.repositories.messages import MessageRepository
 from app.backend.repositories.redis import RedisRepository
 from app.backend.schemas.message.models import Message, Source
@@ -37,6 +37,9 @@ class MessageService(IMessageService):
         if conversation is None:
             raise ChatNotFoundError(conversation_id)
 
+        if conversation.user_id != iaedu_channel_id:
+            raise AccessDeniedError("Nao tens permissao para enviar mensagens para este chat.")
+
         user_msg = Message(conversation_id=conversation_id, role="user", content=question)
 
         await self.message_repository.create(user_msg)
@@ -71,6 +74,8 @@ class MessageService(IMessageService):
         await self.context_service.check_and_trigger_summary(conversation_id)
 
         return MessageResponse(
+            user_message_id=str(user_msg.id),
+            assistant_message_id=str(assistant_msg.id),
             answer=response.answer,
             sources=[Source(filename=s.filename, pages=s.pages) for s in response.sources],
             is_fallback=response.is_fallback,

@@ -12,6 +12,18 @@ class MessageRepository:
         message.id = str(result.inserted_id)
         return message.conversation_id
 
+    async def get_message(self, message_id: str) -> Message | None:
+        document = await self.collection.find_one({"_id": ObjectId(message_id)})
+        return Message.model_validate(document) if document else None
+
+    async def get_next_message(self, message_id: str, conversation_id: str) -> Message | None:
+        query = {
+            "conversation_id": conversation_id,
+            "_id": {"$gt": ObjectId(message_id)}
+        }
+        document = await self.collection.find_one(query, sort=[("_id", 1)])
+        return Message.model_validate(document) if document else None
+
     async def get_messages(self, conversation_id: str) -> list[Message]:
         query = self.collection.find({"conversation_id": conversation_id}).sort("_id", 1)
         documents = await query.to_list(length=None)
@@ -32,3 +44,10 @@ class MessageRepository:
             "_id": {"$gt": ObjectId(last_summarized_message_id)}
         }
         return await self.collection.count_documents(query_filter)
+
+    async def update_report_status(self, message_id: str, is_reported: bool) -> bool:
+        result = await self.collection.update_one(
+            {"_id": ObjectId(message_id)},
+            {"$set": {"is_reported": is_reported}}
+        )
+        return result.modified_count > 0

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, status, Depends
+from fastapi import APIRouter, Response, status, Depends, Header
 
 from app.backend.schemas.chat.request import ChatCreate
 from app.backend.schemas.chat.response import ChatCreated, ChatRead
@@ -12,11 +12,12 @@ router = APIRouter()
 async def create_chat(
     body: ChatCreate, 
     response: Response,
+    x_iaedu_channel_id: str = Header(..., alias="X-IAEdu-Channel-ID"),
     service: IChatService = Depends(get_chat_service)
 ):
     chat_created, created = await service.create_chat(
         project_id=body.project_id, 
-        user_id=body.user_id
+        user_id=x_iaedu_channel_id
     )
     
     if not created:
@@ -25,9 +26,10 @@ async def create_chat(
     return chat_created
 
 
-@router.get("/chat/{conversation_id}", response_model=ChatRead)
+@router.get("/chat/{conversation_id}", response_model=ChatRead, response_model_by_alias=False)
 async def get_chat(
     conversation_id: str,
+    x_iaedu_channel_id: str = Header(..., alias="X-IAEdu-Channel-ID"),
     service: IChatService = Depends(get_chat_service)
 ):
-    return await service.get_chat(conversation_id)
+    return await service.get_chat(conversation_id, requester_user_id=x_iaedu_channel_id)

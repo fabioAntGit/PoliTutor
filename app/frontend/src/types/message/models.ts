@@ -12,4 +12,5 @@ export interface Message {
   createdAt: string;
   sources?: Source[];
   isFallback?: boolean;
+  is_reported?: boolean;
 }

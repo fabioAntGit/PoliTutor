@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
-from typing import Optional, Annotated
+from typing import Optional
 from uuid import uuid4
-from pydantic import BaseModel, Field, BeforeValidator
+from pydantic import BaseModel, Field
 
-PyObjectId = Annotated[str, BeforeValidator(lambda v: str(v) if v else None)]
+from app.backend.schemas.shared.mongo import PyObjectId
 
 class Chat(BaseModel):
     conversation_id: str = Field(

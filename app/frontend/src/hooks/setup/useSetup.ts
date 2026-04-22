@@ -3,44 +3,45 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setupSchema, type SetupFormValues } from "@/schemas/setup";
 import { sessionService } from "@/services/session.service";
-import { useProject } from "@/hooks/shared/useProject";
-import { ChatService } from "@/services/chat.service";
+import { useEffect, useState } from "react";
 
 export function useSetup() {
   const navigate = useNavigate();
-  const { project, loading, error } = useProject();
+  const [hasConfig, setHasConfig] = useState(false);
 
   const form = useForm<SetupFormValues>({
     resolver: zodResolver(setupSchema),
     mode: "onBlur",
   });
 
+  useEffect(() => {
+    const config = sessionService.loadConfig();
+    if (config) {
+      setHasConfig(true);
+      form.reset({
+        endpoint: config.endpoint,
+        apiKey: config.apiKey,
+        channelId: config.channelId,
+      });
+    }
+  }, [form]);
+
   const onSubmit = async (data: SetupFormValues) => {
     form.clearErrors("root");
 
-    if (!project) return;
-
     try {
-      const chat = await ChatService.createChat({
-        project_id: project.id,
-        user_id: data.channelId,
-      });
-
       sessionService.saveConfig(data);
-
-      navigate(`/chat/${chat.conversation_id}`);
+      navigate("/", { replace: true });
     } catch (error) {
       form.setError("root", {
-        message: error instanceof Error ? error.message : "Erro ao criar chat.",
+        message: error instanceof Error ? error.message : "Erro ao guardar configuração.",
       });
     }
   };
 
   return {
-    project,
-    loading,
-    error,
     form,
+    hasConfig,
     onSubmit: form.handleSubmit(onSubmit),
   };
 }

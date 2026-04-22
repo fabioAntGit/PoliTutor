@@ -1,6 +1,7 @@
 from app.backend.core.exceptions import (
     ChatNotFoundError,
     ProjectNotFoundError,
+    AccessDeniedError,
 )
 from app.backend.repositories.chats import ChatRepository
 from app.backend.repositories.messages import MessageRepository
@@ -47,11 +48,14 @@ class ChatService(IChatService):
         conversation_id = await self.chat_repository.create(chat)
         return ChatCreated(conversation_id=conversation_id), True
 
-    async def get_chat(self, conversation_id: str) -> ChatRead:
+    async def get_chat(self, conversation_id: str, requester_user_id: str) -> ChatRead:
         chat = await self.chat_repository.get_chat(conversation_id)
 
         if chat is None:
             raise ChatNotFoundError(conversation_id)
+            
+        if chat.user_id != requester_user_id:
+            raise AccessDeniedError("Nao tens permissao para aceder a este chat.")
 
         project_config = PROJECT_REGISTRY.get(chat.project_id)
         

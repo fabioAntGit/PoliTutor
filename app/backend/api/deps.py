@@ -11,6 +11,9 @@ from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.message_service import IMessageService
 from app.backend.services.interfaces.project_service import IProjectService
 from app.backend.repositories.redis import RedisRepository
+from app.backend.repositories.reports import ReportRepository
+from app.backend.services.reports import ReportService
+from app.backend.services.interfaces.report_service import IReportService
 
 def get_chat_repository() -> ChatRepository:
     return ChatRepository()
@@ -21,6 +24,9 @@ def get_message_repository() -> MessageRepository:
 
 def get_redis_repository() -> RedisRepository:
     return RedisRepository()
+
+def get_report_repository() -> ReportRepository:
+    return ReportRepository()
 
 def get_context_service(
     message_repository: MessageRepository = Depends(get_message_repository),
@@ -63,3 +69,14 @@ def get_chat_service(
 
 def get_project_service() -> IProjectService:
     return ProjectService()
+
+def get_report_service(
+    repository: ReportRepository = Depends(get_report_repository),
+    message_repository: MessageRepository = Depends(get_message_repository),
+    chat_repository: ChatRepository = Depends(get_chat_repository),
+) -> IReportService:
+    return ReportService(
+        repository=repository,
+        message_repository=message_repository,
+        chat_repository=chat_repository,
+    )

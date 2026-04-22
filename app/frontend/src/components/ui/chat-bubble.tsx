@@ -2,6 +2,7 @@ import type { Message } from "@/types/message";
 import { Copy, Check, Flag, BookOpen, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { ReportService } from "@/services/report.service";
 
 interface ChatBubbleProps {
     message: Message;
@@ -9,10 +10,13 @@ interface ChatBubbleProps {
 
 export function ChatBubble({ message }: ChatBubbleProps) {
     const isUser = message.role === "user";
+    const hasPersistedId = /^[a-f0-9]{24}$/i.test(message.id);
+    const canReport = isUser && hasPersistedId;
     const [copied, setCopied] = useState(false);
-    const [reported, setReported] = useState(false);
+    const [reported, setReported] = useState(message.is_reported || false);
     const [showSources, setShowSources] = useState(false);
     const [speaking, setSpeaking] = useState(false);
+    const [isReporting, setIsReporting] = useState(false);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
@@ -41,8 +45,31 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         window.speechSynthesis.speak(utterance);
     };
 
-    const handleReport = (id: string, text: string) => {
-        setReported((prev) => !prev);
+    const handleReport = async (id: string) => {
+        if (isReporting) return;
+
+        setIsReporting(true);
+        try {
+            if (reported) {
+                const success = await ReportService.unreportMessage(id);
+                if (success) {
+                    setReported(false);
+                }
+            } else {
+                const success = await ReportService.reportMessage(id);
+                if (success) {
+                    setReported(true);
+                } else {
+                    alert("Erro ao enviar o report. Certifica-te que a mensagem já tem uma resposta.");
+                }
+            }
+        } catch (error: any) {
+            console.error("Erro ao processar report:", error);
+            const msg = error instanceof Error ? error.message : "Erro ao processar o pedido. Tenta novamente mais tarde.";
+            alert(msg);
+        } finally {
+            setIsReporting(false);
+        }
     };
 
     const formatTime = (isoString?: string) => {
@@ -127,13 +154,15 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                     </button>
                 )}
 
-                {isUser && (
-                    <button
-                        onClick={() => handleReport(message.id, message.content)}
-                        className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors hover:bg-red-500/10 hover:text-red-500 ${reported ? "text-red-500 bg-red-500/5" : "text-muted-foreground"}`}
-                    >
-                        <Flag className={`h-3.5 w-3.5 ${reported ? "fill-current" : ""}`} />
-                    </button>
+                {canReport && (
+                <button
+                    onClick={() => handleReport(message.id)}
+                    disabled={isReporting}
+                    title={reported ? "Remover report" : "Reportar problema"}
+                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors hover:bg-red-500/10 hover:text-red-500 ${reported ? "text-red-500 bg-red-500/5" : "text-muted-foreground"} ${isReporting ? "opacity-50 cursor-wait" : ""}`}
+                >
+                    <Flag className={`h-3.5 w-3.5 ${reported ? "fill-current" : ""} ${isReporting ? "animate-pulse" : ""}`} />
+                </button>
                 )}
             </div>
         </div>

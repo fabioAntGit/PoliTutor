@@ -1,16 +1,11 @@
 import { api } from "@/api/client";
-import type { Message, MessageResponse, MessageSend } from "@/types/message";
-
-export interface MessageConfig {
-  apiKey: string;
-  endpoint: string;
-  channelId: string;
-}
+import type { IAEduConfig } from "@/types/iaedu";
+import type { MessageResponse, MessageSend } from "@/types/message";
 
 export async function sendMessage(
   conversationId: string,
   body: MessageSend,
-  config: MessageConfig,
+  config: IAEduConfig,
   signal?: AbortSignal
 ): Promise<MessageResponse> {
   try {
