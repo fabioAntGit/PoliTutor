@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { ApiError } from "@/lib/errors";
 import { useParams } from "react-router";
 import type { Message } from "@/types/message";
 import { MessageService } from "@/services/message.service";
@@ -31,7 +32,11 @@ export function useChat() {
         setMessages(chatResponse.messages);
       })
       .catch((err) => {
-        setError(err.message || "Erro ao carregar os dados do chat.");
+        if (err instanceof ApiError && err.isNotFound) {
+          setError("Chat não encontrado.");
+        } else {
+          setError("Erro ao carregar os dados do chat.");
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -96,15 +101,24 @@ export function useChat() {
         );
         return [...updated, assistantMsg];
       });
-    } catch (error: any) {
-      if (error.name === "CanceledError" || error.name === "AbortError" || error.message === "canceled") {
+    } catch (err: any) {
+      if (err.name === "CanceledError" || err.name === "AbortError" || err.message === "canceled") {
         return;
+      }
+
+      let errorMessage = "Erro ao obter resposta.";
+      if (err instanceof ApiError) {
+        if (err.isValidationError) {
+          errorMessage = "Credenciais inválidas. Verifica o Endpoint, API Key e Channel ID nas definições.";
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
       }
 
       const assistantMsg: Message = {
         id: `${Date.now()}-assistant-error`,
         role: "assistant",
-        content: error instanceof Error ? error.message : "Erro ao obter resposta.",
+        content: errorMessage,
         createdAt: new Date().toISOString(),
       };
 

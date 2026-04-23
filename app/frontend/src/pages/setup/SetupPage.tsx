@@ -57,7 +57,7 @@ export default function SetupPage() {
               <Input
                 id="endpoint"
                 type="url"
-                placeholder="https://api.iaedu.pt/…/stream"
+                placeholder="https://api.iaedu.pt/agent-chat//api/v1/agent/{id}/stream"
                 aria-invalid={!!errors.endpoint}
                 {...register("endpoint")}
               />
@@ -65,7 +65,7 @@ export default function SetupPage() {
                 <p className="text-xs text-destructive">{errors.endpoint.message}</p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  URL do agente IAEdu, termina em <code>/stream</code>.
+                  URL do agente IAEdu. Formato: <code>https://api.iaedu.pt/agent-chat//api/v1/agent/&#123;id&#125;/stream</code>
                 </p>
               )}
             </div>

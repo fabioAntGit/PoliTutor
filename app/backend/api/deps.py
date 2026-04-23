@@ -55,14 +55,10 @@ def get_message_service(
 
 def get_chat_service(
     chat_repository: ChatRepository = Depends(get_chat_repository),
-    message_repository: MessageRepository = Depends(get_message_repository),
-    redis_repository: RedisRepository = Depends(get_redis_repository),
     message_service: IMessageService = Depends(get_message_service),
 ) -> IChatService:
     return ChatService(
         chat_repository=chat_repository,
-        message_repository=message_repository,
-        redis_repository=redis_repository,
         message_service=message_service,
     )
 

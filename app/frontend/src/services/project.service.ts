@@ -12,7 +12,7 @@ export const ProjectService = {
   /**
    * Retrieves the details of a specific project by its ID.
    */
-  async getProjectById(id: string): Promise<ProjectRead | undefined> {
+  async getProjectById(id: string): Promise<ProjectRead> {
     return await projectsApi.getProject(id);
   }
 };

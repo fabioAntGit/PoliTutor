@@ -1,8 +1,14 @@
+import asyncio
+import logging
 from app.backend.repositories.chats import ChatRepository
 from app.backend.repositories.messages import MessageRepository
 from app.backend.repositories.redis import RedisRepository
 from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.context_service import IContextService
+from rag.src.shared.call_model import call_openrouter
+from rag.src.shared.config import SUMMARIZATION_PROMPT, SUMMARIZATION_THRESHOLD
+
+logger = logging.getLogger(__name__)
 
 class ContextService(IContextService):
     def __init__(
@@ -37,17 +43,32 @@ class ContextService(IContextService):
     async def check_and_trigger_summary(self, conversation_id: str) -> None:
         count = await self.redis_repository.get_message_count(conversation_id)
         
-        if count >= 16:
-            summary, messages = await self.redis_repository.get_context(conversation_id)
+        if count >= SUMMARIZATION_THRESHOLD:
+            logger.info("Triggering background summary for conversation %s (count=%d)", conversation_id, count)
+            summary_old, messages = await self.redis_repository.get_context(conversation_id)
             
-            # TODO chamar o OpenRouter (método a ser criado futuramente)
-            # new_summary = await self.llm_service.call_openrouter(summary, messages)
-            new_summary = "TODO: Substituir pela resposta do OpenRouter"
+            if not messages:
+                return
+
+            history_str = self._format_history(messages)
             
-            if messages:
-                last_msg_id = messages[-1].id
-                await self.chat_repository.set_summary(conversation_id, new_summary, last_msg_id)
-                await self.redis_repository.set_summary(conversation_id, new_summary)
+            prompt = SUMMARIZATION_PROMPT.format(
+                old_summary=summary_old or "Não existe resumo anterior.",
+                history=history_str
+            )
+            
+            try:
+                new_summary = await asyncio.to_thread(call_openrouter, prompt)
+                
+                if new_summary:
+                    last_msg_id = messages[-1].id
+                    await self.chat_repository.set_summary(conversation_id, new_summary, last_msg_id)
+                    await self.redis_repository.set_summary(conversation_id, new_summary)
+                    logger.info("Summary updated for conversation %s", conversation_id)
+                else:
+                    logger.warning("OpenRouter returned empty summary for conversation %s", conversation_id)
+            except Exception as e:
+                logger.error("Failed to generate summary for conversation %s: %s", conversation_id, e)
             
             await self.redis_repository.reset_message_count(conversation_id)
 

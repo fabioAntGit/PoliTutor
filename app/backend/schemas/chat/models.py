@@ -14,7 +14,7 @@ class Chat(BaseModel):
     project_id: str = Field(min_length=1, max_length=64)
     course: str = Field(min_length=1, max_length=64)
     user_id: str = Field(min_length=1, max_length=64)
-    summary: Optional[str] = Field(default=None, max_length=1000)
+    summary: Optional[str] = Field(default=None, max_length=5000)
     last_summarized_message_id: Optional[PyObjectId] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

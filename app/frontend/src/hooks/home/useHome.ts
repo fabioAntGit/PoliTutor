@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { ProjectService } from "@/services/project.service";
 import { ChatService } from "@/services/chat.service";
 import type { ProjectRead } from "@/types/project";
+import { ApiError } from "@/lib/errors";
 
 export function useHome() {
   const navigate = useNavigate();
@@ -10,7 +11,6 @@ export function useHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Track which project is being initialized (showing a spinner on the card)
   const [enteringId, setEnteringId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,9 +34,13 @@ export function useHome() {
       const chat = await ChatService.createChat({ project_id: projectId });
       
       navigate(`/chat/${chat.conversation_id}`);
-    } catch (err: any) {
+    } catch (err) {
+      let message = "Erro ao iniciar o chat. Verifica as tuas configurações.";
+      if (err instanceof ApiError) {
+        message = err.message;
+      }
       console.error("Erro ao entrar no projecto:", err);
-      alert(err.message || "Erro ao iniciar o chat. Verifica as tuas configurações.");
+      alert(message);
     } finally {
       setEnteringId(null);
     }

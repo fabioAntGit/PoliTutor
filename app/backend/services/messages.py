@@ -40,12 +40,12 @@ class MessageService(IMessageService):
         if conversation.user_id != iaedu_channel_id:
             raise AccessDeniedError("Nao tens permissao para enviar mensagens para este chat.")
 
+        summary, history = await self.context_service.get_or_load_context(conversation_id)
+
         user_msg = Message(conversation_id=conversation_id, role="user", content=question)
 
         await self.message_repository.create(user_msg)
         await self.redis_repository.add_message(user_msg)
-
-        summary, messages = await self.context_service.get_or_load_context(conversation_id)
 
         iaedu_creds = IaEduCredentials(
             url=iaedu_endpoint,
@@ -57,7 +57,7 @@ class MessageService(IMessageService):
             conversation.course,
             question,
             summary,
-            messages,
+            history,
             iaedu_creds=iaedu_creds,
         )
 
