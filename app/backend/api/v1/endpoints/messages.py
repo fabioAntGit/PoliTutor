@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import APIRouter, Depends, Header
 
 from app.backend.schemas.message.request import MessageSend

@@ -3,7 +3,7 @@ from app.backend.core.exceptions import (
     ProjectNotFoundError,
     AccessDeniedError,
 )
-from app.backend.repositories.chats import ChatRepository
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.core.projects import PROJECT_REGISTRY
 from app.backend.schemas.chat.models import Chat
 from app.backend.schemas.chat.response import ChatRead, ChatCreated
@@ -14,7 +14,7 @@ from app.backend.services.interfaces.message_service import IMessageService
 class ChatService(IChatService):
     def __init__(
         self,
-        chat_repository: ChatRepository,
+        chat_repository: IChatRepository,
         message_service: IMessageService,
     ) -> None:
         self.chat_repository = chat_repository

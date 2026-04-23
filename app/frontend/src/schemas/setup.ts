@@ -5,8 +5,8 @@ export const setupSchema = z.object({
     .string()
     .min(1, "O endpoint e obrigatorio.")
     .regex(
-      /^https:\/\/api\.iaedu\.pt\/agent-chat\/\/api\/v1\/agent\/[^/]+\/stream$/,
-      "Formato invalido. Exemplo: https://api.iaedu.pt/agent-chat//api/v1/agent/{id}/stream"
+      /^https:\/\/api\.iaedu\.pt\/agent-chat\/+api\/v1\/agent\/[^/]+\/stream$/,
+      "Formato invalido. Exemplo: https://api.iaedu.pt/agent-chat/api/v1/agent/{id}/stream"
     ),
 
   apiKey: z

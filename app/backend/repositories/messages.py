@@ -1,10 +1,10 @@
 from bson import ObjectId
-from app.backend.core.database import get_db
+from pymongo.asynchronous.database import AsyncDatabase
 from app.backend.schemas.message.models import Message
 
 class MessageRepository:
-    def __init__(self) -> None:
-        self.collection = get_db()["messages"]
+    def __init__(self, db: AsyncDatabase) -> None:
+        self.collection = db["messages"]
 
     async def create(self, message: Message) -> str:
         data = message.model_dump(by_alias=True, exclude={"id"})

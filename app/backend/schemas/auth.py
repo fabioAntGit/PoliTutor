@@ -17,6 +17,6 @@ class IAEduAuthHeaders(IAEduBaseHeaders):
     )
     x_iaedu_endpoint: str = Field(
         alias="X-IAEdu-Endpoint",
-        pattern=r"^https://api\.iaedu\.pt/agent-chat//api/v1/agent/[^/]+/stream$",
+        pattern=r"^https://api\.iaedu\.pt/agent-chat/+api/v1/agent/[^/]+/stream$",
         max_length=256
     )

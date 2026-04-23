@@ -27,24 +27,6 @@ class ProjectNotFoundError(AppError):
         super().__init__(details={"project_id": project_id})
 
 
-class ChatAlreadyExistsError(AppError):
-    status_code = 409
-    code = "chat_already_exists"
-    message = "Ja existe um chat para este projeto e utilizador"
-
-    def __init__(self, project_id: str, user_id: str, conversation_id: str) -> None:
-        self.project_id = project_id
-        self.user_id = user_id
-        self.conversation_id = conversation_id
-        super().__init__(
-            details={
-                "project_id": project_id,
-                "user_id": user_id,
-                "conversation_id": conversation_id,
-            }
-        )
-
-
 class ChatNotFoundError(AppError):
     status_code = 404
     code = "chat_not_found"

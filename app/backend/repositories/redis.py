@@ -1,10 +1,10 @@
-from app.backend.core.database import get_redis
+import redis.asyncio as redis
 from app.backend.core.config import REDIS_TTL
 from app.backend.schemas.message.models import Message
 
 class RedisRepository:
-    def __init__(self) -> None:
-        self.client = get_redis()
+    def __init__(self, client: redis.Redis) -> None:
+        self.client = client
         self.ttl = REDIS_TTL
 
     async def add_message(self, message: Message):

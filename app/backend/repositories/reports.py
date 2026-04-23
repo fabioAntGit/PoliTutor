@@ -1,10 +1,10 @@
 from bson import ObjectId
-from app.backend.core.database import get_db
+from pymongo.asynchronous.database import AsyncDatabase
 from app.backend.schemas.report.models import Report
 
 class ReportRepository:
-    def __init__(self) -> None:
-        self.collection = get_db()["reports"]
+    def __init__(self, db: AsyncDatabase) -> None:
+        self.collection = db["reports"]
 
     async def create(self, report: Report) -> bool:
         result = await self.collection.insert_one(report.model_dump(by_alias=True))

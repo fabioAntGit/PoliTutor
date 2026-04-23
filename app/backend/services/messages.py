@@ -1,9 +1,9 @@
 from rag.src.shared.models import IaEduCredentials
 from rag.src.runtime.retrieval import ask
-from app.backend.repositories.chats import ChatRepository
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
-from app.backend.repositories.messages import MessageRepository
-from app.backend.repositories.redis import RedisRepository
+from app.backend.repositories.interfaces.message_repository import IMessageRepository
+from app.backend.repositories.interfaces.redis_repository import IRedisRepository
 from app.backend.schemas.message.models import Message, Source
 from app.backend.schemas.message.response import MessageResponse
 from app.backend.services.interfaces.message_service import IMessageService
@@ -14,9 +14,9 @@ from app.backend.services.interfaces.context_service import IContextService
 class MessageService(IMessageService):
     def __init__(
         self,
-        message_repository: MessageRepository,
-        chat_repository: ChatRepository,
-        redis_repository: RedisRepository,
+        message_repository: IMessageRepository,
+        chat_repository: IChatRepository,
+        redis_repository: IRedisRepository,
         context_service: IContextService,
     ) -> None:
         self.message_repository = message_repository

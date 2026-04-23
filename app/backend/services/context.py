@@ -1,8 +1,8 @@
 import asyncio
 import logging
-from app.backend.repositories.chats import ChatRepository
-from app.backend.repositories.messages import MessageRepository
-from app.backend.repositories.redis import RedisRepository
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
+from app.backend.repositories.interfaces.message_repository import IMessageRepository
+from app.backend.repositories.interfaces.redis_repository import IRedisRepository
 from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.context_service import IContextService
 from rag.src.shared.call_model import call_openrouter
@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 class ContextService(IContextService):
     def __init__(
         self,
-        message_repository: MessageRepository,
-        chat_repository: ChatRepository,
-        redis_repository: RedisRepository,
+        message_repository: IMessageRepository,
+        chat_repository: IChatRepository,
+        redis_repository: IRedisRepository,
     ) -> None:
         self.message_repository = message_repository
         self.chat_repository = chat_repository

@@ -6,10 +6,9 @@ To add a new project, add an entry here with the corresponding
 course_code (used to filter ChromaDB metadata).
 """
 
-from dataclasses import dataclass
+from pydantic import BaseModel
 
-@dataclass
-class ProjectConfig:
+class ProjectConfig(BaseModel):
     id: str
     name: str
     description: str

@@ -1,16 +1,16 @@
-from app.backend.repositories.reports import ReportRepository
-from app.backend.repositories.messages import MessageRepository
+from app.backend.repositories.interfaces.report_repository import IReportRepository
+from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.schemas.report.models import Report
 from app.backend.services.interfaces.report_service import IReportService
 from app.backend.core.exceptions import ReportError, AccessDeniedError
-from app.backend.repositories.chats import ChatRepository
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
 
 class ReportService(IReportService):
     def __init__(
         self, 
-        repository: ReportRepository,
-        message_repository: MessageRepository,
-        chat_repository: ChatRepository
+        repository: IReportRepository,
+        message_repository: IMessageRepository,
+        chat_repository: IChatRepository
     ) -> None:
         self.repository = repository
         self.message_repository = message_repository
@@ -65,7 +65,6 @@ class ReportService(IReportService):
         if not msg:
             raise ReportError(message="Mensagem nao encontrada")
 
-        # Verify chat ownership
         chat = await self.chat_repository.get_chat(msg.conversation_id)
         if not chat or chat.user_id != requester_user_id:
             raise AccessDeniedError("Nao tens permissao para remover reports deste chat.")
