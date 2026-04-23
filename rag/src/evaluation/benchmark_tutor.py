@@ -17,8 +17,9 @@ Two main workflows:
       bypassing the Socratic method.
 
     - Evaluation (--evaluate): runs the full tutor pipeline (ask()) for each
-      question, scores each response with LLM-as-judge on defined criteria, F1 score and
-      saves a visual report (PNG) to data/benchmark/results/.
+      question, scores each response with LLM-as-judge on defined criteria,
+      semantic similarity and guardrail classification metrics.
+      Saves a visual report (PNG) to data/benchmark/results/.
 
 Output:
     data/benchmark/BenchmarkTutor-sample.json              — generated dataset
@@ -364,6 +365,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
                 question=entry.question,
                 question_type=entry.question_type,
                 actual_response=tutor_response.answer,
+                expected_answer="",
                 faithfulness=None,
                 non_directiveness=None,
                 scaffolding=None,
@@ -383,6 +385,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
                 question=entry.question,
                 question_type=entry.question_type,
                 actual_response=tutor_response.answer,
+                expected_answer="",
                 faithfulness=None,
                 non_directiveness=None,
                 scaffolding=None,
@@ -402,6 +405,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
                 question=entry.question,
                 question_type=entry.question_type,
                 actual_response=tutor_response.answer,
+                expected_answer="",
                 faithfulness=None,
                 non_directiveness=None,
                 scaffolding=None,
@@ -431,6 +435,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
             question=entry.question,
             question_type=entry.question_type,
             actual_response=tutor_response.answer,
+            expected_answer=entry.expected_answer,
             faithfulness=int(scores.get("faithfulness", 0)),
             non_directiveness=int(scores.get("non_directiveness", 0)),
             scaffolding=int(scores.get("scaffolding", 0)),
@@ -444,14 +449,134 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
     return results
 
 
+def save_results_json(results: list[TutorEvaluationResult], results_dir: Path, timestamp: str) -> Path:
+    """
+    Saves the normal results (Case 4 only) to a JSON file sorted by semantic
+    similarity, from highest to lowest.
+
+    Each entry contains the question, actual tutor response, expected Socratic
+    answer and the similarity score, providing ready-to-use high/low similarity
+    pairs for the written report.
+
+    Args:
+        results:     Full list of evaluated tutor responses.
+        results_dir: Directory where the JSON file will be written.
+        timestamp:   Timestamp string shared with the PNG report for easy pairing.
+
+    Returns:
+        Path to the written JSON file.
+    """
+    normal = [
+        r for r in results
+        if not r.is_fallback and not r.is_guardrail and not r.is_output_guardrail
+        and r.semantic_similarity is not None
+    ]
+
+    sorted_results = sorted(normal, key=lambda r: r.semantic_similarity, reverse=True)
+
+    export = [
+        {
+            "rank": i + 1,
+            "semantic_similarity": round(r.semantic_similarity, 4),
+            "question_type": r.question_type,
+            "filename": r.filename,
+            "page": r.page,
+            "question": r.question,
+            "actual_response": r.actual_response,
+            "expected_answer": r.expected_answer,
+        }
+        for i, r in enumerate(sorted_results)
+    ]
+
+    output_file = results_dir / f"benchmark_tutor_similarity_{timestamp}.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(export, f, ensure_ascii=False, indent=2)
+
+    logger.info(
+        "Similarity results saved to %s (%d entries, highest=%.3f, lowest=%.3f)",
+        output_file.name,
+        len(export),
+        export[0]["semantic_similarity"] if export else 0.0,
+        export[-1]["semantic_similarity"] if export else 0.0,
+    )
+    return output_file
+
+
+def compute_guardrail_classification_metrics(
+    results: list[TutorEvaluationResult],
+) -> dict[str, float | int]:
+    """
+    Computes classic binary classification metrics for the input guardrail.
+
+    The input guardrail (regex-based) is treated as a binary classifier where:
+        - Positive class = adversarial question (should be blocked)
+        - Negative class = regular question (should NOT be blocked)
+
+    Confusion matrix:
+        TP = adversarial questions correctly blocked by input guardrail
+        FN = adversarial questions that passed the input guardrail
+        FP = regular questions incorrectly blocked by input guardrail
+        TN = regular questions that correctly passed the input guardrail
+
+    Args:
+        results: List of all evaluated tutor responses.
+
+    Returns:
+        Dict with keys: tp, fn, fp, tn, tpr, fpr, precision, recall, f1.
+        Rates are in [0, 1]. Returns 0.0 for undefined metrics (e.g. division by zero).
+    """
+    tp = fn = fp = tn = 0
+
+    for r in results:
+        is_blocked = r.is_guardrail
+        is_adversarial = r.question_type == "adversarial"
+
+        if is_adversarial and is_blocked:
+            tp += 1
+        elif is_adversarial and not is_blocked:
+            fn += 1
+        elif not is_adversarial and is_blocked:
+            fp += 1
+        else:  # regular and not blocked
+            tn += 1
+
+    # Standard classification metrics
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0  # = TPR
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+    fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+
+    metrics = {
+        "tp": tp,
+        "fn": fn,
+        "fp": fp,
+        "tn": tn,
+        "precision": precision,
+        "recall": recall,  # = TPR (True Positive Rate)
+        "f1": f1,
+        "fpr": fpr,
+    }
+
+    logger.info(
+        "Guardrail classification: TP=%d FN=%d FP=%d TN=%d | "
+        "Precision=%.3f Recall/TPR=%.3f F1=%.3f FPR=%.3f",
+        tp, fn, fp, tn, precision, recall, f1, fpr,
+    )
+
+    return metrics
+
+
 def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
     """
-    Generates a 1×3 matplotlib figure and saves it as a timestamped PNG.
+    Generates a 3×2 matplotlib figure and saves it as a timestamped PNG.
+    Also exports a companion JSON sorted by semantic similarity for report examples.
 
     Subplots:
-        1. Bar chart — mean std per LLM-judge criterion (all non-fallback results).
+        1. Bar chart — mean ± std per LLM-judge criterion (normal responses only).
         2. Histogram — distribution of overall mean LLM-judge score.
-        3. Bar chart — mean std F1 score by question type (regular vs adversarial).
+        3. Bar chart — mean ± std semantic similarity by question type.
+        4. Bar chart — system defence layers (fallback, input guardrail, output guardrail rates).
+        5. Table — input guardrail classification metrics (Precision, Recall/TPR, F1, FPR).
 
     Args:
         results: List of evaluated tutor responses.
@@ -484,7 +609,7 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
         np.mean([getattr(r, c) for c in TUTOR_BENCHMARK_CRITERIA]) for r in normal
     ]
 
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig, axes = plt.subplots(3, 2, figsize=(14, 15))
     fig.suptitle("Tutor Benchmark — Avaliação da Qualidade da Resposta Socrática", fontsize=13)
 
     # 1 — Bar chart: mean ± std per LLM-judge criterion (normal responses only)
@@ -569,6 +694,66 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
         xy=(0.5, -0.16), xycoords="axes fraction", ha="center", fontsize=8, color="gray",
     )
 
+    # 5 — Input guardrail classification metrics (Precision, Recall, F1, FPR)
+    ax = axes[2, 0]
+    guardrail_metrics = compute_guardrail_classification_metrics(results)
+
+    # Build the confusion matrix and metrics table
+    table_data = [
+        ["Métrica", "Valor"],
+        ["True Positives (TP)", str(guardrail_metrics["tp"])],
+        ["False Negatives (FN)", str(guardrail_metrics["fn"])],
+        ["False Positives (FP)", str(guardrail_metrics["fp"])],
+        ["True Negatives (TN)", str(guardrail_metrics["tn"])],
+        ["", ""],
+        ["Precision", f"{guardrail_metrics['precision']:.3f}"],
+        ["Recall / TPR", f"{guardrail_metrics['recall']:.3f}"],
+        ["F1-Score", f"{guardrail_metrics['f1']:.3f}"],
+        ["False Positive Rate", f"{guardrail_metrics['fpr']:.3f}"],
+    ]
+
+    ax.axis("off")
+    ax.set_title("Input Guardrail — Métricas de Classificação", fontsize=11)
+
+    table = ax.table(
+        cellText=table_data[1:],
+        colLabels=table_data[0],
+        cellLoc="center",
+        loc="center",
+        colWidths=[0.45, 0.25],
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 1.4)
+
+    # Style header row
+    for col_idx in range(2):
+        table[0, col_idx].set_facecolor("#4C72B0")
+        table[0, col_idx].set_text_props(color="white", fontweight="bold")
+
+    # Style confusion matrix rows (TP, FN, FP, TN) with subtle background
+    for row_idx in range(1, 5):
+        table[row_idx, 0].set_facecolor("#E8EDF3")
+        table[row_idx, 1].set_facecolor("#E8EDF3")
+
+    # Style the separator row
+    table[5, 0].set_facecolor("white")
+    table[5, 1].set_facecolor("white")
+    table[5, 0].set_edgecolor("white")
+    table[5, 1].set_edgecolor("white")
+
+    # Highlight F1-Score row
+    table[8, 0].set_text_props(fontweight="bold")
+    table[8, 1].set_text_props(fontweight="bold")
+
+    ax.annotate(
+        "Classificador: input guardrail (regex) | Positivo: adversarial | Negativo: regular",
+        xy=(0.5, 0.02), xycoords="axes fraction", ha="center", fontsize=8, color="gray",
+    )
+
+    # 6 — Empty subplot (reserved for future use, e.g. threshold analysis)
+    axes[2, 1].axis("off")
+
     plt.tight_layout()
 
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -577,6 +762,9 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
     plt.savefig(output_file, dpi=150)
     plt.close()
     logger.info("Visual report saved to %s", output_file)
+
+    save_results_json(results, results_dir, timestamp)
+
     return output_file
 
 if __name__ == "__main__":

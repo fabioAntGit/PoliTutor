@@ -18,11 +18,7 @@ Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding 
 - Three-layer defence system: input guardrails (regex) → LLM system prompt → output guardrail
 - `ask()` function callable by a backend, accepting per-student IAEdu credentials for production use
 - Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, Recall)
-- Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring and layered robustness metrics
-- Three-layer defence system: input guardrails (regex) → LLM system prompt → output guardrail
-- `ask()` function callable by a backend, accepting per-student IAEdu credentials for production use
-- Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, Recall)
-- Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring and layered robustness metrics
+- Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring, guardrail classification metrics (Precision, Recall, F1, FPR) and layered robustness metrics
 - Interactive CLI chat for local testing (`chat.py`)
 - Embedding visualisation via Renumics Spotlight
 
@@ -448,7 +444,14 @@ python src/benchmark_tutor.py --evaluate           # all BenchmarkTutor-*.json f
 python src/benchmark_tutor.py --evaluate <file>    # single file
 ```
 
-Output: a timestamped PNG report in `data/benchmark/results/` with a 2×2 grid:
+Output: two files per run in `data/benchmark/results/`, both sharing the same timestamp:
+
+| File | Description |
+| --- | --- |
+| `benchmark_tutor_{timestamp}.png` | Visual report (3×2 grid, see below) |
+| `benchmark_tutor_similarity_{timestamp}.json` | All normal results sorted by semantic similarity (highest → lowest), with `question`, `actual_response`, `expected_answer` and `similarity` — ready to extract high/low similarity examples for the written report |
+
+The PNG report contains a **3×2 grid** of subplots:
 
 | Subplot | Description |
 | --- | --- |
@@ -456,8 +459,12 @@ Output: a timestamped PNG report in `data/benchmark/results/` with a 2×2 grid:
 | **Score distribution** | Histogram of overall mean score per response — normal responses only |
 | **Semantic similarity** | Mean ± std by question type (regular vs. adversarial not blocked) |
 | **System robustness** | Fallback rate (% of total), input guardrail rate and output guardrail rate (% of adversarials) |
+| **Guardrail classification** | Confusion matrix (TP, FN, FP, TN) and binary classification metrics for the input guardrail: Precision, Recall/TPR, F1-Score, FPR |
+| *(reserved)* | Reserved for future threshold analysis |
 
 The robustness subplot surfaces the full three-layer defence picture: what was caught by regex, what the LLM failed on (and was corrected), and what proportion of adversarials the system prompt handled correctly (inferred as 100% − input guardrail rate − output guardrail rate).
+
+The guardrail classification subplot treats the input guardrail as a binary classifier (positive = adversarial) and reports standard IR/classification metrics, as recommended for this type of system evaluation.
 
 Both generation and judge prompts are configurable via `TUTOR_BENCHMARK_GENERATION_PROMPT` and `TUTOR_BENCHMARK_JUDGE_PROMPT` in `config.py`.
 
