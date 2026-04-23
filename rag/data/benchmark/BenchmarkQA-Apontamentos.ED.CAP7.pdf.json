@@ -1,0 +1,42 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "3",
+    "question": "Quais são as características essenciais de uma fila (Queue) mencionadas no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "5",
+    "question": "Quais são as operações básicas suportadas pela interface Queue?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "6",
+    "question": "Qual é a técnica de criptografia mais simples mencionada no texto e como funciona?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "7",
+    "question": "Como é representada matematicamente a encriptação de uma letra usando aritmética modular?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "8",
+    "question": "Como a implementação de filas através de arrays pode ser otimizada para evitar a movimentação ineficiente de dados?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "9",
+    "question": "Qual é a vantagem e o custo de usar um array dinâmico para implementar uma fila?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "10",
+    "question": "Qual é a função das referências frontNode e rearNode em uma lista ligada usada para implementar uma fila?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP7.pdf",
+    "page": "11",
+    "question": "Qual o Big O para a operação dequeue nas diferentes implementações de um Queue: array, array circular e lista ligada?"
+  }
+]

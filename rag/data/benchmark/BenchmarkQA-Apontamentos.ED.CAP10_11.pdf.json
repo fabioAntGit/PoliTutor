@@ -1,0 +1,127 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "3",
+    "question": "Qual é o problema importante e recorrente na computação mencionado na introdução do capítulo sobre pesquisas?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "4",
+    "question": "Qual é a convenção usada para representar 'lugar nenhum' ao procurar um elemento que não está presente no array?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "5",
+    "question": "Qual é o erro prático que pode ocorrer se o algoritmo for executado de 0 a n em vez de 0 a n-1?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "6",
+    "question": "Qual é o propósito do método linearSearch implementado no contexto fornecido?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "7",
+    "question": "Qual é a vantagem de ordenar um array antes de aplicar um algoritmo de busca?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "8",
+    "question": "Qual é a principal limitação do algoritmo de pesquisa binária quando aplicado a listas ligadas?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "9",
+    "question": "Qual é a importância de ordenar o array antes de usar o algoritmo de pesquisa binária?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "10",
+    "question": "Qual é o algoritmo de pesquisa mais eficiente, a pesquisa binária ou a pesquisa linear?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "11",
+    "question": "O que caracteriza um algoritmo de ordenação estável?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "12",
+    "question": "Qual é a complexidade básica do algoritmo Bubble Sort conforme descrito no contexto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "13",
+    "question": "Qual é a ideia principal por trás do algoritmo Selection Sort?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "14",
+    "question": "Qual é a abordagem utilizada para mover o maior elemento da parte não ordenada para o início da parte ordenada no algoritmo Selection Sort?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "15",
+    "question": "Qual é a diferença principal entre o Selection Sort e o Bubble Sort em termos de trocas realizadas durante a ordenação?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "16",
+    "question": "Quais são os passos de alto nível para a implementação do algoritmo de ordenação descrito no contexto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "17",
+    "question": "Qual é a abordagem utilizada para implementar o algoritmo de Insertion Sort no contexto fornecido?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "18",
+    "question": "Qual é a diferença de desempenho entre o Insertion Sort e o Merge Sort em termos de complexidade temporal?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "19",
+    "question": "Qual é o algoritmo utilizado para ordenar o array de objetos na implementação mencionada?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "20",
+    "question": "Qual é o propósito do método mergeSort no contexto fornecido?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "21",
+    "question": "Qual é a eficiência do Merge Sort na melhor das hipóteses em termos de comparações chave?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "22",
+    "question": "Qual é a principal desvantagem do algoritmo Merge Sort em comparação com outros métodos de ordenação?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "23",
+    "question": "Quais são os passos de alto nível para a implementação do algoritmo Quicksort?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "24",
+    "question": "Qual é o propósito da função findPartition no algoritmo de quick sort?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "25",
+    "question": "Qual é a complexidade do caso médio do algoritmo Quicksort?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "26",
+    "question": "Porquê que o Merge Sort necessita espaço extra?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP10_11.pdf",
+    "page": "27",
+    "question": "O que é o valor pivot no Quicksort?"
+  }
+]

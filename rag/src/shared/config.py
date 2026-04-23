@@ -125,6 +125,10 @@ TOP_K_RESULTS = 20
 #   CPU → Alibaba-NLP/gte-reranker-modernbert-base   (best benchmark results on CPU)
 RERANKER_MODEL = "Alibaba-NLP/gte-reranker-modernbert-base"
 RERANKER_TOP_K = 5
+# Chunks with ChromaDB cosine distance above this threshold are discarded before
+# reranking. Set to None to disable (retrieves all TOP_K_RESULTS regardless of
+# distance). Calibrated via benchmark_threshold.py using the elbow method.
+RETRIEVAL_DISTANCE_THRESHOLD: float | None = 0.9301
 
 # 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"

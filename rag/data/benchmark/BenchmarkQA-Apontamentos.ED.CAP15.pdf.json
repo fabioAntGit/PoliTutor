@@ -1,0 +1,102 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "3",
+    "question": "Que tipo de informações podem ser representadas graficamente além das distâncias entre cidades, conforme discutido na introdução?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "4",
+    "question": "Qual é a definição de um grafo simples segundo o texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "5",
+    "question": "O que caracteriza um grafo não direcionado como conexo?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "6",
+    "question": "Qual é a diferença entre a representação de grafos pesados e não pesados em uma matriz de adjacência?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "7",
+    "question": "Qual é a vantagem de usar valores booleanos em vez de números inteiros na matriz de adjacências de um grafo não pesado?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "8",
+    "question": "Qual é a vantagem de usar uma lista de adjacências em vez de uma matriz de adjacências na representação de grafos com poucas arestas?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "9",
+    "question": "Como são representados os pesos em um grafo pesado segundo o contexto apresentado?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "10",
+    "question": "Como se remove um vértice de um grafo de acordo com o contexto fornecido?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "11",
+    "question": "Qual método retorna um iterador que contém o caminho mais curto entre dois vértices?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "12",
+    "question": "Qual é a função que insere uma aresta entre dois vértices em um grafo pesado?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "13",
+    "question": "Quais são as duas estratégias mencionadas para realizar a travessia de grafos?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "14",
+    "question": "Qual é a condição que define a Regra 3 no processo de travessia em profundidade?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "16",
+    "question": "Quais são as regras seguidas para a travessia em largura de um grafo a partir de um vértice inicial?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "18",
+    "question": "Qual é a definição de 'caminho mais curto' no contexto de um dígrafo pesado com arestas rotuladas por números não negativos?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "19",
+    "question": "Qual é a ideia principal do algoritmo de Dijkstra ao calcular os caminhos mais curtos a partir de um nó inicial s?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "20",
+    "question": "Qual é a ideia geral por trás da primeira versão do algoritmo de Dijkstra apresentada no documento?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "21",
+    "question": "Por que as estimativas mantidas pelo algoritmo de Dijkstra são consideradas apertadas ou os comprimentos mínimos do caminho?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "22",
+    "question": "Qual é a complexidade da inicialização de D e da criação da fila de prioridade quando a fila de prioridade é implementada como uma heap binária?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "23",
+    "question": "Qual é o problema comum baseado em grafos discutido na seção 15.6 do documento?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP15.pdf",
+    "page": "24",
+    "question": "O que é uma árvore geradora mínima de um grafo?"
+  }
+]

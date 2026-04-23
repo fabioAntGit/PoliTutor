@@ -1,0 +1,92 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "3",
+    "question": "Quais são as duas principais interfaces na Plataforma de Coleções do Java?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "4",
+    "question": "Quais são os benefícios mencionados no contexto sobre o uso de coleções na programação orientada a objetos?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "5",
+    "question": "O que é uma classe abstrata e qual é a sua característica principal?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "6",
+    "question": "Quais são os tipos de bugs mencionados no contexto e como os genéricos ajudam a lidar com eles?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "7",
+    "question": "Por que o compilador não impede que um programador passe um objeto do tipo errado para o método add na classe BoxDemo1?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "8",
+    "question": "Qual é o problema que ocorre no exemplo BoxDemo2 quando tentamos converter um objeto armazenado como String para Integer?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "9",
+    "question": "Qual é a limitação ao usar tipos genéricos na classe Box em relação aos tipos de dados que podem ser passados para T?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "10",
+    "question": "Como podemos instanciar uma classe genérica Box com o tipo Integer sem precisar de fazer uma conversão ao invocar o método get?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "11",
+    "question": "Por que é importante seguir as convenções de nomenclatura para tipos parametrizados em Java?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "12",
+    "question": "O que permite a declaração de tipos parametrizados dentro de assinaturas de método ou construtor?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "13",
+    "question": "Qual é o propósito do método genérico 'inspect' mencionado no contexto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "14",
+    "question": "O que acontece se um tipo estendido por T não for colocado primeiro na lista de limites quando T tem vários limites superiores?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "15",
+    "question": "Quais são os três tipos de wildcards em Java mencionados no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "16",
+    "question": "Como se usa um wildcard de limite inferior em Java para permitir que uma lista de inteiros seja passada para um método que aceita List<Number> ou List<Object>?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "17",
+    "question": "O que são wildcards ilimitados e quando são geralmente usados no código?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "18",
+    "question": "O que é eliminação de tipo em genéricos no Java e como ela afeta o bytecode após a compilação?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "19",
+    "question": "Por que motivo o código 'List<int> list = new ArrayList<>(); list.add(17);' não compila em Java?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP1.2.pdf",
+    "page": "20",
+    "question": "Por que não podemos usar tipos primitivos como tipos parametrizados em Java?"
+  }
+]

@@ -12,7 +12,7 @@ Two main workflows:
 import json
 import logging
 import sys
-from dataclasses import asdict, dataclass
+from pydantic import BaseModel
 from datetime import datetime
 from pathlib import Path
 
@@ -47,8 +47,7 @@ load_dotenv()
 RESULTS_DIR = BENCHMARK_OUTPUT_DIR / "results"
 
 
-@dataclass
-class BenchmarkConfig:
+class BenchmarkConfig(BaseModel):
     """Defines a retrieval configuration to evaluate in the comparison benchmark."""
     name: str
     embedding_model: str = EMBEDDING_MODEL

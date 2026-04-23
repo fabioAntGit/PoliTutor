@@ -1,0 +1,77 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "3",
+    "question": "Como uma árvore é formalmente definida na ciência da computação?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "4",
+    "question": "Qual é a altura e o tamanho da árvore mencionada na figura anterior?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "5",
+    "question": "O que caracteriza uma árvore completa em termos de equilíbrio e disposição das folhas?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "6",
+    "question": "Quais são as duas estratégias mencionadas para implementar árvores binárias usando arrays e quais são as suas vantagens e desvantagens?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "7",
+    "question": "O que caracteriza uma árvore binária completa?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "8",
+    "question": "Quais são as propriedades de uma árvore binária cheia mencionadas no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "9",
+    "question": "Quais são as três ordens fundamentais para percorrer uma árvore binária descritas no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "13",
+    "question": "Quais são as operações comuns para todas as árvores binárias mencionadas no contexto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "14",
+    "question": "Qual método na interface BinaryTreeADT retorna uma referência ao elemento raiz?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "15",
+    "question": "Qual método retorna verdadeiro se a árvore binária contém um elemento que corresponde ao elemento especificado?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "16",
+    "question": "Quais são as desvantagens de implementar uma árvore binária usando um array?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "17",
+    "question": "Como é representada uma árvore binária vazia na implementação ligada de BinaryTree?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "18",
+    "question": "Quais são as duas maneiras de resolver o problema de implementar iteradores em árvores binárias?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "19",
+    "question": "Qual é a técnica principal de implementação da BinaryTreeADT mencionada no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP12.pdf",
+    "page": "20",
+    "question": "Qual é a relação entre as classes LinkedBinaryTree e BinaryTreeNode?"
+  }
+]
