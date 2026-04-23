@@ -11,7 +11,7 @@ _redis: redis.Redis | None = None
 
 async def connect_to_mongo() -> None:
     global _client, _db
-    _client = AsyncMongoClient(MONGO_URI)
+    _client = AsyncMongoClient(MONGO_URI, tlsAllowInvalidCertificates=True)
     await _client.admin.command("ping")
     _db = _client[MONGO_DB]
 

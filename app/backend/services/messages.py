@@ -1,9 +1,9 @@
 from rag.src.shared.models import IaEduCredentials
 from rag.src.runtime.retrieval import ask
-from app.backend.repositories.chats import ChatRepository
-from app.backend.core.exceptions import ChatNotFoundError
-from app.backend.repositories.messages import MessageRepository
-from app.backend.repositories.redis import RedisRepository
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
+from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
+from app.backend.repositories.interfaces.message_repository import IMessageRepository
+from app.backend.repositories.interfaces.redis_repository import IRedisRepository
 from app.backend.schemas.message.models import Message, Source
 from app.backend.schemas.message.response import MessageResponse
 from app.backend.services.interfaces.message_service import IMessageService
@@ -14,9 +14,9 @@ from app.backend.services.interfaces.context_service import IContextService
 class MessageService(IMessageService):
     def __init__(
         self,
-        message_repository: MessageRepository,
-        chat_repository: ChatRepository,
-        redis_repository: RedisRepository,
+        message_repository: IMessageRepository,
+        chat_repository: IChatRepository,
+        redis_repository: IRedisRepository,
         context_service: IContextService,
     ) -> None:
         self.message_repository = message_repository
@@ -37,12 +37,15 @@ class MessageService(IMessageService):
         if conversation is None:
             raise ChatNotFoundError(conversation_id)
 
+        if conversation.user_id != iaedu_channel_id:
+            raise AccessDeniedError("Nao tens permissao para enviar mensagens para este chat.")
+
+        summary, history = await self.context_service.get_or_load_context(conversation_id)
+
         user_msg = Message(conversation_id=conversation_id, role="user", content=question)
 
         await self.message_repository.create(user_msg)
         await self.redis_repository.add_message(user_msg)
-
-        summary, messages = await self.context_service.get_or_load_context(conversation_id)
 
         iaedu_creds = IaEduCredentials(
             url=iaedu_endpoint,
@@ -54,7 +57,7 @@ class MessageService(IMessageService):
             conversation.course,
             question,
             summary,
-            messages,
+            history,
             iaedu_creds=iaedu_creds,
         )
 
@@ -71,6 +74,8 @@ class MessageService(IMessageService):
         await self.context_service.check_and_trigger_summary(conversation_id)
 
         return MessageResponse(
+            user_message_id=str(user_msg.id),
+            assistant_message_id=str(assistant_msg.id),
             answer=response.answer,
             sources=[Source(filename=s.filename, pages=s.pages) for s in response.sources],
             is_fallback=response.is_fallback,

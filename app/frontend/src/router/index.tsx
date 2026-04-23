@@ -5,6 +5,7 @@ import SetupPage from "@/pages/setup/SetupPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import NotFoundPage from "@/pages/not-found/NotFoundPage"
 import ChatGuard from "@/guards/ChatGuard";
+import SessionGuard from "@/guards/SessionGuard";
 
 export const router = createBrowserRouter([
   {
@@ -12,20 +13,25 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
-        index: true,
-        element: <HomePage />,
-      },
-      {
-        path: "setup/:projectId",
+        path: "setup",
         element: <SetupPage />,
       },
       {
-        path: "chat/:conversationId",
-        element: <ChatGuard />,
+        element: <SessionGuard />,
         children: [
           {
             index: true,
-            element: <ChatPage />,
+            element: <HomePage />,
+          },
+          {
+            path: "chat/:conversationId",
+            element: <ChatGuard />,
+            children: [
+              {
+                index: true,
+                element: <ChatPage />,
+              },
+            ],
           },
         ],
       },
@@ -33,7 +39,6 @@ export const router = createBrowserRouter([
         path: "*",
         element: <NotFoundPage />,
       },
-      
     ],
   },
 ]);

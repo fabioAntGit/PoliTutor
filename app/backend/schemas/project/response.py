@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 
 class ProjectRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str
     name: str
     description: str
     institution: str
-    configType: str
+    config_type: str = Field(..., alias="configType")

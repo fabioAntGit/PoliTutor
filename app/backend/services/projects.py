@@ -1,4 +1,4 @@
-from app.backend.repositories.projects import PROJECT_REGISTRY
+from app.backend.core.projects import PROJECT_REGISTRY
 from app.backend.schemas.project.response import ProjectRead
 from app.backend.core.exceptions import ProjectNotFoundError
 from app.backend.services.interfaces.project_service import IProjectService
@@ -11,7 +11,7 @@ class ProjectService(IProjectService):
                 name=config.name,
                 description=config.description,
                 institution=config.institution,
-                configType=config.configType,
+                config_type=config.config_type,
             )
             for config in PROJECT_REGISTRY.values()
         ]
@@ -26,5 +26,5 @@ class ProjectService(IProjectService):
             name=project_config.name,
             description=project_config.description,
             institution=project_config.institution,
-            configType=project_config.configType,
+            config_type=project_config.config_type,
         )

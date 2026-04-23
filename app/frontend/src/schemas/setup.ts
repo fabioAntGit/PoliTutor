@@ -3,20 +3,21 @@ import { z } from "zod";
 export const setupSchema = z.object({
   endpoint: z
     .string()
-    .min(1, "O endpoint é obrigatório.")
-    .url("Introduza um URL válido.")
-    .refine((val) => val.startsWith("https://"), "O endpoint deve usar HTTPS.")
-    .refine((val) => val.endsWith("/stream"), "O endpoint deve terminar em /stream."),
+    .min(1, "O endpoint e obrigatorio.")
+    .regex(
+      /^https:\/\/api\.iaedu\.pt\/agent-chat\/+api\/v1\/agent\/[^/]+\/stream$/,
+      "Formato invalido. Exemplo: https://api.iaedu.pt/agent-chat/api/v1/agent/{id}/stream"
+    ),
 
   apiKey: z
     .string()
-    .min(1, "A chave de API é obrigatória.")
-    .regex(/^sk-usr-[a-z0-9]+$/, "Formato inválido. Exemplo: sk-usr-olzgh5hx4bjwrq7ggqkxxqd31x"),
+    .min(1, "A chave de API e obrigatoria.")
+    .regex(/^sk-usr-[a-z0-9]+$/, "Formato invalido. Exemplo: sk-usr-olzgh5hx4bjwrq7ggqkxxqd31x"),
 
   channelId: z
     .string()
-    .min(1, "O ID do canal é obrigatório.")
-    .regex(/^[a-z0-9]+$/, "O ID do canal só pode conter letras minúsculas e números.")
+    .min(1, "O ID do canal e obrigatorio.")
+    .regex(/^[a-z0-9]+$/, "O ID do canal so pode conter letras minusculas e numeros.")
     .min(10, "O ID do canal parece demasiado curto."),
 });
 

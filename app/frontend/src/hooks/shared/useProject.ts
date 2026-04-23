@@ -1,3 +1,4 @@
+import { ApiError } from "@/lib/errors";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { ProjectService } from "@/services/project.service";
@@ -17,13 +18,14 @@ export function useProject() {
 
     ProjectService.getProjectById(projectId)
       .then((res) => {
-        if (res) {
-          setProject(res);
-        } else {
-          setError("Projeto não encontrado.");
-        }
+        setProject(res);
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error instanceof ApiError && error.isNotFound) {
+          setError("Projeto nao encontrado.");
+          return;
+        }
+
         setError("Erro ao carregar os dados do projeto.");
       })
       .finally(() => {

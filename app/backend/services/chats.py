@@ -1,11 +1,10 @@
 from app.backend.core.exceptions import (
     ChatNotFoundError,
     ProjectNotFoundError,
+    AccessDeniedError,
 )
-from app.backend.repositories.chats import ChatRepository
-from app.backend.repositories.messages import MessageRepository
-from app.backend.repositories.redis import RedisRepository
-from app.backend.repositories.projects import PROJECT_REGISTRY
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
+from app.backend.core.projects import PROJECT_REGISTRY
 from app.backend.schemas.chat.models import Chat
 from app.backend.schemas.chat.response import ChatRead, ChatCreated
 from app.backend.services.interfaces.chat_service import IChatService
@@ -15,14 +14,10 @@ from app.backend.services.interfaces.message_service import IMessageService
 class ChatService(IChatService):
     def __init__(
         self,
-        chat_repository: ChatRepository,
-        message_repository: MessageRepository,
-        redis_repository: RedisRepository,
+        chat_repository: IChatRepository,
         message_service: IMessageService,
     ) -> None:
         self.chat_repository = chat_repository
-        self.message_repository = message_repository
-        self.redis_repository = redis_repository
         self.message_service = message_service
 
     async def create_chat(self, project_id: str, user_id: str) -> tuple[ChatCreated, bool]:
@@ -47,11 +42,14 @@ class ChatService(IChatService):
         conversation_id = await self.chat_repository.create(chat)
         return ChatCreated(conversation_id=conversation_id), True
 
-    async def get_chat(self, conversation_id: str) -> ChatRead:
+    async def get_chat(self, conversation_id: str, requester_user_id: str) -> ChatRead:
         chat = await self.chat_repository.get_chat(conversation_id)
 
         if chat is None:
             raise ChatNotFoundError(conversation_id)
+            
+        if chat.user_id != requester_user_id:
+            raise AccessDeniedError("Nao tens permissao para aceder a este chat.")
 
         project_config = PROJECT_REGISTRY.get(chat.project_id)
         
