@@ -95,6 +95,9 @@ OPENROUTER_MODEL_BENCHMARK = "openai/gpt-4o"
 # Geração socrática final (usado quando GENERATOR_BACKEND = "openrouter")
 OPENROUTER_MODEL_GENERATOR = "openai/gpt-4o"
 
+# Modelo para sumarização pedagógica de conversas
+OPENROUTER_MODEL_SUMMARIZATION = "google/gemini-2.5-flash-lite"
+
 # Generator backend: "iaedu" | "openrouter"
 # Switch to "openrouter" to avoid IAEdu rate limiting.
 # Switch to "iaedu" when all is ready for production (alterar isto depois para iaedu)!!!

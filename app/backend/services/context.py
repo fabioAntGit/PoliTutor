@@ -6,7 +6,7 @@ from app.backend.repositories.interfaces.redis_repository import IRedisRepositor
 from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.context_service import IContextService
 from rag.src.shared.call_model import call_openrouter
-from rag.src.shared.config import SUMMARIZATION_PROMPT, SUMMARIZATION_THRESHOLD
+from rag.src.shared.config import SUMMARIZATION_PROMPT, SUMMARIZATION_THRESHOLD, OPENROUTER_MODEL_SUMMARIZATION
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,11 @@ class ContextService(IContextService):
             )
             
             try:
-                new_summary = await asyncio.to_thread(call_openrouter, prompt)
+                new_summary = await asyncio.to_thread(
+                    call_openrouter, 
+                    prompt, 
+                    model=OPENROUTER_MODEL_SUMMARIZATION
+                )
                 
                 if new_summary:
                     last_msg_id = messages[-1].id
