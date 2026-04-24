@@ -18,11 +18,7 @@ Poli-Tutor implements a modular RAG pipeline for ingesting, chunking, embedding 
 - Three-layer defence system: input guardrails (regex) → LLM system prompt → output guardrail
 - `ask()` function callable by a backend, accepting per-student IAEdu credentials for production use
 - Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, Recall)
-- Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring and layered robustness metrics
-- Three-layer defence system: input guardrails (regex) → LLM system prompt → output guardrail
-- `ask()` function callable by a backend, accepting per-student IAEdu credentials for production use
-- Retrieval benchmark: automated dataset generation and evaluation (Hit Rate, MRR, Recall)
-- Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring and layered robustness metrics
+- Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring, guardrail classification metrics (Precision, Recall, F1, FPR) and layered robustness metrics
 - Interactive CLI chat for local testing (`chat.py`)
 - Embedding visualisation via Renumics Spotlight
 
@@ -241,7 +237,11 @@ retrieval.py    →  ask(course, query, iaedu_creds=None)
       |                    |
       |           [Input guardrails] — sanitize, validate, detect injection/code request
       |                    |
-      |           retrieve() — embeds query, searches ChromaDB (top 20), reranks (top 5)
+      |           retrieve() — embeds query, searches ChromaDB (top 20)
+      |                    |
+      |           [Distance threshold] — discards chunks with cosine distance > 0.9301
+      |                    |
+      |           reranker — scores remaining chunks, keeps top 5
       |                    |
       v           generator.py — builds context from chunks, calls IAEdu or OpenRouter
                              |
@@ -297,7 +297,17 @@ from retrieval import retrieve
 results = retrieve(course="ed", query="O que é uma árvore AVL?")
 ```
 
-It queries ChromaDB filtered by course unit, then applies cross-encoder reranking before returning results as a structured `RetrievalResults` object.
+It queries ChromaDB filtered by course unit, applies the distance threshold filter, then applies cross-encoder reranking before returning results as a structured `RetrievalResults` object.
+
+### Distance threshold
+
+Chunks with a ChromaDB cosine distance above `RETRIEVAL_DISTANCE_THRESHOLD` are discarded before reranking. This prevents the reranker from scoring clearly irrelevant chunks and ensures the system returns a fallback when no sufficiently close content exists in the course materials.
+
+The active threshold is **0.9301**, calibrated via `benchmark_threshold.py` (see [Threshold Calibration](#threshold-calibration) below). At this value:
+- Hit Rate@5 = **86.6%** across 583 benchmark questions
+- Fallback rate = **0.3%** (2 questions with no relevant chunks in the corpus)
+
+Set `RETRIEVAL_DISTANCE_THRESHOLD = None` in `config.py` to disable filtering entirely.
 
 ### Reranker scoring
 
@@ -388,6 +398,36 @@ Edit `BENCHMARK_COMPARISON_CONFIGS` in `config.py` to add, remove, or modify con
 | `collection_name` | ChromaDB collection to query (must be pre-indexed with the right model) |
 | `reranker_model` | Cross-encoder model name, or `null` to skip reranking |
 
+### Threshold Calibration
+
+`benchmark_threshold.py` determines the optimal ChromaDB distance threshold using a sweep over the observed distance range. This is a one-off calibration step — run it after changing the embedding model or reindexing the collection.
+
+**How it works:**
+
+1. **Distance collection** — runs retrieval without threshold or reranking for every benchmark question, collecting raw ChromaDB cosine distances. Each chunk is classified as a *hit* (covers the expected page) or *miss*.
+2. **Threshold sweep** — evaluates `N` evenly-spaced threshold values across `[d_min, d_max]`. For each value, the full retrieve → filter → rerank pipeline is executed and IR metrics + fallback rate are computed.
+3. **Suggestion** — two criteria are applied: the second-derivative elbow on Hit Rate@5, and a composite score `Hit@5 − α × fallback_rate`.
+
+```bash
+# Run with default 20 threshold values
+python -m src.evaluation.benchmark_threshold
+
+# Custom number of thresholds
+python -m src.evaluation.benchmark_threshold --thresholds 30
+```
+
+Output: `data/benchmark/results/threshold_sweep_<timestamp>.json`
+
+**Visualise results:**
+
+```bash
+python -m src.evaluation.plot_threshold_sweep data/benchmark/results/threshold_sweep_<timestamp>.json
+```
+
+Saves a publication-ready PNG alongside the JSON with two panels: IR metrics vs threshold (Hit@5, NDCG@5, MRR@5) and fallback rate vs threshold, with the recommended threshold annotated.
+
+> The sweep runs the reranker for every question at every threshold value — expect several hours on CPU with the full benchmark dataset. The active threshold is set via `RETRIEVAL_DISTANCE_THRESHOLD` in `config.py`.
+
 ---
 
 ## Tutor Benchmark
@@ -448,7 +488,14 @@ python src/benchmark_tutor.py --evaluate           # all BenchmarkTutor-*.json f
 python src/benchmark_tutor.py --evaluate <file>    # single file
 ```
 
-Output: a timestamped PNG report in `data/benchmark/results/` with a 2×2 grid:
+Output: two files per run in `data/benchmark/results/`, both sharing the same timestamp:
+
+| File | Description |
+| --- | --- |
+| `benchmark_tutor_{timestamp}.png` | Visual report (3×2 grid, see below) |
+| `benchmark_tutor_similarity_{timestamp}.json` | All normal results sorted by semantic similarity (highest → lowest), with `question`, `actual_response`, `expected_answer` and `similarity` — ready to extract high/low similarity examples for the written report |
+
+The PNG report contains a **3×2 grid** of subplots:
 
 | Subplot | Description |
 | --- | --- |
@@ -456,8 +503,12 @@ Output: a timestamped PNG report in `data/benchmark/results/` with a 2×2 grid:
 | **Score distribution** | Histogram of overall mean score per response — normal responses only |
 | **Semantic similarity** | Mean ± std by question type (regular vs. adversarial not blocked) |
 | **System robustness** | Fallback rate (% of total), input guardrail rate and output guardrail rate (% of adversarials) |
+| **Guardrail classification** | Confusion matrix (TP, FN, FP, TN) and binary classification metrics for the input guardrail: Precision, Recall/TPR, F1-Score, FPR |
+| *(reserved)* | Reserved for future threshold analysis |
 
 The robustness subplot surfaces the full three-layer defence picture: what was caught by regex, what the LLM failed on (and was corrected), and what proportion of adversarials the system prompt handled correctly (inferred as 100% − input guardrail rate − output guardrail rate).
+
+The guardrail classification subplot treats the input guardrail as a binary classifier (positive = adversarial) and reports standard IR/classification metrics, as recommended for this type of system evaluation.
 
 Both generation and judge prompts are configurable via `TUTOR_BENCHMARK_GENERATION_PROMPT` and `TUTOR_BENCHMARK_JUDGE_PROMPT` in `config.py`.
 

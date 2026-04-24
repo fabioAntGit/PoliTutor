@@ -1,0 +1,52 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "3",
+    "question": "O que é uma colisão em uma tabela de hash e como ela pode ser resolvida?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "4",
+    "question": "Qual é a probabilidade de que duas pessoas em um grupo de 23 tenham o mesmo aniversário, e como isso se relaciona com colisões em tabelas de hash?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "5",
+    "question": "Qual é o método recomendado para escolher o tamanho de uma tabela de hash?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "6",
+    "question": "Qual é a regra prática recomendada ao criar funções de hash para garantir uma distribuição uniforme das chaves?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "7",
+    "question": "Qual é o impacto do comprimento médio da cadeia λ no desempenho das pesquisas em tabelas de hash com listas ligadas?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "8",
+    "question": "Qual é o impacto do fator de carga no desempenho da dispersão aberta em tabelas de hash?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "9",
+    "question": "Como o hash duplo elimina o agrupamento primário em comparação com a pesquisa linear?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "10",
+    "question": "Como é determinado o novo local para inserir um valor quando ocorre uma colisão no hash duplo?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "11",
+    "question": "Quais são as duas principais abordagens para resolução de colisões em tabelas de hash mencionadas no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP16.pdf",
+    "page": "12",
+    "question": "O que acontece quando duas ou mais chaves são mapeadas para o mesmo local numa tabela de hash?"
+  }
+]

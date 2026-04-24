@@ -1,0 +1,42 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "3",
+    "question": "O que é uma fila de prioridade e por que uma estrutura de dados de fila normal não é eficiente para implementá-la?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "4",
+    "question": "Quais são as duas propriedades que definem uma minheap?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "5",
+    "question": "Quais são as operações adicionais que uma minheap possui além das operações herdadas de uma árvore binária?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "6",
+    "question": "Como são adicionados elementos a uma minheap?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "7",
+    "question": "Qual é o processo para inserir um novo nó em uma heap e garantir a propriedade de ordenação?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "8",
+    "question": "Como é removido o elemento mínimo de uma heap e qual é o processo de reordenação subsequente?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "9",
+    "question": "Como são atribuídos os números aos nós de uma árvore binária completa e como isso facilita a implementação de heaps?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP14.pdf",
+    "page": "10",
+    "question": "Como é representada uma árvore binária completa em um array?"
+  }
+]
