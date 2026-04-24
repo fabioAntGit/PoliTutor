@@ -3,25 +3,22 @@ FROM node:20-slim AS build
 
 WORKDIR /app
 
-# Copy package files from the frontend directory
 COPY app/frontend/package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy the rest of the frontend source code
 COPY app/frontend/ ./
 
-# Build the application
+# Allow overriding the API URL at build time (defaults to localhost for local Docker use)
+ARG VITE_API_BASE_URL=http://localhost:8000/api/v1
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 RUN npm run build
 
 # Production stage
 FROM nginx:stable-alpine
 
-# Copy the built files to the nginx html directory
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Add a basic nginx configuration to handle SPA routing if necessary
 RUN echo 'server { \
     listen 80; \
     location / { \

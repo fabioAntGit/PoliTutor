@@ -109,7 +109,7 @@ def generate(
     if GENERATOR_BACKEND == "openrouter":
         raw_answer = call_openrouter(prompt, max_tokens=2000, model=OPENROUTER_MODEL_GENERATOR)
     else:
-        creds = iaedu_creds.__dict__ if iaedu_creds else {}
+        creds = iaedu_creds.model_dump() if iaedu_creds else {}
         raw_answer = call_iaedu(prompt, **creds)
 
     if raw_answer is None:

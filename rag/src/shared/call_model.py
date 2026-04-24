@@ -111,7 +111,6 @@ def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.
     if not api_key:
         logger.error("OPENROUTER_KEY environment variable is not set.")
         return None
-    logger.debug("OPENROUTER_KEY loaded: %s...%s (len=%d)", api_key[:8], api_key[-4:], len(api_key))
 
     max_retries = 3
     retry_delay = 5

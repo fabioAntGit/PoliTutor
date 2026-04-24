@@ -30,7 +30,7 @@ logging.basicConfig(
 BASE_DIR = Path(__file__).resolve().parent
 RAG_DIR = BASE_DIR.parent.parent  # rag/
 # Load environment variables from the root .env file
-load_dotenv(RAG_DIR.parent / ".env")
+load_dotenv(RAG_DIR / ".env")
 
 # 2. PATH MANAGEMENT
 DEFAULT_RAW_PATH = RAG_DIR / "data" / "raw"
@@ -100,9 +100,9 @@ OPENROUTER_MODEL_GENERATOR = "openai/gpt-4o"
 OPENROUTER_MODEL_SUMMARIZATION = "google/gemini-2.5-flash-lite"
 
 # Generator backend: "iaedu" | "openrouter"
-# Switch to "openrouter" to avoid IAEdu rate limiting.
-# Switch to "iaedu" when all is ready for production (alterar isto depois para iaedu)!!!
-GENERATOR_BACKEND: str = "openrouter"
+# Production: "iaedu" — credenciais por aluno vindas do frontend.
+# Desenvolvimento/benchmarks: "openrouter" — evita rate limits da IAEdu.
+GENERATOR_BACKEND: str = "iaedu"
 
 MAX_IMAGE_API_CALLS = None  # No limit
 IMAGE_API_DELAY = 1.5
@@ -127,7 +127,7 @@ CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 TOP_K_RESULTS = 20
 #   GPU → jinaai/jina-reranker-v2-base-multilingual  (best benchmark results with GPU)
 #   CPU → Alibaba-NLP/gte-reranker-modernbert-base   (best benchmark results on CPU)
-RERANKER_MODEL = "Alibaba-NLP/gte-reranker-modernbert-base"
+RERANKER_MODEL = "BAAI/bge-reranker-base"
 RERANKER_TOP_K = 5
 # Chunks with ChromaDB cosine distance above this threshold are discarded before
 # reranking. Set to None to disable (retrieves all TOP_K_RESULTS regardless of
