@@ -28,14 +28,15 @@ logging.basicConfig(
 )
 
 BASE_DIR = Path(__file__).resolve().parent
+RAG_DIR = BASE_DIR.parent.parent  # rag/
 # Load environment variables from the root .env file
-load_dotenv(BASE_DIR.parent.parent / ".env")
+load_dotenv(RAG_DIR.parent / ".env")
 
 # 2. PATH MANAGEMENT
-DEFAULT_RAW_PATH = BASE_DIR.parent / "data" / "raw"
+DEFAULT_RAW_PATH = RAG_DIR / "data" / "raw"
 RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
 COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
-IMAGES_OUTPUT_DIR = BASE_DIR.parent / "data" / "processed" / "images"
+IMAGES_OUTPUT_DIR = RAG_DIR / "data" / "processed" / "images"
 
 # 3. DOCUMENT EXTRACTION (Unstructured API)
 SUPPORTED_EXTENSIONS = ["*.pdf", "*.pptx", "*.md"]
@@ -131,7 +132,7 @@ RERANKER_TOP_K = 5
 RETRIEVAL_DISTANCE_THRESHOLD: float | None = 0.9301
 
 # 8. BENCHMARKING & EVALUATION
-BENCHMARK_OUTPUT_DIR = BASE_DIR.parent / "data" / "benchmark"
+BENCHMARK_OUTPUT_DIR = RAG_DIR / "data" / "benchmark"
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
 TUTOR_BENCHMARK_MAX_QUESTIONS = 200  # Max questions to generate (2 per sampled page: 1 regular + 1 adversarial)
 
