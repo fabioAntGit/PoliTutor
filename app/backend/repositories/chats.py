@@ -1,11 +1,11 @@
 from bson import ObjectId
 from datetime import datetime, timezone
-from app.backend.core.database import get_db
+from pymongo.asynchronous.database import AsyncDatabase
 from app.backend.schemas.chat.models import Chat
 
 class ChatRepository:
-    def __init__(self) -> None:
-        self.collection = get_db()["chats"]
+    def __init__(self, db: AsyncDatabase) -> None:
+        self.collection = db["chats"]
 
     async def create(self, chat: Chat) -> str:
         await self.collection.insert_one(chat.model_dump())

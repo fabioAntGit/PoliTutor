@@ -1,8 +1,7 @@
-import logging
-
 from fastapi import APIRouter, Depends, Header
 
-from app.backend.schemas.message.request import MessageSend, MessageCredentials
+from app.backend.schemas.message.request import MessageSend
+from app.backend.schemas.auth import IAEduAuthHeaders
 from app.backend.schemas.message.response import MessageResponse
 from app.backend.services.interfaces.message_service import IMessageService
 from app.backend.api.deps import get_message_service
@@ -14,7 +13,7 @@ router = APIRouter()
 async def send_message(
     conversation_id: str,
     body: MessageSend,
-    headers: MessageCredentials = Header(...),
+    headers: IAEduAuthHeaders = Header(...),
     service: IMessageService = Depends(get_message_service)
 ):
     return await service.send_message(

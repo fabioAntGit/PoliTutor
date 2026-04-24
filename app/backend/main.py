@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from app.backend.api.v1.endpoints.chats import router as chats_router
 from app.backend.api.v1.endpoints.messages import router as messages_router
 from app.backend.api.v1.endpoints.projects import router as projects_router
+from app.backend.api.v1.endpoints.reports import router as reports_router
 from app.backend.core.database import close_mongo, connect_to_mongo, connect_to_redis, close_redis
 from app.backend.core.exceptions import AppError
 from app.backend.schemas.shared.api_error import ApiError
@@ -60,6 +61,7 @@ async def startup_event():
 app.include_router(chats_router, prefix="/api/v1")
 app.include_router(messages_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
+app.include_router(reports_router, prefix="/api/v1")
 
 
 @app.on_event("shutdown")
