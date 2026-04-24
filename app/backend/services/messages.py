@@ -44,7 +44,7 @@ class MessageService(IMessageService):
 
         user_msg = Message(conversation_id=conversation_id, role="user", content=question)
 
-        await self.message_repository.create(user_msg)
+        user_msg.id = await self.message_repository.create(user_msg)
         await self.redis_repository.add_message(user_msg)
 
         iaedu_creds = IaEduCredentials(
@@ -68,7 +68,7 @@ class MessageService(IMessageService):
             sources=[Source(filename=source.filename, pages=source.pages) for source in response.sources],
         )
 
-        await self.message_repository.create(assistant_msg)
+        assistant_msg.id = await self.message_repository.create(assistant_msg)
         await self.redis_repository.add_message(assistant_msg)
 
         await self.context_service.check_and_trigger_summary(conversation_id)

@@ -9,8 +9,7 @@ class MessageRepository:
     async def create(self, message: Message) -> str:
         data = message.model_dump(by_alias=True, exclude={"id"})
         result = await self.collection.insert_one(data)
-        message.id = str(result.inserted_id)
-        return message.conversation_id
+        return str(result.inserted_id)
 
     async def get_message(self, message_id: str) -> Message | None:
         document = await self.collection.find_one({"_id": ObjectId(message_id)})

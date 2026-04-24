@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ApiError } from "@/lib/errors";
 import { useParams } from "react-router";
 import type { Message } from "@/types/message";
 import { MessageService } from "@/services/message.service";
-import type { SubmitEvent } from "react";
 import { ChatService } from "@/services/chat.service";
 import type { ChatRead } from "@/types/chat";
 
@@ -55,7 +54,7 @@ export function useChat() {
     }
   };
 
-  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (isTyping) return;

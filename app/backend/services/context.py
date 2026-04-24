@@ -21,7 +21,7 @@ class ContextService(IContextService):
         self.chat_repository = chat_repository
         self.redis_repository = redis_repository
 
-    async def get_or_load_context (self, conversation_id: str) -> tuple[str | None, str]:
+    async def get_or_load_context(self, conversation_id: str) -> tuple[str | None, str]:
         summary, messages = await self.redis_repository.get_context(conversation_id)
         
         if not messages:
@@ -57,13 +57,14 @@ class ContextService(IContextService):
                 history=history_str
             )
             
+            await self.redis_repository.reset_message_count(conversation_id)
             try:
                 new_summary = await asyncio.to_thread(
-                    call_openrouter, 
-                    prompt, 
+                    call_openrouter,
+                    prompt,
                     model=OPENROUTER_MODEL_SUMMARIZATION
                 )
-                
+
                 if new_summary:
                     last_msg_id = messages[-1].id
                     await self.chat_repository.set_summary(conversation_id, new_summary, last_msg_id)
@@ -73,8 +74,6 @@ class ContextService(IContextService):
                     logger.warning("OpenRouter returned empty summary for conversation %s", conversation_id)
             except Exception as e:
                 logger.error("Failed to generate summary for conversation %s: %s", conversation_id, e)
-            
-            await self.redis_repository.reset_message_count(conversation_id)
 
     def _format_history(self, messages: list[Message]) -> str:
         history_lines = []

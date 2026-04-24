@@ -3,6 +3,7 @@ import { Copy, Check, Flag, BookOpen, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { ReportService } from "@/services/report.service";
+import { toast } from "sonner";
 
 interface ChatBubbleProps {
     message: Message;
@@ -60,13 +61,13 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 if (success) {
                     setReported(true);
                 } else {
-                    alert("Erro ao enviar o report. Certifica-te que a mensagem já tem uma resposta.");
+                    toast.error("Erro ao enviar o report. Certifica-te que a mensagem já tem uma resposta.");
                 }
             }
         } catch (error: any) {
             console.error("Erro ao processar report:", error);
             const msg = error instanceof Error ? error.message : "Erro ao processar o pedido. Tenta novamente mais tarde.";
-            alert(msg);
+            toast.error(msg);
         } finally {
             setIsReporting(false);
         }
