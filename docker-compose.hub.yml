@@ -19,9 +19,13 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
     depends_on:
       redis:
         condition: service_healthy
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
 
   frontend:
     image: josebarbosa2005/poli-tutor:frontend
