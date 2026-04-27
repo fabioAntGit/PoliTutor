@@ -17,7 +17,7 @@ import json
 import logging
 import re
 
-from ..shared.config import GENERATOR_BACKEND, OPENROUTER_MODEL_GENERATOR, SOCRATIC_REDIRECT, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
+from ..shared.config import GENERATOR_BACKEND, OPENROUTER_MODEL_GENERATOR, SOCRATIC_REDIRECT, TUTOR_API_ERROR_MESSAGE, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
 
 
 from .guardrails import detect_direct_answer
@@ -72,38 +72,51 @@ def generate(
     summary: str = "",
     history: str = "",
     iaedu_creds: IaEduCredentials | None = None,
+    is_retrieval_fallback: bool = False,
 ) -> TutorResponse:
     """
     Generates a Socratic tutoring response grounded in the retrieved course material.
 
-    If no relevant chunks were retrieved, returns a fallback TutorResponse without
-    calling the LLM. Otherwise, builds a context prompt and calls the configured
-    backend (GENERATOR_BACKEND). On API failure, also returns the fallback response.
+    When no chunks were retrieved but conversation history exists, falls back to a
+    history-only prompt so the LLM can continue the dialogue (e.g. student replies
+    "Sim" to a previous tutor question). Only returns a hard fallback message when
+    there is neither retrieved content nor any conversation context.
 
     Args:
-        query:            The student's question.
-        results:          Ranked chunks retrieved from ChromaDB.
-        summary:          Pre-formatted summary of previous conversation.
-        history:          Pre-formatted string of recent chat history.
-        iaedu_creds:  Per-request IAEdu credentials forwarded from the student's
-                      frontend session. Required when GENERATOR_BACKEND == "iaedu".
-                      If None, call_iaedu falls back to environment variables.
+        query:                 The student's question.
+        results:               Ranked chunks retrieved from ChromaDB (may be empty).
+        summary:               Pre-formatted summary of previous conversation.
+        history:               Pre-formatted string of recent chat history.
+        iaedu_creds:           Per-request IAEdu credentials forwarded from the student's
+                               frontend session. Required when GENERATOR_BACKEND == "iaedu".
+                               If None, call_iaedu falls back to environment variables.
+        is_retrieval_fallback: True when the caller found no chunks after distance filtering.
+                               Propagated onto TutorResponse for downstream metrics.
 
     Returns:
-        A TutorResponse with the tutor's answer, cited sources, and fallback flag.
+        A TutorResponse with the tutor's answer, cited sources, and fallback flags.
     """
     if results.is_empty():
-        logger.warning("[GENERATE] FALLBACK REASON: No retrieval results (0 chunks).")
-        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
-
-    context = build_context(results)
-    sources = build_sources(results)
+        if not summary and not history:
+            logger.warning("[GENERATE] FALLBACK REASON: No retrieval results and no conversation history.")
+            return TutorResponse(
+                answer=TUTOR_FALLBACK_MESSAGE,
+                sources=[],
+                is_fallback=True,
+                is_retrieval_fallback=True,
+            )
+        logger.info("[GENERATE] No RAG chunks — continuing dialogue from conversation history.")
+        context = "[Sem conteúdo RAG disponível. Continua o diálogo com base no histórico da conversa.]"
+        sources = []
+    else:
+        context = build_context(results)
+        sources = build_sources(results)
 
     prompt = TUTOR_SYSTEM_PROMPT.format(
         chat_summary=summary or "Não há resumo disponível.",
         chat_history=history or "Não há histórico anterior.",
         user_question=query,
-        rag_context=context
+        rag_context=context,
     )
 
     if GENERATOR_BACKEND == "openrouter":
@@ -113,40 +126,67 @@ def generate(
         raw_answer = call_iaedu(prompt, **creds)
 
     if raw_answer is None:
-        logger.error("[GENERATE] FALLBACK REASON: %s API returned no answer", GENERATOR_BACKEND)
-        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
+        logger.error("[GENERATE] API ERROR: %s returned no answer", GENERATOR_BACKEND)
+        return TutorResponse(
+            answer=TUTOR_API_ERROR_MESSAGE,
+            sources=[],
+            is_fallback=True,
+            is_retrieval_fallback=is_retrieval_fallback,
+        )
 
     logger.debug("[GENERATE] Raw LLM response (first 500 chars):\n%s", raw_answer[:500])
 
-    # Parse the JSON response from the LLM
     clean = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_answer.strip())
     try:
         data = json.loads(clean)
     except (json.JSONDecodeError, TypeError) as exc:
         logger.warning("[GENERATE] LLM response is not valid JSON (%s) — using raw text.", exc)
-        return TutorResponse(answer=raw_answer, sources=sources, is_fallback=False)
+        return TutorResponse(
+            answer=raw_answer,
+            sources=sources,
+            is_fallback=False,
+            is_retrieval_fallback=is_retrieval_fallback,
+        )
 
-    # Handle the case where the LLM itself decided the context is not relevant
     if data.get("is_fallback", False):
         logger.warning("[GENERATE] FALLBACK REASON: LLM set is_fallback=true.")
-        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
+        return TutorResponse(
+            answer=TUTOR_FALLBACK_MESSAGE,
+            sources=[],
+            is_fallback=True,
+            is_retrieval_fallback=is_retrieval_fallback,
+        )
 
     answer = data.get("answer", "")
     if not answer:
         logger.warning("[GENERATE] FALLBACK REASON: LLM returned empty answer string.")
-        return TutorResponse(answer=TUTOR_FALLBACK_MESSAGE, sources=[], is_fallback=True)
+        return TutorResponse(
+            answer=TUTOR_FALLBACK_MESSAGE,
+            sources=[],
+            is_fallback=True,
+            is_retrieval_fallback=is_retrieval_fallback,
+        )
 
-    # Use sources from LLM response (only the ones it actually cited)
     llm_sources = [
         TutorSource(filename=s.get("filename", ""), pages=s.get("pages", []))
         for s in data.get("sources", [])
         if s.get("filename")
     ]
 
-    # Output guardrail: verify the response is Socratic
     if detect_direct_answer(answer):
         logger.warning("[GENERATE] Output guardrail triggered — replacing with Socratic redirect.")
-        return TutorResponse(answer=SOCRATIC_REDIRECT, sources=llm_sources, is_fallback=False, is_output_guardrail=True)
+        return TutorResponse(
+            answer=SOCRATIC_REDIRECT,
+            sources=llm_sources,
+            is_fallback=False,
+            is_output_guardrail=True,
+            is_retrieval_fallback=is_retrieval_fallback,
+        )
 
     logger.info("Tutor response generated from %d source chunks.", len(llm_sources))
-    return TutorResponse(answer=answer, sources=llm_sources, is_fallback=False)
+    return TutorResponse(
+        answer=answer,
+        sources=llm_sources,
+        is_fallback=False,
+        is_retrieval_fallback=is_retrieval_fallback,
+    )

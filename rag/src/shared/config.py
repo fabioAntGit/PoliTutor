@@ -254,6 +254,12 @@ TUTOR_FALLBACK_MESSAGE = (
     "Tente reformular a questão ou consulte diretamente os slides da UC."
 )
 
+# Error message returned when the LLM backend fails (API error, rate limit, timeout).
+TUTOR_API_ERROR_MESSAGE = (
+    "Ocorreu um problema temporário ao processar a tua pergunta. "
+    "Por favor, tenta novamente dentro de momentos."
+)
+
 # 10. CONVERSATION SUMMARIZATION
 # Number of messages to wait before triggering a background summarization
 SUMMARIZATION_THRESHOLD = 16

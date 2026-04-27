@@ -92,7 +92,7 @@ class TutorResponse(BaseModel):
         sources:      List of source chunks used to ground the response.
         is_fallback:  True if no relevant context was found and a fallback message was returned.
         is_guardrail: True if an input guardrail blocked the query before reaching the LLM.
-        is_retrieval_fallback: True if the distance threshold filtered all chunks before the LLM was called.
+        is_retrieval_fallback: True if the distance threshold filtered all chunks (LLM may still have been called using conversation history).
     """
     answer: str
     sources: list[TutorSource]
