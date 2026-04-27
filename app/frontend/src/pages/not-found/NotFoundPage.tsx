@@ -5,7 +5,7 @@ export default function NotFoundPage() {
         <h1 className="text-2xl font-medium sm:text-3xl">404</h1>
         <div className="hidden h-10 w-px bg-border sm:block" />
         <h2 className="text-sm text-muted-foreground sm:text-base">
-          This page could not be found.
+          Esta página não foi encontrada
         </h2>
       </div>
     </main>

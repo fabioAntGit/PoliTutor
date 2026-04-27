@@ -1,13 +1,19 @@
 services:
-  # Redis: Short-term conversation memory
+  # Redis: cache de mensagens recentes da conversa
   redis:
     image: redis:alpine
     container_name: poli-tutor-redis
     ports:
       - "6379:6379"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  # Backend: FastAPI application
+  # Backend: FastAPI + RAG runtime (retrieval, reranking, geração socrática)
+  # O rag/src/ingestion/pipeline.py NÃO corre aqui — só o runtime de retrieval é usado.
   backend:
     build:
       context: .
@@ -22,20 +28,14 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
-      - redis
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      redis:
+        condition: service_healthy
     volumes:
       - ./app:/app/app
       - ./rag:/app/rag
       - huggingface_cache:/root/.cache/huggingface
 
-  # Frontend: React/Vite UI
+  # Frontend: React/Vite servido por Nginx
   frontend:
     build:
       context: .
@@ -47,4 +47,5 @@ services:
       - backend
 
 volumes:
+  # Cache dos modelos HuggingFace (bge-m3 + reranker) — persiste entre restarts
   huggingface_cache:

@@ -20,7 +20,6 @@ from ..shared.config import (
     RERANKER_TOP_K,
     RETRIEVAL_DISTANCE_THRESHOLD,
     TOP_K_RESULTS,
-    TUTOR_FALLBACK_MESSAGE,
 )
 from ..ingestion.embedding import get_embedder
 from ..shared.database import get_collection
@@ -159,19 +158,14 @@ def ask(
     results = retrieve(course, query)
 
     if results.is_empty():
-        logger.warning("[ASK] FALLBACK REASON: no chunks after retrieval (threshold=%.3f).",
+        logger.warning("[ASK] No chunks after retrieval (threshold=%.3f) — delegating to history-aware generation.",
                        RETRIEVAL_DISTANCE_THRESHOLD or float("inf"))
-        return TutorResponse(
-            answer=TUTOR_FALLBACK_MESSAGE,
-            sources=[],
-            is_fallback=True,
-            is_retrieval_fallback=True,
-        )
 
     return generate(
         query,
         results,
         summary,
         history,
-        iaedu_creds
+        iaedu_creds,
+        is_retrieval_fallback=results.is_empty(),
     )

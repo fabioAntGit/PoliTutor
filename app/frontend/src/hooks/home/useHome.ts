@@ -4,6 +4,7 @@ import { ProjectService } from "@/services/project.service";
 import { ChatService } from "@/services/chat.service";
 import type { ProjectRead } from "@/types/project";
 import { ApiError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export function useHome() {
   const navigate = useNavigate();
@@ -39,8 +40,8 @@ export function useHome() {
       if (err instanceof ApiError) {
         message = err.message;
       }
-      console.error("Erro ao entrar no projecto:", err);
-      alert(message);
+      console.error("Erro ao entrar no projeto:", err);
+      toast.error(message);
     } finally {
       setEnteringId(null);
     }
