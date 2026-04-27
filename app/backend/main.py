@@ -20,6 +20,8 @@ from app.backend.api.v1.endpoints.reports import router as reports_router
 from app.backend.core.database import close_mongo, connect_to_mongo, connect_to_redis, close_redis
 from app.backend.core.exceptions import AppError
 from app.backend.schemas.shared.api_error import ApiError
+from rag.src.ingestion.embedding import get_embedder
+from rag.src.runtime.reranker import get_reranker
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,10 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
 async def startup_event():
     await connect_to_mongo()
     await connect_to_redis()
+    logger.info("Pre-loading embedding and reranker models...")
+    get_embedder()
+    get_reranker()
+    logger.info("Models loaded and ready.")
 
 
 app.include_router(chats_router, prefix="/api/v1")

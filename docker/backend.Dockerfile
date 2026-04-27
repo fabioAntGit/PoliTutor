@@ -25,6 +25,8 @@ COPY --from=builder /root/.local /root/.local
 
 COPY app/ ./app/
 COPY rag/ ./rag/
+COPY app/backend/.env ./app/backend/.env
+COPY rag/.env ./rag/.env
 
 ENV PATH=/root/.local/bin:$PATH
 ENV PYTHONPATH="/app"

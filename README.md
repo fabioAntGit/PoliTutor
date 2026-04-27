@@ -154,7 +154,7 @@ Place your files inside `rag/data/raw/<course_unit>/`, following the naming conv
 ### Full stack — Backend + Frontend + Redis
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 - Frontend: http://localhost:3000
@@ -164,14 +164,16 @@ docker-compose up --build
 To run in detached mode:
 
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
 To stop:
 
 ```bash
-docker-compose down
+docker compose down
 ```
+
+> **First build:** The backend image downloads ML models (~2.3 GB) on first build. Subsequent builds are fast thanks to the `huggingface_cache` volume.
 
 > **GPU (optional):** The stack runs on CPU by default. If you have an NVIDIA GPU with `nvidia-container-toolkit` installed, you can enable it by adding the following to the `backend` service in `docker-compose.yml`:
 >
