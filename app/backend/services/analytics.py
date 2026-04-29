@@ -2,7 +2,7 @@ from collections import Counter
 from datetime import date, timedelta
 from typing import Literal
 
-from app.backend.repositories.analytics import AnalyticsRepository
+from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
 from app.backend.schemas.analytics.response import (
     ActivityPoint,
     ActivityRead,
@@ -19,21 +19,32 @@ from app.backend.services.interfaces.analytics_service import IAnalyticsService
 _DAYS_MAP = {"7d": 7, "30d": 30, "90d": 90}
 
 
+# ---------------------------
+# Activity helper
+# ---------------------------
+
 def _fill_activity_dates(raw: list[dict], days: int) -> ActivityRead:
     counts = {item["date"]: item["questions"] for item in raw}
     today = date.today()
     start = today - timedelta(days=days - 1)
+
     data = []
     current = start
+
     while current <= today:
         date_str = current.strftime("%Y-%m-%d")
         data.append(ActivityPoint(date=date_str, questions=counts.get(date_str, 0)))
         current += timedelta(days=1)
+
     return ActivityRead(data=data)
 
 
+# ---------------------------
+# Service
+# ---------------------------
+
 class AnalyticsService(IAnalyticsService):
-    def __init__(self, analytics_repository: AnalyticsRepository) -> None:
+    def __init__(self, analytics_repository: IAnalyticsRepository) -> None:
         self.repo = analytics_repository
 
     async def get_activity(self, range_param: Literal["7d", "30d", "90d"]) -> ActivityRead:
@@ -68,8 +79,21 @@ class AnalyticsService(IAnalyticsService):
 
     async def get_course_topics(self, course: str) -> CourseTopicsRead:
         concepts = await self.repo.get_course_concepts(course)
-        counter: Counter = Counter(concepts)
-        topics = [TopicPoint(topic=concept, count=count) for concept, count in counter.most_common(15)]
+
+        if not concepts:
+            return CourseTopicsRead(course=course, topics=[])
+
+        # contar
+        counter = Counter(c.strip().lower() for c in concepts if c)
+
+        # ordenar
+        top = counter.most_common(15)
+
+        topics = [
+            TopicPoint(topic=topic, count=count)
+            for topic, count in top
+        ]
+
         return CourseTopicsRead(course=course, topics=topics)
 
     async def get_course_sources(self, course: str) -> CourseSourcesRead:

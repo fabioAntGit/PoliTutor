@@ -24,6 +24,7 @@ from app.backend.services.interfaces.message_service import IMessageService
 from app.backend.services.interfaces.project_service import IProjectService
 from app.backend.services.interfaces.report_service import IReportService
 
+from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.repositories.interfaces.redis_repository import IRedisRepository
@@ -41,11 +42,11 @@ def get_redis_repository(client: redis.Redis = Depends(get_redis)) -> IRedisRepo
 def get_report_repository(db: AsyncDatabase = Depends(get_db)) -> IReportRepository:
     return ReportRepository(db)
 
-def get_analytics_repository(db: AsyncDatabase = Depends(get_db)) -> AnalyticsRepository:
+def get_analytics_repository(db: AsyncDatabase = Depends(get_db)) -> IAnalyticsRepository:
     return AnalyticsRepository(db)
 
 def get_analytics_service(
-    analytics_repository: AnalyticsRepository = Depends(get_analytics_repository),
+    analytics_repository: IAnalyticsRepository = Depends(get_analytics_repository),
 ) -> IAnalyticsService:
     return AnalyticsService(analytics_repository=analytics_repository)
 

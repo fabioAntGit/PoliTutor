@@ -77,9 +77,9 @@ function TopicsCard({ topics, isLoading, maxCount }: { topics: TopicPoint[] | nu
       <CardHeader>
         <div className="flex items-center gap-2">
           <Flame className="h-4 w-4 text-orange-500" />
-          <CardTitle>Tópicos em Destaque</CardTitle>
+          <CardTitle>Conceitos em Destaque</CardTitle>
         </div>
-        <CardDescription>Os termos mais repetidos pelos alunos nas suas perguntas neste curso</CardDescription>
+        <CardDescription>Conceitos mais abordados pelos alunos nas interações</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading || topics === null ? (
@@ -122,7 +122,7 @@ function SourcesCard({ sources, isLoading, maxCount }: { sources: SourcePoint[] 
           <FileText className="h-4 w-4 text-blue-500" />
           <CardTitle>Fontes Mais Consultadas</CardTitle>
         </div>
-        <CardDescription>Materiais do curso mais citados pelo assistente nas respostas aos alunos</CardDescription>
+        <CardDescription>Materiais do curso mais citados pelo tutor nas respostas aos alunos</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading || sources === null ? (

@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta, timezone
 from pymongo.asynchronous.database import AsyncDatabase
+import re
     
 class AnalyticsRepository:
     def __init__(self, db: AsyncDatabase) -> None:
@@ -90,14 +91,30 @@ class AnalyticsRepository:
             {"summary": 1, "_id": 0},
         )
         docs = await cursor.to_list(length=None)
+
         concepts: list[str] = []
+
         for doc in docs:
             raw = doc.get("summary", "")
+
+            if not isinstance(raw, str):
+                continue
+
+            cleaned = re.sub(r"^```json\s*|\s*```$", "", raw.strip(), flags=re.DOTALL)
+
             try:
-                parsed = json.loads(raw)
-                concepts.extend(parsed.get("concepts_covered", []))
-            except (json.JSONDecodeError, AttributeError):
-                pass
+                parsed = json.loads(cleaned)
+
+                tags = parsed.get("concept_tags")
+
+                if tags and isinstance(tags, list):
+                    concepts.extend(tags)
+                else:
+                    concepts.extend(parsed.get("concepts_covered", []))
+                    
+            except json.JSONDecodeError:
+                continue
+
         return concepts
 
     async def get_course_sources(self, course: str, limit: int = 10) -> list[dict]:

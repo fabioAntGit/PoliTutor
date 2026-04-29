@@ -299,6 +299,7 @@ Output requirements:
   "topic": "string",
   "student_state": "string",
   "concepts_covered": ["string"],
+  "concept_tags": ["string"],
   "open_questions": ["string"],
   "progress": ["string"],
   "next_step": "string"
@@ -308,6 +309,13 @@ Field guidance:
 - "topic": the main topic or problem currently being discussed.
 - "student_state": the student's current understanding, difficulty, or confusion.
 - "concepts_covered": concepts already explained and still relevant.
+- "concept_tags": list of atomic, short, and normalized concepts.
+  - Each item must represent a single concept.
+  - Avoid long phrases or explanations.
+  - Avoid duplicates or unnecessary variations.
+  - Use reusable and general terms (e.g., "linked list", "binary search tree", "O(n) complexity").
+  - Split compound concepts (e.g., "linked list vs array" → ["linked list", "array"]).
+  - Prefer consistent terminology across summaries.
 - "open_questions": doubts, confusions, or unresolved points still open.
 - "progress": concrete progress already made by the student.
 - "next_step": the most useful next pedagogical step for the tutor.
