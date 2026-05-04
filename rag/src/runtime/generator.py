@@ -73,46 +73,18 @@ def generate(
     history: str = "",
     iaedu_creds: IaEduCredentials | None = None,
     is_retrieval_fallback: bool = False,
+    memory: str = "",
 ) -> TutorResponse:
-    """
-    Generates a Socratic tutoring response grounded in the retrieved course material.
-
-    When no chunks were retrieved but conversation history exists, falls back to a
-    history-only prompt so the LLM can continue the dialogue (e.g. student replies
-    "Sim" to a previous tutor question). Only returns a hard fallback message when
-    there is neither retrieved content nor any conversation context.
-
-    Args:
-        query:                 The student's question.
-        results:               Ranked chunks retrieved from ChromaDB (may be empty).
-        summary:               Pre-formatted summary of previous conversation.
-        history:               Pre-formatted string of recent chat history.
-        iaedu_creds:           Per-request IAEdu credentials forwarded from the student's
-                               frontend session. Required when GENERATOR_BACKEND == "iaedu".
-                               If None, call_iaedu falls back to environment variables.
-        is_retrieval_fallback: True when the caller found no chunks after distance filtering.
-                               Propagated onto TutorResponse for downstream metrics.
-
-    Returns:
-        A TutorResponse with the tutor's answer, cited sources, and fallback flags.
-    """
     if results.is_empty():
-        if not summary and not history:
-            logger.warning("[GENERATE] FALLBACK REASON: No retrieval results and no conversation history.")
-            return TutorResponse(
-                answer=TUTOR_FALLBACK_MESSAGE,
-                sources=[],
-                is_fallback=True,
-                is_retrieval_fallback=True,
-            )
-        logger.info("[GENERATE] No RAG chunks — continuing dialogue from conversation history.")
-        context = "[Sem conteúdo RAG disponível. Continua o diálogo com base no histórico da conversa.]"
+        logger.info("[GENERATE] No RAG chunks — continuing dialogue from conversation context.")
+        context = ""
         sources = []
     else:
         context = build_context(results)
         sources = build_sources(results)
 
     prompt = TUTOR_SYSTEM_PROMPT.format(
+        student_memory=memory,
         chat_summary=summary or "Não há resumo disponível.",
         chat_history=history or "Não há histórico anterior.",
         user_question=query,

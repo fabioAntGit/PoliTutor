@@ -118,39 +118,18 @@ def ask(
     summary: str = "",
     history: str = "",
     iaedu_creds: IaEduCredentials | None = None,
+    memory: str = "",
 ) -> TutorResponse:
-    """
-    End-to-end tutor pipeline: retrieve relevant chunks then generate a Socratic response.
-
-    Applies input guardrails before retrieval. If the query is blocked
-    (empty, too short/long, prompt-injection detected, or explicit code
-    request), returns early with a rejection message and never hits the LLM.
-
-    Args:
-        course:           Course unit identifier (e.g., 'ed', 'pp').
-        query:            The student's question.
-        summary:          Pre-formatted summary of the conversation.
-        history:          Pre-formatted string of the chat history.
-        iaedu_creds:  Per-request IAEdu credentials forwarded from the student's
-                      frontend session. Required when GENERATOR_BACKEND == "iaedu".
-
-    Returns:
-        A TutorResponse with the tutor's answer, cited sources, and fallback flag.
-    """
-    # 1. Sanitize
     query = sanitize_input(query)
 
-    # 2. Basic length validation
     is_valid, reason = validate_input(query)
     if not is_valid:
         return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
-    # 3. Prompt injection detection
     is_injection, reason = detect_prompt_injection(query)
     if is_injection:
         return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
-    # 4. Code request detection
     is_code_req, reason = detect_code_request(query)
     if is_code_req:
         return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
@@ -158,7 +137,7 @@ def ask(
     results = retrieve(course, query)
 
     if results.is_empty():
-        logger.warning("[ASK] No chunks after retrieval (threshold=%.3f) — delegating to history-aware generation.",
+        logger.warning("[ASK] No chunks after retrieval (threshold=%.3f) — delegating to context-aware generation.",
                        RETRIEVAL_DISTANCE_THRESHOLD or float("inf"))
 
     return generate(
@@ -168,4 +147,5 @@ def ask(
         history,
         iaedu_creds,
         is_retrieval_fallback=results.is_empty(),
+        memory=memory,
     )

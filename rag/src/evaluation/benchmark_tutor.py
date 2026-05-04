@@ -377,7 +377,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
             ))
             continue
 
-        # Retriever found no relevant chunks — generation was never called.
+        # No relevant chunks and LLM set is_fallback=true.
         if tutor_response.is_fallback:
             results.append(TutorEvaluationResult(
                 filename=entry.filename,

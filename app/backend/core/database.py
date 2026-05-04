@@ -22,6 +22,9 @@ async def _ensure_indexes(db: AsyncDatabase) -> None:
     await db["messages"].create_index([("role", 1), ("created_at", 1)])
     await db["chats"].create_index("course")
     await db["chats"].create_index([("course", 1), ("created_at", -1)])
+    # user_memory indexes
+    await db["user_memory"].create_index([("user_id", 1), ("course", 1)])
+    await db["user_memory"].create_index([("user_id", 1), ("course", 1), ("type", 1), ("topic", 1)], unique=True)
 
 async def connect_to_redis() -> None:
     global _redis
