@@ -97,16 +97,8 @@ def generate(
         A TutorResponse with the tutor's answer, cited sources, and fallback flags.
     """
     if results.is_empty():
-        if not summary and not history:
-            logger.warning("[GENERATE] FALLBACK REASON: No retrieval results and no conversation history.")
-            return TutorResponse(
-                answer=TUTOR_FALLBACK_MESSAGE,
-                sources=[],
-                is_fallback=True,
-                is_retrieval_fallback=True,
-            )
-        logger.info("[GENERATE] No RAG chunks — continuing dialogue from conversation history.")
-        context = "[Sem conteúdo RAG disponível. Continua o diálogo com base no histórico da conversa.]"
+        logger.info("[GENERATE] No RAG chunks — continuing dialogue from conversation context.")
+        context = ""
         sources = []
     else:
         context = build_context(results)
