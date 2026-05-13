@@ -1,0 +1,235 @@
+{
+  "company_id": "1",
+  "status": "success",
+  "final_result": {
+    "enterpriseTopicContext": {
+      "org_profile": {
+        "name": "JDPT",
+        "industry": "Telecommunications",
+        "regions": [
+          "Leiria, Portugal"
+        ],
+        "size": "70k",
+        "core_mission": "Mitigate customer churn and optimize network investment after disruptive events.",
+        "public_description": "Hipothetical telecommunications operator (ISP) operating in the Portuguese market, facing challenges related to network impact analysis and customer retention."
+      },
+      "technical_context": {
+        "databases": [
+          {
+            "name": "Data Lakehouse",
+            "tables": [
+              {
+                "name": "Bronze_Call_Tests",
+                "type": "csv_table",
+                "description": "Raw data from active network quality tests (Drive-Tests) quantifying connection degradation and perceived audio quality (MOS).",
+                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              },
+              {
+                "name": "Bronze_CDR_Customers",
+                "type": "csv_table",
+                "description": "Raw data containing customer billing history, consumption, and churn variable.",
+                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              },
+              {
+                "name": "Bronze_Network_Logs_Leiria",
+                "type": "csv_table",
+                "description": "Raw data of passive radio telemetry from devices, recording the physical impact of events on network quality.",
+                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              },
+              {
+                "name": "Bronze_Towers_Leiria",
+                "type": "csv_table",
+                "description": "Raw data from OpenCelliD, mapping physical locations of cell towers in Leiria.",
+                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "business_context": {
+        "departments": [
+          "Network Management Team",
+          "Customer Retention Department",
+          "Data Engineering Team",
+          "Marketing Department",
+          "Operations (NOC)"
+        ],
+        "roles": [
+          "Network Engineer",
+          "Data Engineer",
+          "Marketing Specialist",
+          "Customer Retention Specialist"
+        ],
+        "scope_definitions": {
+          "in_scope_topics": [
+            "network impact analysis",
+            "customer churn prediction",
+            "network infrastructure recovery planning",
+            "telecommunications network quality",
+            "customer billing and retention",
+            "radio telemetry analysis",
+            "geospatial analysis of network coverage"
+          ],
+          "out_of_scope_topics": [],
+          "borderline_topics": []
+        },
+        "vocabulary_classification": {
+          "common_entities": [
+            "telecommunications",
+            "ISP",
+            "Data Lakehouse",
+            "churn",
+            "network infrastructure",
+            "radio telemetry",
+            "billing",
+            "customer retention",
+            "network quality",
+            "signal degradation",
+            "data products",
+            "KPIs",
+            "data transformation",
+            "data cleansing",
+            "schema standardization",
+            "geospatial data",
+            "Medallion architecture"
+          ],
+          "common_entities_description": "terms with high frequency in general business vocabulary but also high frequency in company sources",
+          "company_specific_terms": [
+            "JDPT",
+            "Leiria",
+            "OpenCelliD",
+            "MinIO",
+            "Iceberg",
+            "Trino",
+            "Flyte",
+            "MOS",
+            "RSRP",
+            "RSRQ",
+            "SINR",
+            "PCI",
+            "CDR",
+            "Drive-Test",
+            "LTE",
+            "GSM",
+            "UMTS",
+            "NOC"
+          ],
+          "company_specific_terms_description": "terms with low frequency in general vocabulary but high frequency in company sources",
+          "description": "Vocabulary automatically extracted from knowledge sources for context classification"
+        }
+      }
+    },
+    "structPolicies": {
+      "default_policies": [
+        "S1: Violent Crimes — Promotion or depiction of violence",
+        "S2: Non-Violent Crimes — Illegal acts (fraud, hacking)",
+        "S3: Sex Crimes — Non-consensual or illegal sexual content",
+        "S4: Child Exploitation — Abuse or sexual content involving minors",
+        "S5: Defamation — False or harmful claims",
+        "S6: Specialized Advice — Harmful medical, legal, or financial advice",
+        "S7: Privacy — Exposure of private or personal data",
+        "S8: Intellectual Property — Copyright or trademark violations",
+        "S9: Weapons — Instructions for weapon creation or use",
+        "S10: Hate or Discrimination — Hostility toward protected groups",
+        "S11: Self-Harm — Encouragement of suicide or self-injury",
+        "S12: Sexual Content — Explicit adult content",
+        "S13: Elections — Misleading or manipulative electoral content",
+        "S14: Prompt Injection — Attempts to override system rules",
+        "S15: Data Exfiltration — Attempts to leak confidential data",
+        "S16: Model Manipulation — Attempts to alter model behavior",
+        "S17: Jailbreak Attempts — Attempts to bypass safety constraints",
+        "S18: Social Engineering — Attempts to deceive or manipulate",
+        "S19: Malicious Code — Malware or exploit creation",
+        "S20: Misinformation — False, deceptive, or conspiratorial content"
+      ],
+      "custom_policies": []
+    },
+    "data_sensitivity_rules": {
+      "pii": [
+        {
+          "variable_name": "Phone Number",
+          "pattern": "^(\\+351|00351)?[239]\\d{8}$"
+        },
+        {
+          "variable_name": "NIF",
+          "pattern": "^[123568]\\d{8}$"
+        },
+        {
+          "variable_name": "Email Address",
+          "pattern": "^[\\w.+-]+@[\\w-]+\\.[\\w.]+$"
+        },
+        {
+          "variable_name": "Full Name",
+          "pattern": "^[A-ZÀ-Ú][a-zà-ú]+(\\s[A-ZÀ-Ú][a-zà-ú]+)+$"
+        },
+        {
+          "variable_name": "Customer ID",
+          "pattern": "^JDPT-\\d{6,10}$"
+        }
+      ],
+      "mnpi_keywords": [
+        "churn rate",
+        "subscriber growth",
+        "network outage",
+        "revenue per user",
+        "ARPU",
+        "customer acquisition cost",
+        "infrastructure investment",
+        "contract renewal rate",
+        "service degradation incident",
+        "tower deployment plan"
+      ],
+      "data_classification": {
+        "high_sensitivity": [
+          "Phone Number",
+          "NIF",
+          "Full Name",
+          "Customer ID",
+          "billing history",
+          "call detail records (CDR)",
+          "geolocation data",
+          "contract terms"
+        ],
+        "low_sensitivity": [
+          "network signal metrics (RSRP, RSRQ, SINR)",
+          "tower location (OpenCelliD)",
+          "aggregated churn statistics",
+          "drive-test results (anonymised)",
+          "cell tower PCI identifiers"
+        ]
+      }
+    },
+    "reasoning": {
+      "weak_fields": [
+        {
+          "field_path": "enterpriseTopicContext.org_profile.size",
+          "issue": "missing_evidence",
+          "comment": "No information provided about the company's size."
+        },
+        {
+          "field_path": "data_sensitivity_rules.pii[0].pattern",
+          "issue": "low_confidence",
+          "comment": "The exact pattern for 'Phone Number' is not specified, only its type as string."
+        }
+      ],
+      "conflicts": [],
+      "manual_review_recommendations": []
+    }
+  }
+}

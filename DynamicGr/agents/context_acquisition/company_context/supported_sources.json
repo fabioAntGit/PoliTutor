@@ -1,0 +1,131 @@
+{
+  "version": "1.0",
+  "sources": [
+    {
+      "name": "DB",
+      "description": "Deterministic relational schema extraction via db_schema_extractor",
+      "supported_db_types": [
+        "mysql",
+        "postgresql",
+        "mariadb",
+        "sqlite"
+      ],
+      "input_formats": {
+        "direct": {
+          "type": "connection_string",
+          "required": [
+            "connection_url",
+            "db_type"
+          ],
+          "optional": [
+            "connection_alias"
+          ],
+          "example": {
+            "connection_url": "mysql+pymysql://user:pass@host:3306/db_name",
+            "db_type": "mysql",
+            "connection_alias": "main_db"
+          },
+          "params_template": {
+            "connection_alias": "default_connection",
+            "connection_url": "{resolved.connection_url}",
+            "db_type": "{resolved.db_type}"
+          }
+        },
+        "components": {
+          "type": "credentials",
+          "required": [
+            "db_type",
+            "host",
+            "database_name",
+            "username",
+            "password"
+          ],
+          "optional": [
+            "port",
+            "connection_alias"
+          ],
+          "db_type_mapping": {
+            "mysql": "mysql+pymysql://{username}:{password}@{host}:{port}/{database_name}",
+            "postgresql": "postgresql+psycopg2://{username}:{password}@{host}:{port}/{database_name}",
+            "mariadb": "mysql+pymysql://{username}:{password}@{host}:{port}/{database_name}",
+            "sqlite": "sqlite:///{database_name}"
+          },
+          "params_template": {
+            "connection_alias": "default_connection",
+            "connection_url": "{resolved.connection_url}",
+            "db_type": "{resolved.db_type}"
+          }
+        }
+      }
+    },
+    {
+      "name": "FL",
+      "description": "Deterministic file context extraction via folder_crawler",
+      "supported_file_types": [
+        "txt",
+        "pdf",
+        "docx",
+        "pptx",
+        "md",
+        "json"
+      ],
+      "input_formats": {
+        "folder": {
+          "type": "default_root",
+          "required": [],
+          "params_template": {}
+        }
+      }
+    },
+    {
+      "name": "WEB",
+      "description": "Deterministic web extraction via web_crawler",
+      "input_formats": {
+        "direct": {
+          "type": "url",
+          "required": [
+            "url"
+          ],
+          "example": {
+            "url": "https://example.com"
+          },
+          "params_template": {
+            "url": "{resolved.url}"
+          }
+        }
+      }
+    },
+    {
+      "name": "CSV",
+      "description": "Deterministic CSV schema extraction via csv_crawler",
+      "supported_file_types": [
+        "csv"
+      ],
+      "input_formats": {
+        "direct": {
+          "type": "csv_path",
+          "required": [
+            "csv_path"
+          ],
+          "optional": [
+            "delimiter",
+            "encoding",
+            "sample_rows"
+          ],
+          "example": {
+            "csv_path": "C:/data/company.csv",
+            "delimiter": ",",
+            "encoding": "utf-8",
+            "sample_rows": 5
+          },
+          "params_template": {
+            "csv_path": "{resolved.csv_path}",
+            "delimiter": "{resolved.delimiter}",
+            "encoding": "{resolved.encoding}",
+            "sample_rows": "{resolved.sample_rows}"
+          }
+        }
+      }
+    }
+  ]
+}
