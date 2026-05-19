@@ -14,7 +14,17 @@ async def connect_to_mongo() -> None:
     _client = AsyncMongoClient(MONGO_URI, tlsAllowInvalidCertificates=True)
     await _client.admin.command("ping")
     _db = _client[MONGO_DB]
+    await _ensure_indexes(_db)
 
+async def _ensure_indexes(db: AsyncDatabase) -> None:
+    await db["chats"].create_index("user_id")
+    await db["messages"].create_index([("role", 1), ("conversation_id", 1)])
+    await db["messages"].create_index([("role", 1), ("created_at", 1)])
+    await db["chats"].create_index("course")
+    await db["chats"].create_index([("course", 1), ("created_at", -1)])
+    # user_memory indexes
+    await db["user_memory"].create_index([("user_id", 1), ("course", 1)])
+    await db["user_memory"].create_index([("user_id", 1), ("course", 1), ("type", 1), ("topic", 1)], unique=True)
 
 async def connect_to_redis() -> None:
     global _redis

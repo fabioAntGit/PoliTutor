@@ -13,7 +13,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.backend.api.v1.endpoints.analytics import router as analytics_router
 from app.backend.api.v1.endpoints.chats import router as chats_router
+from app.backend.api.v1.endpoints.memory import router as memory_router
 from app.backend.api.v1.endpoints.messages import router as messages_router
 from app.backend.api.v1.endpoints.projects import router as projects_router
 from app.backend.api.v1.endpoints.reports import router as reports_router
@@ -68,7 +70,8 @@ app.include_router(chats_router, prefix="/api/v1")
 app.include_router(messages_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
-
+app.include_router(analytics_router, prefix="/api/v1", tags=["dashboard"])
+app.include_router(memory_router, prefix="/api/v1", tags=["memory"])
 
 @app.on_event("shutdown")
 async def shutdown_event():
