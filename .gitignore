@@ -21,6 +21,12 @@ venv/
 !**/.env.example
 rag/.env
 
+# Test coverage & cache
+coverage/
+htmlcov/
+.coverage
+.pytest_cache/
+
 # OS
 .DS_Store
 Thumbs.db
