@@ -82,9 +82,7 @@
             "unregulated secondary markets",
             "unauthorized civilian tactical training"
           ],
-          "borderline_topics": [
-            "integration of artificial intelligence with physical targeting systems"
-          ]
+          "borderline_topics": []
         },
         "vocabulary_classification": {
           "common_entities": [
@@ -198,6 +196,11 @@
           "public safety guidelines"
         ]
       }
+    },
+    "reasoning": {
+      "weak_fields": [],
+      "conflicts": [],
+      "manual_review_recommendations": []
     }
   }
 }
