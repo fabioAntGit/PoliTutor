@@ -4,6 +4,8 @@ import { ChatBubble } from "@/components/ui/chat-bubble";
 import { TypingDots } from "@/components/ui/typing-dots";
 import { useChat } from "@/hooks/chat/useChat";
 import { PageState } from "@/components/ui/page-state";
+import { useProjectDescription } from "@/hooks/shared/useProjectDescription";
+import { ProjectDescriptionInfo } from "@/components/project-description-info";
 
 export default function ChatPage() {
     const navigate = useNavigate();
@@ -19,11 +21,14 @@ export default function ChatPage() {
         handleSubmit,
         handleCancel,
     } = useChat();
+    const { description: projectDescription, loading: descriptionLoading } = useProjectDescription(
+        chat?.project_id
+    );
 
     return (
         <PageState loading={loading} error={error}>
             <main className="flex h-screen flex-col overflow-hidden">
-            <header className="relative flex shrink-0 items-center justify-center border-b py-4">
+            <header className="relative flex shrink-0 items-center justify-center border-b px-6 py-4">
                 <button
                     onClick={() => navigate("/")}
                     className="absolute left-6 rounded-md p-2 transition-colors hover:bg-muted"
@@ -31,7 +36,17 @@ export default function ChatPage() {
                     <ArrowLeft className="h-5 w-5" />
                 </button>
 
-                <h1 className="text-xl font-semibold">{chat?.project_name}</h1>
+                <h1 className="max-w-[70%] truncate text-center text-xl font-semibold">
+                    {chat?.project_name}
+                </h1>
+
+                <div className="absolute right-6">
+                    <ProjectDescriptionInfo
+                        projectName={chat?.project_name}
+                        description={projectDescription}
+                        loading={descriptionLoading}
+                    />
+                </div>
             </header>
 
             <section className="flex-1 overflow-y-auto px-6 [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)]">

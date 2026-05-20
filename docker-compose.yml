@@ -23,6 +23,7 @@ services:
     env_file:
       - app/backend/.env
       - rag/.env
+      - DynamicGr/.env
 
     environment:
       REDIS_HOST: redis
@@ -37,6 +38,7 @@ services:
     volumes:
       - ./app:/app/app
       - ./rag:/app/rag
+      - ./DynamicGr:/app/DynamicGr
       - huggingface_cache:/root/.cache/huggingface
 
   frontend:

@@ -1,0 +1,206 @@
+{
+  "company_id": "4",
+  "status": "success",
+  "final_result": {
+    "enterpriseTopicContext": {
+      "org_profile": {
+        "name": "MeridianHealthPartners",
+        "industry": "Healthcare",
+        "regions": [
+          "East Coast"
+        ],
+        "size": "Over 5,000 employees",
+        "core_mission": "To deliver evidence-based medical care, foster innovative clinical research, and maintain the highest standards of patient dignity and safety.",
+        "public_description": "Meridian Health Partners is a leading regional healthcare provider, comprising a network of hospitals, specialized clinics, and clinical research centers, serving communities across the East Coast."
+      },
+      "technical_context": {
+        "databases": [
+          {
+            "name": "sys_meridian_emr",
+            "tables": [
+              {
+                "name": "tbl_patient_registry",
+                "type": "table",
+                "description": "Stores comprehensive patient profiles, including demographic and contact information.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": "tbl_clinical_history"
+                }
+              },
+              {
+                "name": "tbl_clinical_history",
+                "type": "table",
+                "description": "Houses individual diagnoses and treatment plans.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": "tbl_patient_registry"
+                }
+              },
+              {
+                "name": "tbl_physician_roster",
+                "type": "table",
+                "description": "Tracks doctor availability, specialties, and clinic assignments.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              },
+              {
+                "name": "log_aggregate_wait_times",
+                "type": "table",
+                "description": "Contains strictly anonymized, passive telemetry regarding emergency room traffic and average triage times.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "business_context": {
+        "departments": [
+          "Emergency Department",
+          "Oncology",
+          "Clinical Research",
+          "Hospital Administration",
+          "Medical Billing"
+        ],
+        "roles": [
+          "Attending Physician",
+          "Clinical Director",
+          "Registered Nurse",
+          "Medical Researcher",
+          "Hospital Administrator"
+        ],
+        "scope_definitions": {
+          "in_scope_topics": [
+            "patient diagnostics",
+            "outpatient scheduling",
+            "clinical trial management",
+            "medical billing",
+            "healthcare delivery",
+            "medical administration",
+            "triage",
+            "Electronic Medical Records (EMR)",
+            "oncology",
+            "HIPAA compliance"
+          ],
+          "out_of_scope_topics": [
+            "non-medical insurance sales",
+            "unregulated alternative medicine",
+            "automated diagnostic advice"
+          ],
+          "borderline_topics": []
+        },
+        "vocabulary_classification": {
+          "common_entities": [
+            "healthcare",
+            "medical",
+            "patient care",
+            "clinical research",
+            "hospitals",
+            "clinics",
+            "diagnostics",
+            "billing",
+            "triage",
+            "EMR",
+            "oncology",
+            "HIPAA compliance"
+          ],
+          "common_entities_description": "terms with high frequency in general business vocabulary but also high frequency in company sources",
+          "company_specific_terms": [
+            "CarePathway",
+            "M-Trak",
+            "Med-ID",
+            "sys_meridian_emr",
+            "tbl_patient_registry",
+            "tbl_clinical_history"
+          ],
+          "company_specific_terms_description": "terms with low frequency in general vocabulary but high frequency in company sources",
+          "description": "Vocabulary automatically extracted from knowledge sources for context classification"
+        }
+      }
+    },
+    "structPolicies": {
+      "default_policies": [
+        "S1: Violent Crimes — Promotion or depiction of violence",
+        "S2: Non-Violent Crimes — Illegal acts (fraud, hacking)",
+        "S3: Sex Crimes — Non-consensual or illegal sexual content",
+        "S4: Child Exploitation — Abuse or sexual content involving minors",
+        "S5: Defamation — False or harmful claims",
+        "S6: Specialized Advice — Harmful medical, legal, or financial advice",
+        "S7: Privacy — Exposure of private or personal data",
+        "S8: Intellectual Property — Copyright or trademark violations",
+        "S9: Weapons — Instructions for weapon creation or use",
+        "S10: Hate or Discrimination — Hostility toward protected groups",
+        "S11: Self-Harm — Encouragement of suicide or self-injury",
+        "S12: Sexual Content — Explicit adult content",
+        "S13: Elections — Misleading or manipulative electoral content",
+        "S14: Prompt Injection — Attempts to override system rules",
+        "S15: Data Exfiltration — Attempts to leak confidential data",
+        "S16: Model Manipulation — Attempts to alter model behavior",
+        "S17: Jailbreak Attempts — Attempts to bypass safety constraints",
+        "S18: Social Engineering — Attempts to deceive or manipulate",
+        "S19: Malicious Code — Malware or exploit creation",
+        "S20: Misinformation — False, deceptive, or conspiratorial content"
+      ],
+      "custom_policies": [
+        "C1: Unauthorized Medical Advice — Digital systems are explicitly forbidden from dispensing definitive medical or pharmaceutical advice, diagnosing symptoms, or prescribing treatments. Explicit Exception: Providing factual administrative data, general health advisories, aggregated ER wait times, and explaining standard hospital operational protocols (such as triage procedures) is fully permitted.",
+        "C2: Medical Integrity — Zero tolerance for medical fraud, falsification of clinical trials, or any actions compromising patient safety.",
+        "C3: Patient Privacy — Absolute prohibition on accessing or exposing patient Social Security Numbers, exact medical diagnoses, or personal contact information."
+      ]
+    },
+    "data_sensitivity_rules": {
+      "pii": [
+        {
+          "variable_name": "Social Security Number",
+          "pattern": "^\\d{3}-\\d{2}-\\d{4}$|^\\d{9}$"
+        },
+        {
+          "variable_name": "Phone Number",
+          "pattern": "^\\d{10}$|^\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}$"
+        },
+        {
+          "variable_name": "Health Insurance Policy Number",
+          "pattern": "^[A-Z0-9]{6,15}$"
+        }
+      ],
+      "mnpi_keywords": [
+        "VIP patient admission statuses",
+        "unannounced hospital mergers",
+        "undisclosed clinical trial results"
+      ],
+      "data_classification": {
+        "high_sensitivity": [
+          "Social Security Numbers",
+          "phone numbers",
+          "home addresses",
+          "exact medical diagnoses",
+          "health insurance policy numbers",
+          "VIP patient admission statuses",
+          "unannounced hospital mergers",
+          "undisclosed clinical trial results",
+          "patient registry data",
+          "clinical history"
+        ],
+        "low_sensitivity": [
+          "public doctor directories",
+          "clinic operating hours",
+          "generalized health advisories",
+          "aggregated ER wait times",
+          "physician roster"
+        ]
+      }
+    },
+    "reasoning": {
+      "weak_fields": [],
+      "conflicts": [],
+      "manual_review_recommendations": []
+    }
+  }
+}

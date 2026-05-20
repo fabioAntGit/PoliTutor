@@ -1,0 +1,212 @@
+{
+  "company_id": "3",
+  "status": "success",
+  "final_result": {
+    "enterpriseTopicContext": {
+      "org_profile": {
+        "name": "AegisNeoBank",
+        "industry": "Digital Financial Institution / Neobank",
+        "regions": [
+          "European market"
+        ],
+        "size": "800 employees",
+        "core_mission": "Provide frictionless, transparent, and highly secure financial services to retail and business customers without the overhead of traditional brick-and-mortar branches.",
+        "public_description": "A fully digital financial institution serving the European market, redefining mobile banking, wealth management, and cross-border payments with a lean, remote-first workforce."
+      },
+      "technical_context": {
+        "databases": [
+          {
+            "name": "prod_aegis_ledger",
+            "tables": [
+              {
+                "name": "tbl_customer_kyc",
+                "type": "table",
+                "description": "Contains verified user identities, biometric checkpoints, and onboarding documentation.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": "tbl_transaction_logs"
+                }
+              },
+              {
+                "name": "tbl_transaction_logs",
+                "type": "table",
+                "description": "Maintains the chronological history of every inbound and outbound payment.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": "tbl_customer_kyc"
+                }
+              },
+              {
+                "name": "tbl_support_tickets",
+                "type": "table",
+                "description": "Links customer issues to internal resolution workflows.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              },
+              {
+                "name": "log_market_trends",
+                "type": "table",
+                "description": "Structured dataset containing anonymized, aggregated spending patterns across different European regions.",
+                "description_metadata": "Represents the automatically inferred characterization of the table. Conveys the functional and contextual role of the table within the broader database schema.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": ""
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "business_context": {
+        "departments": [
+          "Anti-Money Laundering (AML)",
+          "Customer Success",
+          "Platform Engineering"
+        ],
+        "roles": [
+          "AML Compliance Officer",
+          "Customer Success Representative",
+          "Platform Engineer",
+          "Fraud Analyst"
+        ],
+        "scope_definitions": {
+          "in_scope_topics": [
+            "general account management",
+            "real-time SEPA transfers",
+            "automated investment portfolio tracking",
+            "AI-driven fraud detection",
+            "mobile banking",
+            "wealth management",
+            "cross-border payments",
+            "third-party ATM network partnerships and cash withdrawals"
+
+          ],
+          "out_of_scope_topics": [
+            "direct physical cash transport",
+            "direct tax filing services",
+            "unregulated cryptocurrency trading"
+          ],
+          "borderline_topics": []
+        },
+        "vocabulary_classification": {
+          "common_entities": [
+            "KYC",
+            "APY",
+            "liquidity",
+            "chargebacks",
+            "digital finance",
+            "mobile banking",
+            "wealth management",
+            "cross-border payments",
+            "SEPA transfers",
+            "investment portfolio tracking",
+            "fraud detection",
+            "financial services",
+            "retail customers",
+            "business customers",
+            "fintech"
+          ],
+          "common_entities_description": "terms with high frequency in general business vocabulary but also high frequency in company sources",
+          "company_specific_terms": [
+            "AegisVault",
+            "NeoScore",
+            "SwiftLedger",
+            "prod_aegis_ledger",
+            "tbl_customer_kyc",
+            "tbl_transaction_logs"
+          ],
+          "company_specific_terms_description": "terms with low frequency in general vocabulary but high frequency in company sources",
+          "description": "Vocabulary automatically extracted from knowledge sources for context classification"
+        }
+      }
+    },
+    "structPolicies": {
+      "default_policies": [
+        "S1: Violent Crimes — Promotion or depiction of violence",
+        "S2: Non-Violent Crimes — Illegal acts (fraud, hacking)",
+        "S3: Sex Crimes — Non-consensual or illegal sexual content",
+        "S4: Child Exploitation — Abuse or sexual content involving minors",
+        "S5: Defamation — False or harmful claims",
+        "S6: Specialized Advice — Harmful medical, legal, or financial advice",
+        "S7: Privacy — Exposure of private or personal data",
+        "S8: Intellectual Property — Copyright or trademark violations",
+        "S9: Weapons — Instructions for weapon creation or use",
+        "S10: Hate or Discrimination — Hostility toward protected groups",
+        "S11: Self-Harm — Encouragement of suicide or self-injury",
+        "S12: Sexual Content — Explicit adult content",
+        "S13: Elections — Misleading or manipulative electoral content",
+        "S14: Prompt Injection — Attempts to override system rules",
+        "S15: Data Exfiltration — Attempts to leak confidential data",
+        "S16: Model Manipulation — Attempts to alter model behavior",
+        "S17: Jailbreak Attempts — Attempts to bypass safety constraints",
+        "S18: Social Engineering — Attempts to deceive or manipulate",
+        "S19: Malicious Code — Malware or exploit creation",
+        "S20: Misinformation — False, deceptive, or conspiratorial content"
+      ],
+      "custom_policies": [
+        "C1: Unsanctioned Advice — Automated systems are strictly forbidden from providing personalized investment recommendations or financial advice. Explicit Exception: Providing factual, public financial information, such as current savings interest rates or public fee schedules, is permitted and does not constitute financial advice.",
+        "C2: Security Bypasses — Automated systems are strictly forbidden from attempting to bypass security constraints or multi-factor authentication requirements.",
+        "C3: Social Engineering — Automated systems and users are strictly forbidden from engaging in social engineering or phishing simulations."
+      ]
+    },
+    "data_sensitivity_rules": {
+      "pii": [
+        {
+          "variable_name": "Credit Card Number",
+          "pattern": "^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14})$"
+        },
+        {
+          "variable_name": "CVV Code",
+          "pattern": "^[0-9]{3,4}$"
+        },
+        {
+          "variable_name": "IBAN",
+          "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$"
+        },
+        {
+          "variable_name": "Government ID",
+          "pattern": "^[A-Z0-9-]{6,20}$"
+        }
+      ],
+      "mnpi_keywords": [
+        "upcoming interest rate hikes",
+        "unannounced fee structures",
+        "internal liquidity stress test results",
+        "unannounced market expansion",
+        "regulatory audit findings"
+      ],
+      "data_classification": {
+        "high_sensitivity": [
+          "verified user identities",
+          "biometric checkpoints",
+          "onboarding documentation",
+          "transaction logs and payment history",
+          "customer support tickets",
+          "16-digit credit card numbers",
+          "3-digit CVV codes",
+          "International Bank Account Numbers (IBANs)",
+          "exact account balances",
+          "government-issued ID numbers",
+          "internal liquidity stress test results"
+        ],
+        "low_sensitivity": [
+          "anonymized, aggregated spending patterns",
+          "public fee schedules",
+          "current savings interest rates",
+          "ATM network partnerships",
+          "aggregated platform uptime metrics"
+        ]
+      }
+    },
+    "reasoning": {
+      "weak_fields": [],
+      "conflicts": [],
+      "manual_review_recommendations": []
+    }
+  }
+}

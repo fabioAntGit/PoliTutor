@@ -7,9 +7,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY rag/requirements.txt .
+COPY rag/requirements.txt ./
+COPY DynamicGr/requirements.txt ./requirements-dynamicgr.txt
 
 RUN pip install --user --no-cache-dir -r requirements.txt && \
+    pip install --user --no-cache-dir -r requirements-dynamicgr.txt && \
     pip uninstall -y torchcodec
 
 # Stage 2: Runtime — lean image, CPU-only
@@ -26,6 +28,7 @@ COPY --from=builder /root/.local /root/.local
 
 COPY app/ ./app/
 COPY rag/ ./rag/
+COPY DynamicGr/ ./DynamicGr/
 
 ENV PATH=/root/.local/bin:$PATH
 ENV PYTHONPATH=/app

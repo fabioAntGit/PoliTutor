@@ -1,5 +1,5 @@
 import * as projectsApi from "@/api/projects";
-import type { ProjectRead } from "@/types/project";
+import type { ProjectDescriptionRead, ProjectRead } from "@/types/project";
 
 export const ProjectService = {
   /**
@@ -14,5 +14,12 @@ export const ProjectService = {
    */
   async getProjectById(id: string): Promise<ProjectRead> {
     return await projectsApi.getProject(id);
+  },
+
+  /**
+   * Retrieves the full project description text.
+   */
+  async getProjectDescription(id: string): Promise<ProjectDescriptionRead> {
+    return await projectsApi.getProjectDescription(id);
   }
 };

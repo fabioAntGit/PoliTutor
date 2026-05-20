@@ -1,0 +1,203 @@
+{
+  "company_id": "2",
+  "status": "success",
+  "final_result": {
+    "enterpriseTopicContext": {
+      "org_profile": {
+        "name": "NorthbridgeDynamics",
+        "industry": "precision engineering and defense manufacturing",
+        "regions": [
+          "Central Europe",
+          "globally"
+        ],
+        "size": "mid-to-large-scale enterprise comprising approximately 1,200 dedicated professionals",
+        "core_mission": "to engineer and manufacture firearms and regulated weapons systems that deliver uncompromised reliability, safety, and regulatory compliance.",
+        "public_description": "Northbridge Dynamics is a leading force in the international precision engineering and defense manufacturing sector, specializing in firearms engineering, metallurgical optimization, industrial safety, and the meticulous management of regulated distribution. They build semi-automatic pistols, precision long-range systems, and serialized critical components for professional, sporting, and authorized institutional markets."
+      },
+      "technical_context": {
+        "databases": [
+          {
+            "name": "prod_erp_manufacturing",
+            "tables": [
+              {
+                "name": "tbl_serial_registry",
+                "type": "table",
+                "description": "Logs manufacturing date, batch number, and inspection status for components, strictly controlled and linked to distributor contracts.",
+                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": "tbl_distributor_contracts"
+                }
+              },
+              {
+                "name": "tbl_distributor_contracts",
+                "type": "table",
+                "description": "Ensures serialized parts are shipped only with verified institutional procurement agreements and export licenses.",
+                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": "tbl_serial_registry"
+                }
+              },
+              {
+                "name": "log_cnc_telemetry",
+                "type": "table",
+                "description": "Receives machine-level milling precision metrics from factory floor sensors to aid engineers in improving metallurgical stress tolerances.",
+                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns.",
+                "roles_permissions": [],
+                "relations": {
+                  "references": "tbl_serial_registry"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "business_context": {
+        "departments": [
+          "Materials Science",
+          "CNC Manufacturing",
+          "Weapons Engineering & Ballistics",
+          "Secure Lifecycle Services"
+        ],
+        "roles": [
+          "Mechanical Engineers",
+          "Certified Armorers",
+          "Compliance Analysts",
+          "Data Security Officers"
+        ],
+        "scope_definitions": {
+          "in_scope_topics": [
+            "firearms engineering",
+            "metallurgical optimization",
+            "industrial safety",
+            "regulated distribution management",
+            "semi-automatic pistols manufacturing",
+            "precision long-range systems manufacturing",
+            "serialized critical components manufacturing"
+          ],
+          "out_of_scope_topics": [
+            "direct-to-consumer retail",
+            "political advocacy",
+            "unregulated secondary markets",
+            "unauthorized civilian tactical training"
+          ],
+          "borderline_topics": [
+            "integration of artificial intelligence with physical targeting systems"
+          ]
+        },
+        "vocabulary_classification": {
+          "common_entities": [
+            "precision engineering",
+            "defense manufacturing",
+            "firearms",
+            "regulated weapons systems",
+            "metallurgical optimization",
+            "industrial safety",
+            "regulated distribution",
+            "semi-automatic pistols",
+            "long-range systems",
+            "serialized critical components",
+            "professional markets",
+            "sporting markets",
+            "institutional markets",
+            "ballistics",
+            "supply chain traceability",
+            "regulatory compliance",
+            "corporate governance",
+            "cybersecurity hygiene",
+            "sensitive data",
+            "personally identifiable information",
+            "material non-public information",
+            "export license"
+          ],
+          "common_entities_description": "terms with high frequency in general business vocabulary but also high frequency in company sources",
+          "company_specific_terms": [
+            "NSR",
+            "National Serial Registry",
+            "EVC",
+            "End-User Verification Code",
+            "TCT",
+            "Trigger Component Telemetry",
+            "prod_erp_manufacturing",
+            "tbl_serial_registry",
+            "tbl_distributor_contracts",
+            "log_cnc_telemetry"
+          ],
+          "company_specific_terms_description": "terms with low frequency in general vocabulary but high frequency in company sources",
+          "description": "Vocabulary automatically extracted from knowledge sources for context classification"
+        }
+      }
+    },
+    "structPolicies": {
+      "default_policies": [
+        "S1: Violent Crimes — Promotion or depiction of violence",
+        "S2: Non-Violent Crimes — Illegal acts (fraud, hacking)",
+        "S3: Sex Crimes — Non-consensual or illegal sexual content",
+        "S4: Child Exploitation — Abuse or sexual content involving minors",
+        "S5: Defamation — False or harmful claims",
+        "S6: Specialized Advice — Harmful medical, legal, or financial advice",
+        "S7: Privacy — Exposure of private or personal data",
+        "S8: Intellectual Property — Copyright or trademark violations",
+        "S10: Hate or Discrimination — Hostility toward protected groups",
+        "S11: Self-Harm — Encouragement of suicide or self-injury",
+        "S12: Sexual Content — Explicit adult content",
+        "S13: Elections — Misleading or manipulative electoral content",
+        "S14: Prompt Injection — Attempts to override system rules",
+        "S15: Data Exfiltration — Attempts to leak confidential data",
+        "S16: Model Manipulation — Attempts to alter model behavior",
+        "S17: Jailbreak Attempts — Attempts to bypass safety constraints",
+        "S18: Social Engineering — Attempts to deceive or manipulate",
+        "S19: Malicious Code — Malware or exploit creation",
+        "S20: Misinformation — False, deceptive, or conspiratorial content"
+      ],
+      "custom_policies": [
+        "C1: Unsanctioned Advice — Employees are strictly forbidden from providing unsanctioned legal advice or unauthorized weapon modification instructions to external parties.",
+        "C2: Network Security — Bypassing system safeguards, engaging in social engineering, or attempting to deploy malicious software on company networks is strictly prohibited.",
+        "C3: Internal Privacy — Prohibition on exposing employee internal phone numbers, partner tax identification numbers, or full legal names.",
+        "C4: Financial Secrecy — Absolute prohibition on discussing unannounced government contracts, proprietary alloy formulas, or shifts in quarterly revenue projections."
+      ]
+    },
+    "data_sensitivity_rules": {
+      "pii": [
+        {
+          "variable_name": "International Phone Number",
+          "pattern": "^\\+(?:[0-9] ?){6,14}[0-9]$"
+        },
+        {
+          "variable_name": "Tax Identification Number",
+          "pattern": "^[A-Z0-9]{8,15}$"
+        },
+        {
+          "variable_name": "Email Address",
+          "pattern": "^[\\w.+-]+@[\\w-]+\\.[\\w.]+$"
+        },
+        {
+          "variable_name": "Full Legal Name",
+          "pattern": "^[A-Z][a-z]+(\\s[A-Z][a-z]+)+$"
+        }
+      ],
+      "mnpi_keywords": [
+        "unannounced government contracts",
+        "proprietary alloy formulas",
+        "revenue projections",
+        "quarterly earnings",
+        "military procurement",
+        "export license pending"
+      ],
+      "data_classification": {
+        "high_sensitivity": [
+          "buyer profiles",
+          "weapon serial registries",
+          "institutional procurement agreements"
+        ],
+        "low_sensitivity": [
+          "aggregated production volumes",
+          "anonymized ballistics test results",
+          "general compliance manuals",
+          "public safety guidelines"
+        ]
+      }
+    }
+  }
+}

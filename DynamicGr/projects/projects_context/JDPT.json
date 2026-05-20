@@ -11,48 +11,48 @@
         ],
         "size": "70k",
         "core_mission": "Mitigate customer churn and optimize network investment after disruptive events.",
-        "public_description": "Hipothetical telecommunications operator (ISP) operating in the Portuguese market, facing challenges related to network impact analysis and customer retention."
+        "public_description": "Hypothetical telecommunications operator (ISP) operating in the Portuguese market, facing challenges related to network impact analysis and customer retention."
       },
       "technical_context": {
         "databases": [
           {
-            "name": "Data Lakehouse",
+            "name": "prod_telecom_operations",
             "tables": [
               {
-                "name": "Bronze_Call_Tests",
-                "type": "csv_table",
+                "name": "tbl_drive_tests_quality",
+                "type": "relational_table",
                 "description": "Raw data from active network quality tests (Drive-Tests) quantifying connection degradation and perceived audio quality (MOS).",
-                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "description_metadata": "Represents the functional characterization of the table, derived from the statistical and semantic features of its columns. Conveys the role of the table within the broader network optimization schema.",
                 "roles_permissions": [],
                 "relations": {
-                  "references": ""
+                  "references": "tbl_cell_tower_locations"
                 }
               },
               {
-                "name": "Bronze_CDR_Customers",
-                "type": "csv_table",
-                "description": "Raw data containing customer billing history, consumption, and churn variable.",
-                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "name": "tbl_customer_cdr_billing",
+                "type": "relational_table",
+                "description": "Transactional data containing customer billing history, consumption (Call Detail Records), and churn variables.",
+                "description_metadata": "Represents the functional characterization of the table. Conveys the role of the table within the broader customer billing schema.",
                 "roles_permissions": [],
                 "relations": {
-                  "references": ""
+                  "references": "tbl_customer_profiles"
                 }
               },
               {
-                "name": "Bronze_Network_Logs_Leiria",
-                "type": "csv_table",
-                "description": "Raw data of passive radio telemetry from devices, recording the physical impact of events on network quality.",
-                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "name": "tbl_radio_telemetry_logs",
+                "type": "relational_table",
+                "description": "Logs of passive radio telemetry from devices, recording the physical impact of events on network quality.",
+                "description_metadata": "Represents the functional characterization of the table. Conveys the role of the table within the broader network monitoring schema.",
                 "roles_permissions": [],
                 "relations": {
-                  "references": ""
+                  "references": "tbl_cell_tower_locations"
                 }
               },
               {
-                "name": "Bronze_Towers_Leiria",
-                "type": "csv_table",
-                "description": "Raw data from OpenCelliD, mapping physical locations of cell towers in Leiria.",
-                "description_metadata": "Represents the automatically inferred characterization of the table, derived from the statistical and semantic features of its columns (e.g., data types, naming patterns, relational structure, and usage frequency). The description conveys the functional and contextual role of the table within the broader database schema.",
+                "name": "tbl_cell_tower_locations",
+                "type": "relational_table",
+                "description": "Geospatial mapping and physical locations of active cell towers in the Leiria district.",
+                "description_metadata": "Represents the functional characterization of the table. Conveys the role of the table within the broader network infrastructure schema.",
                 "roles_permissions": [],
                 "relations": {
                   "references": ""
@@ -66,13 +66,13 @@
         "departments": [
           "Network Management Team",
           "Customer Retention Department",
-          "Data Engineering Team",
+          "Infrastructure Engineering",
           "Marketing Department",
           "Operations (NOC)"
         ],
         "roles": [
           "Network Engineer",
-          "Data Engineer",
+          "Telecom Operations Manager",
           "Marketing Specialist",
           "Customer Retention Specialist"
         ],
@@ -86,14 +86,17 @@
             "radio telemetry analysis",
             "geospatial analysis of network coverage"
           ],
-          "out_of_scope_topics": [],
+          "out_of_scope_topics": [
+            "direct hardware sales to consumers",
+            "unregulated frequency broadcasting",
+            "content moderation of ISP traffic"
+          ],
           "borderline_topics": []
         },
         "vocabulary_classification": {
           "common_entities": [
             "telecommunications",
             "ISP",
-            "Data Lakehouse",
             "churn",
             "network infrastructure",
             "radio telemetry",
@@ -101,23 +104,20 @@
             "customer retention",
             "network quality",
             "signal degradation",
-            "data products",
             "KPIs",
-            "data transformation",
-            "data cleansing",
-            "schema standardization",
-            "geospatial data",
-            "Medallion architecture"
+            "fiber optics",
+            "broadband",
+            "packet loss",
+            "latency",
+            "geospatial data"
           ],
-          "common_entities_description": "terms with high frequency in general business vocabulary but also high frequency in company sources",
+          "common_entities_description": "Terms with high frequency in general telecommunications business vocabulary but also high frequency in company sources.",
           "company_specific_terms": [
             "JDPT",
             "Leiria",
             "OpenCelliD",
-            "MinIO",
-            "Iceberg",
-            "Trino",
-            "Flyte",
+            "NetPulse",
+            "TowerLink",
             "MOS",
             "RSRP",
             "RSRQ",
@@ -130,8 +130,8 @@
             "UMTS",
             "NOC"
           ],
-          "company_specific_terms_description": "terms with low frequency in general vocabulary but high frequency in company sources",
-          "description": "Vocabulary automatically extracted from knowledge sources for context classification"
+          "company_specific_terms_description": "Terms with low frequency in general vocabulary but high frequency in company sources (includes telecom protocols and internal project names).",
+          "description": "Vocabulary extracted from knowledge sources for context classification."
         }
       }
     },
@@ -158,7 +158,11 @@
         "S19: Malicious Code — Malware or exploit creation",
         "S20: Misinformation — False, deceptive, or conspiratorial content"
       ],
-      "custom_policies": []
+      "custom_policies": [
+        "C1: Telecom Secrecy — Absolute prohibition on sharing Call Detail Records (CDR), call histories, or user geolocation without explicit, verified law enforcement warrants.",
+        "C2: Critical Infrastructure Protection — Do not disclose internal network topology, core router IP ranges, hardware passwords, or physical security vulnerabilities of cell towers. Explicit Exception: Providing general geospatial mapping and physical locations of cell towers based on public datasets (e.g., OpenCelliD) is permitted and does not constitute a security breach.",
+        "C3: Market Integrity — Prevent the leakage of unannounced promotional tariffs, upcoming 5G network expansion plans, or internal churn mitigation strategies."
+      ]
     },
     "data_sensitivity_rules": {
       "pii": [
@@ -214,22 +218,6 @@
           "cell tower PCI identifiers"
         ]
       }
-    },
-    "reasoning": {
-      "weak_fields": [
-        {
-          "field_path": "enterpriseTopicContext.org_profile.size",
-          "issue": "missing_evidence",
-          "comment": "No information provided about the company's size."
-        },
-        {
-          "field_path": "data_sensitivity_rules.pii[0].pattern",
-          "issue": "low_confidence",
-          "comment": "The exact pattern for 'Phone Number' is not specified, only its type as string."
-        }
-      ],
-      "conflicts": [],
-      "manual_review_recommendations": []
     }
   }
 }

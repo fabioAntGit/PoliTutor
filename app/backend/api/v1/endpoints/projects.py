@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.backend.schemas.project.response import ProjectRead
+from app.backend.schemas.project.response import ProjectRead, ProjectDescriptionRead
 from app.backend.services.interfaces.project_service import IProjectService
 from app.backend.api.deps import get_project_service
 
@@ -18,3 +18,11 @@ async def get_project(
     service: IProjectService = Depends(get_project_service)
 ):
     return await service.get_project(project_id)
+
+
+@router.get("/projects/{project_id}/description", response_model=ProjectDescriptionRead)
+async def get_project_description(
+    project_id: str,
+    service: IProjectService = Depends(get_project_service)
+):
+    return await service.get_project_description(project_id)

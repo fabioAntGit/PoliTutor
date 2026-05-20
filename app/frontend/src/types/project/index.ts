@@ -1,1 +1,6 @@
-export type { ProjectConfigType, ProjectRead } from "./response";
+export type {
+	ProjectConfigType,
+	ProjectGuardrailSource,
+	ProjectRead,
+	ProjectDescriptionRead,
+} from "./response";
