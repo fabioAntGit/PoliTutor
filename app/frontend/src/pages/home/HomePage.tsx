@@ -1,27 +1,48 @@
-import { Link } from "react-router";
-import { Settings, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router";
+import { LogOut, Loader2, Shield } from "lucide-react";
 
 import { ProjectCard } from "@/components/project-card";
 import { useHome } from "@/hooks/home/useHome";
 import { PageState } from "@/components/ui/page-state";
 import { Button } from "@/components/ui/button";
+import { authService } from "@/services/auth.service";
+import { logout } from "@/api/auth";
+
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const { projects, loading, error, enteringId, enterProject } = useHome();
+  const isAdmin = authService.getRole() === "admin";
+
+  const handleLogout = async () => {
+    const accessToken = authService.getAccessToken();
+    if (accessToken) {
+      await logout(accessToken).catch(() => {});
+    }
+    authService.clearTokens();
+    navigate("/login", { replace: true });
+  };
 
   return (
-    <PageState 
-      loading={loading} 
-      error={error} 
+    <PageState
+      loading={loading}
+      error={error}
       onRetry={() => window.location.reload()}
     >
       <main className="min-h-screen flex items-center justify-center p-6 relative">
-        {/* Settings Button in Top Right */}
-        <div className="absolute top-6 right-6">
-          <Button variant="ghost" size="icon" asChild title="Definições de Acesso">
-            <Link to="/setup">
-              <Settings className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-            </Link>
+        <div className="absolute top-6 right-6 flex items-center gap-1">
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Dashboard admin"
+              onClick={() => navigate("/admin")}
+            >
+              <Shield className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" title="Terminar sessão" onClick={handleLogout}>
+            <LogOut className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
           </Button>
         </div>
 
@@ -33,12 +54,11 @@ export default function HomePage() {
           <div className="grid gap-3">
             {projects.map((project) => {
               const isEntering = enteringId === project.id;
-              
               return (
                 <div key={project.id} className="relative group">
-                  <ProjectCard 
-                    project={project} 
-                    selected={isEntering} 
+                  <ProjectCard
+                    project={project}
+                    selected={isEntering}
                     onSelect={() => enterProject(project.id)}
                   />
                   {isEntering && (
@@ -52,7 +72,9 @@ export default function HomePage() {
                 </div>
               );
             })}
-            {projects.length === 0 && <p className="text-muted-foreground text-sm">Nenhum projeto encontrado.</p>}
+            {projects.length === 0 && (
+              <p className="text-muted-foreground text-sm">Nenhum projeto encontrado.</p>
+            )}
           </div>
         </div>
       </main>

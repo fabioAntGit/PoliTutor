@@ -31,7 +31,7 @@ class ChatService(IChatService):
         )
 
         if existing_chat is not None:
-            return ChatCreated(conversation_id=existing_chat.conversation_id), False
+            return ChatCreated(conversation_id=existing_chat.id), False
 
         chat = Chat(
             project_id=project_id,
@@ -59,7 +59,7 @@ class ChatService(IChatService):
         messages = await self.message_service.get_chat_messages(conversation_id)
 
         return ChatRead(
-            conversation_id=chat.conversation_id,
+            conversation_id=chat.id,
             project_id=chat.project_id,
             project_name=project_config.name,
             user_id=chat.user_id,

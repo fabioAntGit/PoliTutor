@@ -8,9 +8,7 @@ class IMessageService(Protocol):
         self, 
         conversation_id: str,
         question: str,
-        iaedu_endpoint: str,
-        iaedu_api_key: str,
-        iaedu_channel_id: str
+        user_id: str,
     ) -> MessageResponse:
         ...
 

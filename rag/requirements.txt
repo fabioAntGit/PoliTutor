@@ -21,3 +21,6 @@ nltk
 regex
 redis
 pymongo
+PyJWT
+pwdlib[argon2]
+python-multipart

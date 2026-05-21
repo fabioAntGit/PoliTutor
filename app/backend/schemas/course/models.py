@@ -1,0 +1,9 @@
+from datetime import datetime, timezone
+from pydantic import BaseModel, Field
+
+class Course(BaseModel):
+    code: str = Field(max_length=64, description="Código único do curso, ex: 'ed'")
+    name: str = Field(max_length=255, description="Nome completo do curso")
+    description: str = Field(default="", description="Descrição do curso")
+    is_active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

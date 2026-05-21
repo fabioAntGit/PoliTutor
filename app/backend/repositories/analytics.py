@@ -2,8 +2,10 @@ import json
 from datetime import datetime, timedelta, timezone
 from pymongo.asynchronous.database import AsyncDatabase
 import re
+
+from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
     
-class AnalyticsRepository:
+class AnalyticsRepository(IAnalyticsRepository):
     def __init__(self, db: AsyncDatabase) -> None:
         self.chats = db["chats"]
         self.messages = db["messages"]
@@ -53,7 +55,7 @@ class AnalyticsRepository:
     async def get_course_overview(self, course: str) -> dict:
         total_conversations = await self.chats.count_documents({"course": course})
         user_ids = await self.chats.distinct("user_id", {"course": course})
-        conversation_ids = await self.chats.distinct("conversation_id", {"course": course})
+        conversation_ids = [str(cid) for cid in await self.chats.distinct("_id", {"course": course})]
         total_messages = await self.messages.count_documents({
             "conversation_id": {"$in": conversation_ids},
             "role": "user",
@@ -67,7 +69,7 @@ class AnalyticsRepository:
         }
 
     async def get_course_activity(self, course: str, days: int) -> list[dict]:
-        conversation_ids = await self.chats.distinct("conversation_id", {"course": course})
+        conversation_ids = [str(cid) for cid in await self.chats.distinct("_id", {"course": course})]
         start_date = datetime.now(timezone.utc) - timedelta(days=days)
         pipeline = [
             {"$match": {
@@ -118,7 +120,7 @@ class AnalyticsRepository:
         return concepts
 
     async def get_course_sources(self, course: str, limit: int = 10) -> list[dict]:
-        conversation_ids = await self.chats.distinct("conversation_id", {"course": course})
+        conversation_ids = [str(cid) for cid in await self.chats.distinct("_id", {"course": course})]
         pipeline = [
             {"$match": {"conversation_id": {"$in": conversation_ids}, "role": "assistant"}},
             {"$unwind": "$sources"},

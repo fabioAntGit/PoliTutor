@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Response, status, Depends, Header
+from fastapi import APIRouter, Response, status, Depends
 
 from app.backend.schemas.chat.request import ChatCreate
 from app.backend.schemas.chat.response import ChatCreated, ChatRead
-from app.backend.schemas.auth import IAEduBaseHeaders
 from app.backend.services.interfaces.chat_service import IChatService
-from app.backend.api.deps import get_chat_service
+from app.backend.api.deps import get_chat_service, require_authenticated
 
 router = APIRouter()
 
@@ -13,24 +12,24 @@ router = APIRouter()
 async def create_chat(
     body: ChatCreate, 
     response: Response,
-    headers: IAEduBaseHeaders = Header(...),
+    payload: dict = Depends(require_authenticated),
     service: IChatService = Depends(get_chat_service)
 ):
     chat_created, created = await service.create_chat(
         project_id=body.project_id, 
-        user_id=headers.x_iaedu_channel_id
+        user_id=payload["id"]
     )
-    
+
     if not created:
         response.status_code = status.HTTP_200_OK
-        
+
     return chat_created
 
 
 @router.get("/chat/{conversation_id}", response_model=ChatRead, response_model_by_alias=False)
 async def get_chat(
     conversation_id: str,
-    headers: IAEduBaseHeaders = Header(...),
+    payload: dict = Depends(require_authenticated),
     service: IChatService = Depends(get_chat_service)
 ):
-    return await service.get_chat(conversation_id, requester_user_id=headers.x_iaedu_channel_id)
+    return await service.get_chat(conversation_id, requester_user_id=payload["id"])

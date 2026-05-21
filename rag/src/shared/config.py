@@ -105,7 +105,7 @@ OPENROUTER_MODEL_MEMORY_EXTRACTION = "google/gemini-2.5-flash-lite"
 # Generator backend: "iaedu" | "openrouter"
 # Production: "iaedu" — credenciais por aluno vindas do frontend.
 # Desenvolvimento/benchmarks: "openrouter" — evita rate limits da IAEdu.
-GENERATOR_BACKEND: str = "iaedu"
+GENERATOR_BACKEND: str = "openrouter"
 
 MAX_IMAGE_API_CALLS = None  # No limit
 IMAGE_API_DELAY = 1.5

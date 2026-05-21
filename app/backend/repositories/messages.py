@@ -2,7 +2,9 @@ from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 from app.backend.schemas.message.models import Message
 
-class MessageRepository:
+from app.backend.repositories.interfaces.message_repository import IMessageRepository
+
+class MessageRepository(IMessageRepository):
     def __init__(self, db: AsyncDatabase) -> None:
         self.collection = db["messages"]
 

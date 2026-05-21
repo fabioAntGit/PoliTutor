@@ -3,13 +3,17 @@ import { createBrowserRouter } from "react-router";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import RootLayout from "@/layouts/RootLayout";
 import HomePage from "@/pages/home/HomePage";
-import SetupPage from "@/pages/setup/SetupPage";
+import LoginPage from "@/pages/login/LoginPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import DashboardPage from "@/pages/dashboard/DashboardPage";
 import CourseDashboardPage from "@/pages/dashboard/CourseDashboardPage";
-import NotFoundPage from "@/pages/not-found/NotFoundPage"
-import ChatGuard from "@/guards/ChatGuard";
-import SessionGuard from "@/guards/SessionGuard";
+import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
+import ChangePasswordPage from "@/pages/change-password/ChangePasswordPage";
+import NotFoundPage from "@/pages/not-found/NotFoundPage";
+import AuthGuard from "@/guards/AuthGuard";
+import RoleGuard from "@/guards/RoleGuard";
+import PasswordGuard from "@/guards/PasswordGuard";
+import GuestGuard from "@/guards/GuestGuard";
 
 export const router = createBrowserRouter([
   {
@@ -17,40 +21,62 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
-        path: "setup",
-        element: <SetupPage />,
-      },
-      {
-        element: <SessionGuard />,
+        element: <GuestGuard />,
         children: [
           {
-            index: true,
-            element: <HomePage />,
-          },
-          {
-            path: "chat/:conversationId",
-            element: <ChatGuard />,
-            children: [
-              {
-                index: true,
-                element: <ChatPage />,
-              },
-            ],
+            path: "login",
+            element: <LoginPage />,
           },
         ],
       },
       {
-        // TODO: protect with ProfessorGuard once Moodle auth is integrated
-        path: "dashboard",
-        element: <DashboardLayout />,
+        element: <AuthGuard />,
         children: [
           {
-            index: true,
-            element: <DashboardPage />,
+            path: "change-password",
+            element: <ChangePasswordPage />,
           },
           {
-            path: "courses/:courseId",
-            element: <CourseDashboardPage />,
+            element: <PasswordGuard />,
+            children: [
+              {
+                index: true,
+                element: <HomePage />,
+              },
+              {
+                path: "chat/:conversationId",
+                element: <ChatPage />,
+              },
+              {
+                path: "admin",
+                element: <RoleGuard roles={["admin"]} />,
+                children: [
+                  {
+                    index: true,
+                    element: <AdminDashboardPage />,
+                  },
+                ],
+              },
+              {
+                path: "dashboard",
+                element: <RoleGuard roles={["teacher", "admin"]} />,
+                children: [
+                  {
+                    element: <DashboardLayout />,
+                    children: [
+                      {
+                        index: true,
+                        element: <DashboardPage />,
+                      },
+                      {
+                        path: "courses/:courseId",
+                        element: <CourseDashboardPage />,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
           },
         ],
       },

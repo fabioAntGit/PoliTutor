@@ -3,10 +3,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 from app.backend.schemas.shared.mongo import PyObjectId
-
-class Role(str, Enum):
-    user = "user"
-    assistant = "assistant"
+from app.backend.schemas.message.enums import Role
 
 class Source(BaseModel):
     filename: str
@@ -14,7 +11,7 @@ class Source(BaseModel):
 
 class Message(BaseModel):
     id: PyObjectId | None = Field(alias="_id", default=None)
-    conversation_id: str = Field(pattern=r"^[a-z0-9\-]+$", max_length=64)
+    conversation_id: str = Field(pattern=r"^[0-9a-fA-F]{24}$", max_length=24)
     role: Role
     content: str = Field(min_length=1)
     sources: list[Source] = Field(default_factory=list)

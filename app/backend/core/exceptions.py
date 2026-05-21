@@ -53,3 +53,30 @@ class AccessDeniedError(AppError):
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(message=message)
+
+
+class AuthError(AppError):
+    status_code = 401
+    code = "auth_error"
+    message = "Credenciais invalidas"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
+class UserNotFoundError(AppError):
+    status_code = 404
+    code = "user_not_found"
+    message = "Utilizador nao encontrado"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
+class MemoryNotFoundError(AppError):
+    status_code = 404
+    code = "memory_not_found"
+    message = "Memory not found"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
