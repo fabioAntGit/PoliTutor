@@ -1,8 +1,9 @@
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/password-input";
+import { FormPasswordField } from "@/components/form/FormPasswordField";
+import { FormRootError } from "@/components/form/FormRootError";
+import { SubmitButton } from "@/components/form/SubmitButton";
 import { useChangePassword } from "@/hooks/auth/useChangePassword";
 import { authService } from "@/services/auth.service";
 
@@ -41,60 +42,34 @@ export default function ChangePasswordPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current_password">Password atual</Label>
-            <PasswordInput
-              id="current_password"
-              autoComplete="current-password"
-              aria-invalid={!!errors.current_password}
-              {...register("current_password")}
-            />
-            {errors.current_password && (
-              <p className="text-xs text-destructive">{errors.current_password.message}</p>
-            )}
-          </div>
+          <FormPasswordField
+            id="current_password"
+            label="Password atual"
+            autoComplete="current-password"
+            error={errors.current_password?.message}
+            {...register("current_password")}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="new_password">Nova password</Label>
-            <PasswordInput
-              id="new_password"
-              autoComplete="new-password"
-              aria-invalid={!!errors.new_password}
-              {...register("new_password")}
-            />
-            {errors.new_password && (
-              <p className="text-xs text-destructive">{errors.new_password.message}</p>
-            )}
-          </div>
+          <FormPasswordField
+            id="new_password"
+            label="Nova password"
+            autoComplete="new-password"
+            error={errors.new_password?.message}
+            {...register("new_password")}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="confirm_password">Confirmar nova password</Label>
-            <PasswordInput
-              id="confirm_password"
-              autoComplete="new-password"
-              aria-invalid={!!errors.confirm_password}
-              {...register("confirm_password")}
-            />
-            {errors.confirm_password && (
-              <p className="text-xs text-destructive">{errors.confirm_password.message}</p>
-            )}
-          </div>
+          <FormPasswordField
+            id="confirm_password"
+            label="Confirmar nova password"
+            autoComplete="new-password"
+            error={errors.confirm_password?.message}
+            {...register("confirm_password")}
+          />
         </div>
 
-        {errors.root && (
-          <p className="text-sm text-destructive p-2 bg-destructive/10 rounded-md text-center">
-            {errors.root.message}
-          </p>
-        )}
+        <FormRootError message={errors.root?.message} />
 
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full h-12 text-base font-semibold"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : "Alterar password"}
-        </Button>
+        <SubmitButton loading={isSubmitting}>Alterar password</SubmitButton>
       </form>
     </main>
   );

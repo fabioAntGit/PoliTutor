@@ -19,7 +19,6 @@ from app.backend.api.v1.endpoints.chats import router as chats_router
 from app.backend.api.v1.endpoints.courses import router as courses_router
 from app.backend.api.v1.endpoints.memory import router as memory_router
 from app.backend.api.v1.endpoints.messages import router as messages_router
-from app.backend.api.v1.endpoints.projects import router as projects_router
 from app.backend.api.v1.endpoints.reports import router as reports_router
 from app.backend.api.v1.endpoints.users import router as users_router
 from app.backend.core.database import close_mongo, connect_to_mongo, connect_to_redis, close_redis
@@ -76,7 +75,6 @@ app.include_router(users_router, prefix="/api/v1", tags=["users"])
 app.include_router(courses_router, prefix="/api/v1", tags=["courses"])
 app.include_router(chats_router, prefix="/api/v1", tags=["chats"])
 app.include_router(messages_router, prefix="/api/v1", tags=["messages"])
-app.include_router(projects_router, prefix="/api/v1", tags=["projects"])
 app.include_router(reports_router, prefix="/api/v1", tags=["reports"])
 app.include_router(analytics_router, prefix="/api/v1", tags=["dashboard"])
 app.include_router(memory_router, prefix="/api/v1", tags=["memory"])

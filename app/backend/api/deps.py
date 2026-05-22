@@ -30,7 +30,6 @@ from app.backend.services.chats import ChatService
 from app.backend.services.analytics import AnalyticsService
 from app.backend.services.context import ContextService
 from app.backend.services.messages import MessageService
-from app.backend.services.projects import ProjectService
 from app.backend.services.reports import ReportService
 from app.backend.services.user_memory import UserMemoryService
 from app.backend.services.security import SecurityService
@@ -41,7 +40,6 @@ from app.backend.services.interfaces.analytics_service import IAnalyticsService
 from app.backend.services.interfaces.chat_service import IChatService
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.message_service import IMessageService
-from app.backend.services.interfaces.project_service import IProjectService
 from app.backend.services.interfaces.report_service import IReportService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
 from app.backend.services.interfaces.security_service import ISecurityService
@@ -123,15 +121,14 @@ def get_message_service(
 
 def get_chat_service(
     chat_repository: IChatRepository = Depends(get_chat_repository),
+    course_repository: ICourseRepository = Depends(get_course_repository),
     message_service: IMessageService = Depends(get_message_service),
 ) -> IChatService:
     return ChatService(
         chat_repository=chat_repository,
+        course_repository=course_repository,
         message_service=message_service,
     )
-
-def get_project_service() -> IProjectService:
-    return ProjectService()
 
 def get_report_service(
     report_repository: IReportRepository = Depends(get_report_repository),

@@ -31,7 +31,7 @@ export default function ChatPage() {
                     <ArrowLeft className="h-5 w-5" />
                 </button>
 
-                <h1 className="text-xl font-semibold">{chat?.project_name}</h1>
+                <h1 className="text-xl font-semibold">{chat?.course_name}</h1>
             </header>
 
             <section className="flex-1 overflow-y-auto px-6 [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)]">

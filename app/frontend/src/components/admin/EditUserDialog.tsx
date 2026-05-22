@@ -3,7 +3,6 @@ import { Controller } from "react-hook-form";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Loader2, X, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormField } from "@/components/form/FormField";
+import { FormRootError } from "@/components/form/FormRootError";
 import { useEditUser } from "@/hooks/admin/useEditUser";
 import type { UserResponse } from "@/types/user";
 import type { CourseResponse } from "@/types/course";
@@ -50,30 +51,20 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
           </DialogPrimitive.Description>
 
           <form onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-full_name">Nome completo</Label>
-              <Input
-                id="edit-full_name"
-                aria-invalid={!!errors.full_name}
-                {...register("full_name")}
-              />
-              {errors.full_name && (
-                <p className="text-xs text-destructive">{errors.full_name.message}</p>
-              )}
-            </div>
+            <FormField
+              id="edit-full_name"
+              label="Nome completo"
+              error={errors.full_name?.message}
+              {...register("full_name")}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                aria-invalid={!!errors.email}
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
-              )}
-            </div>
+            <FormField
+              id="edit-email"
+              label="Email"
+              type="email"
+              error={errors.email?.message}
+              {...register("email")}
+            />
 
             <div className="space-y-2">
               <Label>Role</Label>
@@ -164,11 +155,7 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
               />
             </div>
 
-            {errors.root && (
-              <p className="text-sm text-destructive p-2 bg-destructive/10 rounded-md text-center">
-                {errors.root.message}
-              </p>
-            )}
+            <FormRootError message={errors.root?.message} />
 
             <div className="flex gap-2 pt-2">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>

@@ -17,14 +17,14 @@ class AppError(Exception):
         super().__init__(self.message)
 
 
-class ProjectNotFoundError(AppError):
+class CourseNotFoundError(AppError):
     status_code = 404
-    code = "project_not_found"
-    message = "Projeto nao encontrado"
+    code = "course_not_found"
+    message = "Curso nao encontrado"
 
-    def __init__(self, project_id: str) -> None:
-        self.project_id = project_id
-        super().__init__(details={"project_id": project_id})
+    def __init__(self, course_code: str) -> None:
+        self.course_code = course_code
+        super().__init__(details={"course_code": course_code})
 
 
 class ChatNotFoundError(AppError):

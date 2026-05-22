@@ -48,11 +48,6 @@ class MessageService(IMessageService):
             conversation.user_id, conversation.course
         )
 
-        user_msg = Message(conversation_id=conversation_id, role="user", content=question)
-
-        user_msg.id = await self.message_repository.create(user_msg)
-        await self.redis_repository.add_message(user_msg)
-
         response = await asyncio.to_thread(
             ask,
             conversation.course,
@@ -63,6 +58,10 @@ class MessageService(IMessageService):
             memory_context or "",
         )
 
+        user_msg = Message(conversation_id=conversation_id, role="user", content=question)
+        user_msg.id = await self.message_repository.create(user_msg)
+        await self.redis_repository.add_message(user_msg)
+
         assistant_msg = Message(
             conversation_id=conversation_id,
             role="assistant",
@@ -72,6 +71,8 @@ class MessageService(IMessageService):
 
         assistant_msg.id = await self.message_repository.create(assistant_msg)
         await self.redis_repository.add_message(assistant_msg)
+
+        await self.chat_repository.touch(conversation_id)
 
         await self.context_service.check_and_trigger_summary(
             conversation_id, conversation.user_id, conversation.course
