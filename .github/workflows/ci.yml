@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [dev, main]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,9 +18,9 @@ jobs:
       run:
         working-directory: app/frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -40,7 +37,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-coverage
           path: app/coverage/frontend/
@@ -49,10 +46,13 @@ jobs:
   backend:
     name: Backend (pytest)
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -69,11 +69,19 @@ jobs:
         run: pip install -r app/backend/tests/requirements.txt
 
       - name: Run pytest
-        run: pytest app/backend/tests/unit
+        run: pytest app/backend/tests/unit --junitxml=junit.xml
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v3
+        with:
+          name: Backend tests
+          path: junit.xml
+          reporter: java-junit
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-coverage
           path: htmlcov/
