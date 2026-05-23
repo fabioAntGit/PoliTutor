@@ -30,10 +30,24 @@ Poli-Tutor is a Retrieval-Augmented Generation (RAG) system that acts as a Socra
 ```text
 Poli-Tutor/
 ├── app/
-│   ├── backend/              # FastAPI app, repositories, services, schemas
+│   ├── backend/              # FastAPI app
+│   │   ├── api/              # Route handlers (v1 endpoints)
+│   │   ├── core/             # Config, database, project setup
+│   │   ├── repositories/     # Data access (MongoDB, Redis)
+│   │   ├── schemas/          # Pydantic request/response models
+│   │   ├── services/         # Business logic
+│   │   └── tests/            # pytest suite (unit/)
 │   └── frontend/             # React/Vite client
+│       └── src/
+│           ├── api/          # HTTP clients
+│           ├── components/   # UI + dashboard components
+│           ├── hooks/        # React hooks
+│           ├── pages/        # Route pages
+│           ├── services/     # Service layer
+│           └── test/         # Vitest suite (setup + unit/)
 ├── docker/
 │   ├── backend.Dockerfile
+│   ├── backend.test.Dockerfile  # Python 3.11 image for backend tests
 │   └── frontend.Dockerfile
 ├── rag/
 │   ├── .env                  # RAG environment variables (create this — see below)
@@ -49,6 +63,7 @@ Poli-Tutor/
 │   ├── Dockerfile            # One-shot ingestion pipeline container
 │   └── requirements.txt
 ├── docker-compose.yml        # Redis + Backend + Frontend
+├── docker-compose.test.yml   # Backend test runner
 └── README.md
 ```
 
@@ -74,9 +89,10 @@ Supported extensions: `.pdf`, `.pptx`, `.md`
 
 | Requirement | Notes |
 | --- | --- |
-| Docker Desktop | Recommended for running the full stack |
-| Python 3.12+ | Only needed for running without Docker |
+| Docker Desktop | Recommended for running the full stack and the backend test suite |
+| Python 3.12+ | Only needed for running the RAG pipeline without Docker |
 | pip | Only needed for running without Docker |
+| Node.js 20+ | Only needed for running or testing the frontend without Docker |
 
 ---
 
@@ -290,6 +306,44 @@ python -m uvicorn app.backend.main:app --reload --port 8000
 npm install
 npm run dev
 ```
+
+---
+
+## Testing
+
+The project has two independent test suites: the backend runs on **pytest**, the frontend on **Vitest**. Both libraries scale from unit tests to future integration and system tests.
+
+### Backend (pytest)
+
+The backend requires Python 3.11, so its tests run inside a dedicated container — no local Python install needed.
+
+```bash
+# Build the test image once (installs all deps + pytest)
+docker compose -f docker-compose.test.yml build backend-tests
+
+# Run the unit test suite
+docker compose -f docker-compose.test.yml run --rm backend-tests
+```
+
+The source code is mounted as a volume, so editing tests or application code does not require rebuilding the image. Tests live in `app/backend/tests/unit/`.
+
+Coverage runs automatically (`pytest-cov`): a summary is printed to the terminal and a full HTML report is written to `app/coverage/backend/` (open `app/coverage/backend/index.html`).
+
+> **First build:** installs the full RAG dependency set (including PyTorch) — slow once, then cached.
+
+### Frontend (Vitest)
+
+```bash
+cd app/frontend
+npm install            # first time only
+npm test               # watch mode
+npm run test:run       # single run (CI)
+npm run test:coverage  # single run + coverage report
+```
+
+Tests live in `app/frontend/src/test/`, mirroring the source structure under `unit/`. The coverage report (`@vitest/coverage-v8`) is printed to the terminal and written as HTML to `app/coverage/frontend/` (open `app/coverage/frontend/index.html`).
+
+Both suites write their HTML coverage reports into a single `app/coverage/` folder — `app/coverage/backend/` and `app/coverage/frontend/`.
 
 ---
 
@@ -569,4 +623,5 @@ All endpoints require IAEdu headers:
 | **LLM** | IAEdu (GPT-4o), OpenRouter (GPT-4o, Gemini 2.5 Flash Lite) |
 | **Evaluation** | ranx, NumPy, Pandas, Matplotlib |
 | **Frontend** | React 19, React Router 7, Vite, Tailwind CSS, Shadcn/Radix UI, Axios |
+| **Testing** | pytest (backend), Vitest + Testing Library (frontend) |
 | **Containerisation** | Docker, Docker Compose, Nginx |
