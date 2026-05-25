@@ -5,7 +5,7 @@ export const editUserSchema = z.object({
     .email("Email inválido.")
     .endsWith("@estg.ipp.pt", "O email deve pertencer ao domínio @estg.ipp.pt."),
   full_name: z.string().min(1, "Nome completo obrigatório."),
-  role: z.enum(["student", "teacher", "admin"]),
+  role: z.enum(["student", "teacher"]),
   courses: z.array(z.string()),
 });
 

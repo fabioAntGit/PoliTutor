@@ -23,7 +23,7 @@ class AuthenticationService(IAuthenticationService):
 
     async def login(self, username: str, password: str) -> str:
         user = await self.user_repository.find_by_username(username)
-        if not user or not user.is_active:
+        if not user:
             raise AuthError(message="Username ou senha invalidos")
         if not await self.security_service.verify_password(password, user.hashed_password):
             raise AuthError(message="Username ou senha invalidos")
@@ -61,7 +61,7 @@ class AuthenticationService(IAuthenticationService):
             unique_courses = list(set(courses))
             existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
             if len(existing_courses) != len(unique_courses):
-                raise AuthError(message="Um ou mais cursos fornecidos nao existem no sistema")
+                raise AuthError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
 
         hashed_password = await self.security_service.hash_password(password)
 

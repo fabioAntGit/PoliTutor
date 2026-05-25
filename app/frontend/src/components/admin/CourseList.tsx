@@ -2,20 +2,20 @@ import { useState } from "react";
 import { Search, Pencil, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useUsers } from "@/hooks/admin/useUsers";
-import EditUserDialog from "@/components/admin/EditUserDialog";
-import type { UserResponse } from "@/types/user";
+import { useCourses } from "@/hooks/admin/useCourses";
+import EditCourseDialog from "@/components/admin/EditCourseDialog";
+import type { CourseResponse } from "@/types/course";
 
-export default function UserList() {
-  const { users, courses, loading, query, setQuery, refresh } = useUsers();
-  const [editing, setEditing] = useState<UserResponse | null>(null);
+export default function CourseList() {
+  const { courses, loading, query, setQuery, refresh } = useCourses();
+  const [editing, setEditing] = useState<CourseResponse | null>(null);
 
   return (
     <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
-          placeholder="Procurar por nome, username ou email"
+          placeholder="Procurar por sigla ou nome"
           className="pl-9"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -26,28 +26,32 @@ export default function UserList() {
         <div className="flex justify-center py-8">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
-      ) : users.length === 0 ? (
+      ) : courses.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">
-          Nenhum utilizador encontrado.
+          Nenhuma cadeira encontrada.
         </p>
       ) : (
         <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
-          {users.map((user) => (
+          {courses.map((course) => (
             <div
-              key={user.username}
+              key={course.code}
               className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{user.full_name}</p>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider">
-                    {user.role}
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider font-mono">
+                    {course.code}
                   </span>
+                  <p className="text-sm font-medium truncate">{course.name}</p>
+                  {!course.is_active && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium uppercase tracking-wider">
+                      Inativa
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                {user.courses.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-0.5 font-mono uppercase">
-                    {user.courses.join(" · ")}
+                {course.description && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {course.description}
                   </p>
                 )}
               </div>
@@ -55,8 +59,8 @@ export default function UserList() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => setEditing(user)}
-                aria-label={`Editar ${user.username}`}
+                onClick={() => setEditing(course)}
+                aria-label={`Editar ${course.code}`}
               >
                 <Pencil className="size-4" />
               </Button>
@@ -65,9 +69,8 @@ export default function UserList() {
         </div>
       )}
 
-      <EditUserDialog
-        user={editing}
-        courses={courses}
+      <EditCourseDialog
+        course={editing}
         onClose={() => setEditing(null)}
         onSaved={() => {
           setEditing(null);

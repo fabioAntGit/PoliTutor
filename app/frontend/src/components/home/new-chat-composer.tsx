@@ -65,12 +65,12 @@ export function NewChatComposer({
               <SelectValue
                 placeholder={
                   courses.length === 0
-                    ? "Sem cursos disponiveis"
-                    : "Seleciona um curso"
+                    ? "Sem cadeiras disponiveis"
+                    : "Seleciona uma cadeira"
                 }
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" side="bottom" align="start">
               {courses.map((course) => (
                 <SelectItem key={course.code} value={course.code}>
                   {course.name}

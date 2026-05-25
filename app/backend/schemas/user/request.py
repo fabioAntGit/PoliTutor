@@ -14,7 +14,6 @@ class UserUpdateRequest(BaseModel):
     full_name: str | None = None
     role: UserRole | None = None
     courses: list[str] | None = None
-    is_active: bool | None = None
 
 class ChangePasswordRequest(BaseModel):
     current_password: str

@@ -77,8 +77,8 @@ export default function CreateUserForm() {
                   <SelectValue placeholder="Seleciona um role" />
                 </SelectTrigger>
                 <SelectContent position="popper" align="start">
-                  <SelectItem value="student">Estudante</SelectItem>
-                  <SelectItem value="teacher">Professor</SelectItem>
+                  <SelectItem value="student">student</SelectItem>
+                  <SelectItem value="teacher">teacher</SelectItem>
                 </SelectContent>
               </Select>
             )}

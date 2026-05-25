@@ -17,13 +17,13 @@ export default function CourseDashboardPage() {
   if (status === "not_found") {
     return (
       <div className="flex flex-1 flex-col overflow-y-auto">
-        <DashboardPageHeader title="Curso não encontrado" />
+        <DashboardPageHeader title="Cadeira não encontrada" />
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
           <AlertCircle className="h-12 w-12 text-muted-foreground" />
           <div className="text-center">
-            <h1 className="text-lg font-semibold">Curso não encontrado</h1>
+            <h1 className="text-lg font-semibold">Cadeira não encontrada</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              O curso <span className="font-mono font-medium">"{courseId}"</span> não existe ou ainda não tem dados.
+              A cadeira <span className="font-mono font-medium">"{courseId}"</span> não existe ou ainda não tem dados.
             </p>
           </div>
           <Button variant="outline" onClick={() => navigate("/dashboard")}>
@@ -56,7 +56,7 @@ export default function CourseDashboardPage() {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
       <DashboardPageHeader
-        title={<span className="truncate">{courseId ?? "Curso"}</span>}
+        title={<span className="truncate">{courseId ?? "Cadeira"}</span>}
       />
 
       <div className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
@@ -64,12 +64,12 @@ export default function CourseDashboardPage() {
           <h1 className="text-xl font-semibold tracking-tight truncate">
             {courseId?.toUpperCase()}
           </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Análise individual do curso</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Análise individual da cadeira</p>
         </div>
 
         <SectionCards data={overview} variant="course" />
 
-        <ChartAreaInteractive course={courseId} description="Evolução das perguntas dos alunos neste curso" />
+        <ChartAreaInteractive course={courseId} description="Evolução das perguntas dos alunos nesta cadeira" />
 
         <div className="grid grid-cols-1 gap-6 @3xl/main:grid-cols-2">
           <RankedListCard
@@ -83,7 +83,7 @@ export default function CourseDashboardPage() {
           <RankedListCard
             icon={<FileText className="h-4 w-4 text-blue-500" />}
             title="Fontes Mais Consultadas"
-            description="Materiais do curso mais citados pelo tutor nas respostas aos alunos"
+            description="Materiais da cadeira mais citados pelo tutor nas respostas aos alunos"
             items={sourceItems}
             isLoading={isLoading}
             barClassName="bg-blue-500/40"

@@ -36,9 +36,11 @@ export default function ChangePasswordPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-center">
             Alterar password
           </h1>
-          <p className="text-sm text-muted-foreground text-center">
-            Tens de definir uma password nova antes de continuar.
-          </p>
+          {mustChange && (
+            <p className="text-sm text-muted-foreground text-center">
+              Tens de definir uma password nova antes de continuar.
+            </p>
+          )}
         </div>
 
         <div className="space-y-4">

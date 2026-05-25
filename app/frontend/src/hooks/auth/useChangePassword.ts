@@ -7,6 +7,7 @@ import {
 } from "@/schemas/changePassword";
 import { changePassword } from "@/api/auth";
 import { authService } from "@/services/auth.service";
+import { landingForRole } from "@/lib/landing";
 import { ApiError } from "@/lib/errors";
 
 export function useChangePassword() {
@@ -22,7 +23,7 @@ export function useChangePassword() {
     try {
       const tokens = await changePassword(data.current_password, data.new_password);
       authService.setTokens(tokens.access_token);
-      navigate("/", { replace: true });
+      navigate(landingForRole(authService.getRole()), { replace: true });
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : "Erro ao alterar password.";

@@ -12,7 +12,6 @@ class User(BaseModel):
     hashed_password: str = Field(max_length=255)
     full_name: str = Field(max_length=255)
     courses: list[str] = Field(default_factory=list)
-    is_active: bool = Field(default=True)
     must_change_password: bool = Field(default=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

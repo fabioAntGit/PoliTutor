@@ -30,3 +30,20 @@ class CourseRepository(ICourseRepository):
     async def find_by_name(self, name: str) -> Course | None:
         doc = await self.collection.find_one({"name": name})
         return Course.model_validate(doc) if doc else None
+
+    async def get_all_courses(self) -> list[Course]:
+        courses = []
+        async for doc in self.collection.find({}):
+            courses.append(Course.model_validate(doc))
+        return courses
+
+    async def update(self, code: str, fields: dict) -> bool:
+        result = await self.collection.update_one(
+            {"code": code},
+            {"$set": fields},
+        )
+        return result.matched_count > 0
+
+    async def delete(self, code: str) -> bool:
+        result = await self.collection.delete_one({"code": code})
+        return result.deleted_count > 0

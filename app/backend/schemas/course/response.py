@@ -4,3 +4,4 @@ class CourseResponse(BaseModel):
     code: str
     name: str
     description: str
+    is_active: bool = True

@@ -1,19 +1,30 @@
+import logging
+
 from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
+from app.backend.repositories.interfaces.deletion_repository import IDeletionRepository
 from app.backend.services.interfaces.user_service import IUserService
 from app.backend.schemas.user.models import User
 from app.backend.core.validators import validate_and_extract_username
 from app.backend.core.exceptions import AppError, UserNotFoundError
 from pwdlib import PasswordHash
 
+logger = logging.getLogger(__name__)
+
+
 class UserService(IUserService):
     def __init__(
         self,
         user_repository: IUserRepository,
         course_repository: ICourseRepository,
+        chat_repository: IChatRepository,
+        deletion_repository: IDeletionRepository,
     ) -> None:
         self.user_repository = user_repository
         self.course_repository = course_repository
+        self.chat_repository = chat_repository
+        self.deletion_repository = deletion_repository
 
     async def create_user(
         self,
@@ -23,6 +34,9 @@ class UserService(IUserService):
         role: str,
         courses: list[str]
     ) -> User:
+        if len(password) < 8:
+            raise AppError(message="A password deve ter pelo menos 8 caracteres")
+
         username = validate_and_extract_username(email)
 
         if await self.user_repository.find_by_email(email):
@@ -85,7 +99,7 @@ class UserService(IUserService):
                 unique_courses = list(set(courses))
                 existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
                 if len(existing_courses) != len(unique_courses):
-                    raise AppError(message="Um ou mais cursos fornecidos nao existem no sistema")
+                    raise AppError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
                 update_data["courses"] = unique_courses
             else:
                 update_data["courses"] = []
@@ -99,7 +113,23 @@ class UserService(IUserService):
         if not user:
             raise UserNotFoundError()
 
-        return await self.user_repository.delete(username)
+        chats = await self.chat_repository.get_chats(user.id)
+        conversation_ids = [str(chat.id) for chat in chats if chat.id is not None]
+
+        if conversation_ids:
+            await self.deletion_repository.move_docs(
+                "messages", {"conversation_id": {"$in": conversation_ids}}
+            )
+            await self.deletion_repository.move_docs(
+                "reports", {"conversation_id": {"$in": conversation_ids}}
+            )
+
+        await self.deletion_repository.move_docs("chats", {"user_id": user.id})
+        await self.deletion_repository.move_docs("user_memory", {"user_id": user.id})
+        await self.deletion_repository.move_docs("users", {"username": user.username})
+
+        logger.info("Account deleted: username=%s id=%s", user.username, user.id)
+        return True
 
     async def change_password(self, username: str, current_password: str, new_password: str) -> User:
         user = await self.get_user(username)

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { ChatService } from "@/services/chat.service";
 import { listCourses } from "@/api/courses";
+import { authService } from "@/services/auth.service";
 import type { ChatListItem } from "@/types/chat";
 import type { CourseResponse } from "@/types/course";
 import { ApiError } from "@/lib/errors";
@@ -20,10 +21,12 @@ export function useHome() {
   useEffect(() => {
     Promise.all([listCourses(), ChatService.listChats()])
       .then(([coursesData, chatsData]) => {
-        setCourses(coursesData);
+        const myCourses = new Set(authService.getCourses());
+        const mine = coursesData.filter((c) => myCourses.has(c.code));
+        setCourses(mine);
         setChats(chatsData);
-        if (coursesData.length > 0) {
-          setSelectedCourse(coursesData[0].code);
+        if (mine.length > 0) {
+          setSelectedCourse(mine[0].code);
         }
       })
       .catch(() => {
@@ -43,7 +46,7 @@ export function useHome() {
       return;
     }
     if (!selectedCourse) {
-      toast.error("Seleciona um curso.");
+      toast.error("Seleciona uma cadeira.");
       return;
     }
 

@@ -25,3 +25,7 @@ export async function deleteUser(username: string): Promise<void> {
   await api.delete(`/users/${username}`);
 }
 
+export async function deleteMyAccount(): Promise<void> {
+  await api.delete("/users/me");
+}
+

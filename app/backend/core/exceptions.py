@@ -20,7 +20,7 @@ class AppError(Exception):
 class CourseNotFoundError(AppError):
     status_code = 404
     code = "course_not_found"
-    message = "Curso nao encontrado"
+    message = "Cadeira nao encontrada"
 
     def __init__(self, course_code: str) -> None:
         self.course_code = course_code

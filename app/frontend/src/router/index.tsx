@@ -40,12 +40,17 @@ export const router = createBrowserRouter([
             element: <PasswordGuard />,
             children: [
               {
-                index: true,
-                element: <HomePage />,
-              },
-              {
-                path: "chat/:conversationId",
-                element: <ChatPage />,
+                element: <RoleGuard roles={["student"]} />,
+                children: [
+                  {
+                    index: true,
+                    element: <HomePage />,
+                  },
+                  {
+                    path: "chat/:conversationId",
+                    element: <ChatPage />,
+                  },
+                ],
               },
               {
                 path: "admin",
