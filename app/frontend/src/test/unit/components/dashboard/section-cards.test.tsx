@@ -25,14 +25,14 @@ describe("SectionCards", () => {
     expect(screen.getByText("3,5")).toBeInTheDocument();
   });
 
-  it("uses course-specific subtitles for the course variant", () => {
-    render(<SectionCards data={data} variant="course" />);
-    expect(screen.getByText("Alunos que interagiram neste curso")).toBeInTheDocument();
-  });
-
   it("shows no metric values while data is null", () => {
     render(<SectionCards data={null} />);
     expect(screen.getByText("Alunos Ativos")).toBeInTheDocument();
     expect(screen.queryByText("5")).not.toBeInTheDocument();
+  });
+
+  it("uses course-specific subtitles for the course variant", () => {
+    render(<SectionCards data={data} variant="course" />);
+    expect(screen.getByText("Alunos que interagiram nesta cadeira")).toBeInTheDocument();
   });
 });

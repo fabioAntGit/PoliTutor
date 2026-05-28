@@ -46,7 +46,7 @@ async def test_get_courses_empty_list(service, repo):
 async def test_get_activity_translates_range_to_days(service, repo, range_param, expected_days):
     repo.get_activity.return_value = []
     result = await service.get_activity(range_param)
-    repo.get_activity.assert_awaited_once_with(expected_days)
+    repo.get_activity.assert_awaited_once_with(expected_days, course_filter=None)
     assert len(result.data) == expected_days
 
 
