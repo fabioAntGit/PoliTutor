@@ -30,4 +30,9 @@ describe("SectionCards", () => {
     expect(screen.getByText("Alunos Ativos")).toBeInTheDocument();
     expect(screen.queryByText("5")).not.toBeInTheDocument();
   });
+
+  it("uses course-specific subtitles for the course variant", () => {
+    render(<SectionCards data={data} variant="course" />);
+    expect(screen.getByText("Alunos que interagiram nesta cadeira")).toBeInTheDocument();
+  });
 });
