@@ -76,7 +76,7 @@ jobs:
 
       - name: Publish test report
         if: always()
-        uses: dorny/test-reporter@v3
+        uses: dorny/test-reporter@v3.0.0
         with:
           name: Backend tests
           path: junit.xml
