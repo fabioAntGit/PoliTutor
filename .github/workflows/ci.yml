@@ -113,8 +113,8 @@ jobs:
           file: docker/backend.Dockerfile
           push: true
           tags: |
-            josebarbosa2005/poli-tutor:backend
-            josebarbosa2005/poli-tutor:backend-${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/poli-tutor:backend
+            ${{ secrets.DOCKERHUB_USERNAME }}/poli-tutor:backend-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -125,7 +125,7 @@ jobs:
           file: docker/frontend.Dockerfile
           push: true
           tags: |
-            josebarbosa2005/poli-tutor:frontend
-            josebarbosa2005/poli-tutor:frontend-${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/poli-tutor:frontend
+            ${{ secrets.DOCKERHUB_USERNAME }}/poli-tutor:frontend-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
