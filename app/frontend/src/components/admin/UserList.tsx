@@ -1,0 +1,90 @@
+import { useState } from "react";
+import { Search, Pencil, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useUsers } from "@/hooks/admin/useUsers";
+import EditUserDialog from "@/components/admin/EditUserDialog";
+import type { UserResponse } from "@/types/user";
+
+const ROLE_LABELS: Record<string, string> = {
+  student: "Estudante",
+  teacher: "Professor",
+  admin: "Admin",
+};
+
+export default function UserList() {
+  const { users, courses, loading, query, setQuery, refresh } = useUsers();
+  const [editing, setEditing] = useState<UserResponse | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          placeholder="Procurar por nome, username ou email"
+          className="pl-9"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : users.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-8">
+          Nenhum utilizador encontrado.
+        </p>
+      ) : (
+        <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
+          {users.map((user) => (
+            <div
+              key={user.username}
+              className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">{user.full_name}</p>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider">
+                    {ROLE_LABELS[user.role] ?? user.role}
+                  </span>
+                  {!user.is_active && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium uppercase tracking-wider">
+                      Inativo
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                {user.courses.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-0.5 font-mono uppercase">
+                    {user.courses.join(" · ")}
+                  </p>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditing(user)}
+                aria-label={`Editar ${user.username}`}
+              >
+                <Pencil className="size-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <EditUserDialog
+        user={editing}
+        courses={courses}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          refresh();
+        }}
+      />
+    </div>
+  );
+}

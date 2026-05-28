@@ -14,11 +14,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.backend.api.v1.endpoints.analytics import router as analytics_router
+from app.backend.api.v1.endpoints.authentication import router as authentication_router
 from app.backend.api.v1.endpoints.chats import router as chats_router
+from app.backend.api.v1.endpoints.courses import router as courses_router
 from app.backend.api.v1.endpoints.memory import router as memory_router
 from app.backend.api.v1.endpoints.messages import router as messages_router
 from app.backend.api.v1.endpoints.projects import router as projects_router
 from app.backend.api.v1.endpoints.reports import router as reports_router
+from app.backend.api.v1.endpoints.users import router as users_router
 from app.backend.core.database import close_mongo, connect_to_mongo, connect_to_redis, close_redis
 from app.backend.core.exceptions import AppError
 from app.backend.schemas.shared.api_error import ApiError
@@ -58,7 +61,9 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Connecting to MongoDB...")
     await connect_to_mongo()
+    logger.info("Connecting to Redis...")
     await connect_to_redis()
     logger.info("Pre-loading embedding and reranker models...")
     get_embedder()
@@ -66,10 +71,13 @@ async def startup_event():
     logger.info("Models loaded and ready.")
 
 
-app.include_router(chats_router, prefix="/api/v1")
-app.include_router(messages_router, prefix="/api/v1")
-app.include_router(projects_router, prefix="/api/v1")
-app.include_router(reports_router, prefix="/api/v1")
+app.include_router(authentication_router, prefix="/api/v1", tags=["auth"])
+app.include_router(users_router, prefix="/api/v1", tags=["users"])
+app.include_router(courses_router, prefix="/api/v1", tags=["courses"])
+app.include_router(chats_router, prefix="/api/v1", tags=["chats"])
+app.include_router(messages_router, prefix="/api/v1", tags=["messages"])
+app.include_router(projects_router, prefix="/api/v1", tags=["projects"])
+app.include_router(reports_router, prefix="/api/v1", tags=["reports"])
 app.include_router(analytics_router, prefix="/api/v1", tags=["dashboard"])
 app.include_router(memory_router, prefix="/api/v1", tags=["memory"])
 

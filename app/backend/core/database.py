@@ -18,11 +18,12 @@ async def connect_to_mongo() -> None:
 
 async def _ensure_indexes(db: AsyncDatabase) -> None:
     await db["chats"].create_index("user_id")
-    await db["messages"].create_index([("role", 1), ("conversation_id", 1)])
-    await db["messages"].create_index([("role", 1), ("created_at", 1)])
     await db["chats"].create_index("course")
     await db["chats"].create_index([("course", 1), ("created_at", -1)])
-    # user_memory indexes
+    await db["messages"].create_index([("role", 1), ("conversation_id", 1)])
+    await db["messages"].create_index([("role", 1), ("created_at", 1)])
+    await db["users"].create_index("email", unique=True)
+    await db["users"].create_index("username", unique=True)
     await db["user_memory"].create_index([("user_id", 1), ("course", 1)])
     await db["user_memory"].create_index([("user_id", 1), ("course", 1), ("type", 1), ("topic", 1)], unique=True)
 

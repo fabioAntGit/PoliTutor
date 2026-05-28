@@ -1,24 +1,13 @@
 import * as reportsApi from "@/api/reports";
-import { sessionService } from "./session.service";
 
 export const ReportService = {
-  async reportMessage(
-    messageId: string
-  ): Promise<boolean> {
-    const config = sessionService.loadConfig();
-    if (!config) throw new Error("Configuração não encontrada.");
-
-    const response = await reportsApi.sendReport(messageId, config.channelId);
+  async reportMessage(messageId: string): Promise<boolean> {
+    const response = await reportsApi.sendReport(messageId);
     return response.success;
   },
 
-  async unreportMessage(
-    messageId: string
-  ): Promise<boolean> {
-    const config = sessionService.loadConfig();
-    if (!config) throw new Error("Configuração não encontrada.");
-
-    const response = await reportsApi.deleteReport(messageId, config.channelId);
+  async unreportMessage(messageId: string): Promise<boolean> {
+    const response = await reportsApi.deleteReport(messageId);
     return response.success;
   },
 };

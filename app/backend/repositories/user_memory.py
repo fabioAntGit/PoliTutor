@@ -1,9 +1,10 @@
 from pymongo.asynchronous.database import AsyncDatabase
 
 from app.backend.schemas.memory.models import MemoryType, UserMemory
+from app.backend.repositories.interfaces.user_memory_repository import IUserMemoryRepository
 
 
-class UserMemoryRepository:
+class UserMemoryRepository(IUserMemoryRepository):
     def __init__(self, db: AsyncDatabase) -> None:
         self.collection = db["user_memory"]
 

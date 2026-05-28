@@ -2,7 +2,9 @@ from bson import ObjectId
 from pymongo.asynchronous.database import AsyncDatabase
 from app.backend.schemas.report.models import Report
 
-class ReportRepository:
+from app.backend.repositories.interfaces.report_repository import IReportRepository
+
+class ReportRepository(IReportRepository):
     def __init__(self, db: AsyncDatabase) -> None:
         self.collection = db["reports"]
 

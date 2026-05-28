@@ -3,16 +3,18 @@ from datetime import datetime, timezone
 from pymongo.asynchronous.database import AsyncDatabase
 from app.backend.schemas.chat.models import Chat
 
-class ChatRepository:
+from app.backend.repositories.interfaces.chat_repository import IChatRepository
+
+class ChatRepository(IChatRepository):
     def __init__(self, db: AsyncDatabase) -> None:
         self.collection = db["chats"]
 
     async def create(self, chat: Chat) -> str:
-        await self.collection.insert_one(chat.model_dump())
-        return chat.conversation_id
+        result = await self.collection.insert_one(chat.model_dump(exclude={"id"}, by_alias=True))
+        return str(result.inserted_id)
 
     async def get_chat(self, conversation_id: str) -> Chat | None:
-        document = await self.collection.find_one({"conversation_id": conversation_id})
+        document = await self.collection.find_one({"_id": ObjectId(conversation_id)})
 
         if document is None:
             return None
@@ -32,14 +34,14 @@ class ChatRepository:
 
     async def get_summary(self, conversation_id: str) -> str | None:
         document = await self.collection.find_one(
-            {"conversation_id": conversation_id},
+            {"_id": ObjectId(conversation_id)},
             {"summary": 1, "_id": 0}
         )
         return document.get("summary") if document else None
 
     async def set_summary(self, conversation_id: str, summary: str, last_message_id: str):
         await self.collection.update_one(
-            {"conversation_id": conversation_id},
+            {"_id": ObjectId(conversation_id)},
             {
                 "$set": {
                     "summary": summary,
@@ -51,7 +53,7 @@ class ChatRepository:
     
     async def get_last_summarized_message_id(self, conversation_id: str) -> str | None:
         document = await self.collection.find_one(
-            {"conversation_id": conversation_id},
+            {"_id": ObjectId(conversation_id)},
             {"last_summarized_message_id": 1, "_id": 0}
         )
         res = document.get("last_summarized_message_id") if document else None

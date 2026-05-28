@@ -107,10 +107,7 @@ def call_openrouter(prompt: str, max_tokens: int = 1000, temperature: float = 0.
         The text content of the model's response, or None on failure.
     """
     model = model or OPENROUTER_MODEL_GENERATOR
-    api_key = (os.getenv("OPENROUTER_KEY") or "").strip()
-    if not api_key:
-        logger.error("OPENROUTER_KEY environment variable is not set.")
-        return None
+    api_key = os.environ["OPENROUTER_KEY"].strip()
 
     max_retries = 3
     retry_delay = 5
