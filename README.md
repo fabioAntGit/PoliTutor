@@ -47,7 +47,6 @@ Poli-Tutor/
 │           └── test/         # Vitest suite (setup + unit/)
 ├── docker/
 │   ├── backend.Dockerfile
-│   ├── backend.test.Dockerfile  # Python 3.11 image for backend tests
 │   └── frontend.Dockerfile
 ├── rag/
 │   ├── .env                  # RAG environment variables (create this — see below)
@@ -62,8 +61,8 @@ Poli-Tutor/
 │   │   └── shared/           # Config, models, database helpers, utilities
 │   ├── Dockerfile            # One-shot ingestion pipeline container
 │   └── requirements.txt
-├── docker-compose.yml        # Redis + Backend + Frontend
-├── docker-compose.test.yml   # Backend test runner
+├── docker-compose.yml        # Redis + Backend + Frontend (local dev)
+├── docker-compose.hub.yml    # Pre-built images from Docker Hub (deploy)
 └── README.md
 ```
 
@@ -89,8 +88,8 @@ Supported extensions: `.pdf`, `.pptx`, `.md`
 
 | Requirement | Notes |
 | --- | --- |
-| Docker Desktop | Recommended for running the full stack and the backend test suite |
-| Python 3.12+ | Only needed for running the RAG pipeline without Docker |
+| Docker Desktop | Recommended for running the full stack locally |
+| Python 3.11+ | Needed for the backend test suite and running the RAG pipeline without Docker |
 | pip | Only needed for running without Docker |
 | Node.js 20+ | Only needed for running or testing the frontend without Docker |
 
@@ -157,7 +156,14 @@ cd Poli-Tutor
 
 ### 2. Create environment files
 
-Create `rag/.env` and `app/backend/.env` as described above.
+Copy the example files and fill in your credentials (see the **Environment Variables** section above for what each key means):
+
+```bash
+cp rag/.env.example rag/.env
+cp app/backend/.env.example app/backend/.env
+```
+
+> Both files are **required** — `docker compose up` will fail to start if they are missing. The frontend only needs `app/frontend/.env` when running it outside Docker (`cp app/frontend/.env.example app/frontend/.env`).
 
 ### 3. Add your documents
 
@@ -221,6 +227,29 @@ To use a specific embedding model and collection:
 docker run --env-file .env poli-tutor-ingestion \
   python -m src.ingestion.pipeline --model BAAI/bge-m3 --collection PoliTutor-Docs-bge-m3
 ```
+
+---
+
+## Deploy (pre-built images from Docker Hub)
+
+On a push to `main`, CI builds and pushes the `backend` and `frontend` images to Docker Hub. The backend image ships with the retrieval models baked in, so it runs fully offline.
+
+To run the whole stack on any machine with Docker — no source code or build needed:
+
+```bash
+# Only docker-compose.hub.yml + your .env files are required
+docker compose -f docker-compose.hub.yml up -d
+```
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+
+Secrets are **not** baked into the images — provide them at runtime via `app/backend/.env` and `rag/.env` next to the compose file (loaded through `env_file`).
+
+**One-time setup for the CI publish step:** add two repository secrets in GitHub (Settings → Secrets and variables → Actions):
+
+- `DOCKERHUB_USERNAME` — your Docker Hub username
+- `DOCKERHUB_TOKEN` — a Docker Hub access token with Read/Write scope
 
 ---
 
@@ -315,21 +344,22 @@ The project has two independent test suites: the backend runs on **pytest**, the
 
 ### Backend (pytest)
 
-The backend requires Python 3.11, so its tests run inside a dedicated container — no local Python install needed.
+The backend test suite runs in CI on every push and pull request (see `.github/workflows/ci.yml`). To run it locally, create a Python 3.11 virtual environment and install the same dependencies CI uses:
 
 ```bash
-# Build the test image once (installs all deps + pytest)
-docker compose -f docker-compose.test.yml build backend-tests
+python3.11 -m venv .venv
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
 
-# Run the unit test suite
-docker compose -f docker-compose.test.yml run --rm backend-tests
+pip install -r rag/requirements.txt
+pip uninstall -y torchcodec          # not needed for inference
+pip install -r app/backend/tests/requirements.txt
+
+pytest app/backend/tests/unit
 ```
 
-The source code is mounted as a volume, so editing tests or application code does not require rebuilding the image. Tests live in `app/backend/tests/unit/`.
+Tests live in `app/backend/tests/unit/`. Coverage runs automatically (`pytest-cov`): a summary is printed to the terminal and a full HTML report is written to `htmlcov/` (open `htmlcov/index.html`).
 
-Coverage runs automatically (`pytest-cov`): a summary is printed to the terminal and a full HTML report is written to `app/coverage/backend/` (open `app/coverage/backend/index.html`).
-
-> **First build:** installs the full RAG dependency set (including PyTorch) — slow once, then cached.
+> **First install:** pulls the full RAG dependency set (including PyTorch) — slow once.
 
 ### Frontend (Vitest)
 
