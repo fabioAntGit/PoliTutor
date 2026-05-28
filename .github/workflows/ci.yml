@@ -63,10 +63,10 @@ jobs:
             rag/requirements.txt
             app/backend/tests/requirements.txt
 
-      - name: Install RAG dependencies
+      - name: Install RAG dependencies (CPU-only torch)
         run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r rag/requirements.txt
-          pip uninstall -y torchcodec
 
       - name: Install test dependencies
         run: pip install -r app/backend/tests/requirements.txt

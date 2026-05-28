@@ -1,0 +1,9 @@
+# Developer dependencies for running ingestion AND the evaluation/benchmark
+# tooling locally. These never ship in any image — visualization and ranking
+# metrics are dev-only (src/evaluation/).
+-r requirements-ingestion.txt
+
+renumics-spotlight
+ranx
+matplotlib
+pandas
