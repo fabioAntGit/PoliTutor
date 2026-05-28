@@ -60,7 +60,9 @@ Poli-Tutor/
 │   │   ├── evaluation/       # Retrieval and tutor benchmarks
 │   │   └── shared/           # Config, models, database helpers, utilities
 │   ├── Dockerfile            # One-shot ingestion pipeline container
-│   └── requirements.txt
+│   ├── requirements.txt              # Backend runtime deps
+│   ├── requirements-ingestion.txt    # + document parsing (ingestion only)
+│   └── requirements-dev.txt          # + evaluation/benchmark tooling (dev only)
 ├── docker-compose.yml        # Redis + Backend + Frontend (local dev)
 ├── docker-compose.hub.yml    # Pre-built images from Docker Hub (deploy)
 └── README.md
@@ -251,6 +253,21 @@ Secrets are **not** baked into the images — provide them at runtime via `app/b
 - `DOCKERHUB_USERNAME` — your Docker Hub username
 - `DOCKERHUB_TOKEN` — a Docker Hub access token with Read/Write scope
 
+### GPU deployment (optional)
+
+The published backend image ships **CPU-only PyTorch** to stay small and fast to build. The code auto-detects the device at runtime (`EMBEDDING_DEVICE`), so the same image runs on CPU or GPU — it only needs a CUDA-enabled PyTorch to use a GPU.
+
+To run embeddings + reranking on a GPU (e.g. a hosting server with an NVIDIA card), build a CUDA variant:
+
+```bash
+docker build \
+  -f docker/backend.Dockerfile \
+  --build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu124 \
+  -t poli-tutor:backend-gpu .
+```
+
+Then run it on a host with `nvidia-container-toolkit` installed, granting GPU access (e.g. `--gpus all`, or the `deploy.resources.devices` block shown above). No code or config changes are needed — the models move to the GPU automatically.
+
 ---
 
 ## Running without Docker
@@ -277,11 +294,14 @@ source venv/bin/activate
 ```
 </details>
 
-**Install dependencies:**
+**Install dependencies** (ingestion + evaluation tooling):
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
+
+> Pulls CUDA PyTorch by default. For a smaller CPU-only install, run
+> `pip install torch --index-url https://download.pytorch.org/whl/cpu` first.
 
 **Run from the `rag/` folder:**
 
@@ -350,8 +370,8 @@ The backend test suite runs in CI on every push and pull request (see `.github/w
 python3.11 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r rag/requirements.txt
-pip uninstall -y torchcodec          # not needed for inference
 pip install -r app/backend/tests/requirements.txt
 
 pytest app/backend/tests/unit
@@ -359,7 +379,7 @@ pytest app/backend/tests/unit
 
 Tests live in `app/backend/tests/unit/`. Coverage runs automatically (`pytest-cov`): a summary is printed to the terminal and a full HTML report is written to `htmlcov/` (open `htmlcov/index.html`).
 
-> **First install:** pulls the full RAG dependency set (including PyTorch) — slow once.
+> **First install:** pulls the runtime RAG dependency set (including CPU-only PyTorch) — slow once.
 
 ### Frontend (Vitest)
 

@@ -9,15 +9,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY rag/requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt && \
-    pip uninstall -y torchcodec
 
-# Stage 2: Runtime — lean image, CPU-only (GPU not required for inference)
+# Install CPU-only PyTorch by default to keep the image small (the CUDA wheels
+# add ~2.5GB and aren't used without a GPU). Installing torch first pins the
+# flavor so the rest of the requirements don't pull the default CUDA build.
+# Device is auto-detected at runtime (EMBEDDING_DEVICE). For a GPU host build:
+#   docker build --build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu124 ...
+ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
+RUN pip install --user --no-cache-dir torch --index-url ${TORCH_INDEX} && \
+    pip install --user --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime — lean image, CPU-only by default (GPU auto-used if present)
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Runtime system dependencies needed by sentence-transformers and unstructured
+# Runtime system dependency: libgomp1 (OpenMP) is needed by torch / sentence-transformers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*

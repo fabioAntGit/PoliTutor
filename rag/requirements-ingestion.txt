@@ -1,0 +1,8 @@
+# Dependencies for the one-shot ingestion pipeline (rag/Dockerfile).
+# Extends the runtime set with document parsing/chunking libraries that the
+# backend never imports at query time.
+-r requirements.txt
+
+unstructured
+langchain-text-splitters
+nltk
