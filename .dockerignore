@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Virtual environments (avoid sending gigabytes to the build daemon)
+rag/venv/
+rag/.venv/
+
+# Node modules
+app/frontend/node_modules/
+
+# Environment files (passed via env_file in docker-compose)
+*.env
+.env.*
+
+# Data directories (not needed in backend image)
+rag/data/
+
+# Git
+.git/
+.gitignore
+
+# Docs / IDE
+*.md
+.vscode/
+.idea/

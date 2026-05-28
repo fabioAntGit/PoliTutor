@@ -1,0 +1,92 @@
+[
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "2",
+    "question": "O que significa o termo FIFO em relação a uma fila (Queue)?",
+    "answer": "FIFO significa 'first in, first out', ou seja, os elementos são retirados na mesma ordem em que chegam."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "4",
+    "question": "Como é normalmente representada uma fila e como ela opera?",
+    "answer": "Uma fila é normalmente representada na horizontal. Uma extremidade da fila é a parte traseira (ou cauda), onde os elementos são adicionados, e o outro lado é a frente (ou cabeça), a partir da qual os elementos são removidos. Ao contrário de uma pilha (Stack), que opera no final da colecção, uma fila opera em ambas as extremidades."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "6",
+    "question": "O que significa o termo enqueue numa Queue?",
+    "answer": "O termo enqueue refere-se ao processo de adicionar um elemento na fila (Queue)."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "7",
+    "question": "Qual operação na Queue é utilizada para adicionar um elemento à traseira da fila?",
+    "answer": "A operação 'enqueue' é utilizada para adicionar um elemento à traseira da fila."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "9",
+    "question": "O que faz o método 'enqueue' na interface QueueADT?",
+    "answer": "O método 'enqueue' adiciona um elemento à parte traseira da fila."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "10",
+    "question": "O que o método isEmpty() verifica numa fila?",
+    "answer": "O método isEmpty() verifica se a fila não contém elementos e retorna true se estiver vazia."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "11",
+    "question": "O que é a cifra de César e como funciona?",
+    "answer": "A cifra de César codifica uma mensagem deslocando cada letra numa mensagem por um valor constante k. Por exemplo, se k é 5, A torna-se F, B torna-se G, etc."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "12",
+    "question": "O que determina a chave de repetição?",
+    "answer": "A chave de repetição é uma série de números inteiros que determina quanto é que cada caracter será movido."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "13",
+    "question": "Qual é o objetivo do exercício apresentado no contexto?",
+    "answer": "Implementar um programa para a codificação de mensagens com recurso a uma Queue."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "15",
+    "question": "Como pode ser implementada uma fila (Queue)?",
+    "answer": "Uma fila (Queue) pode ser implementada usando um array ou uma lista ligada."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "20",
+    "question": "O que faz a operação isEmpty na LinkedQueue?",
+    "answer": "A operação isEmpty retorna verdadeiro se a contagem dos elementos é 0, e falso caso contrário."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "23",
+    "question": "Qual é uma abordagem melhor para implementar uma Queue com arrays?",
+    "answer": "Uma abordagem melhor é a de usar um array circular e não fixar qualquer ponta da fila."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "24",
+    "question": "O que é uma Queue circular e como funciona conceptualmente?",
+    "answer": "Uma Queue circular é uma implementação de uma Queue usando um array que conceptualmente realiza ciclos em torno de si, onde o último índice é pensado para preceder o índice 0. Para isso, são acompanhados dois inteiros que indicam onde a frente e a traseira da fila estão, em determinado momento."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "28",
+    "question": "O que acontece ao valor da cauda quando realizamos o enqueue de um elemento numa fila circular?",
+    "answer": "O valor da cauda é incrementado e, caso atinja o final do array, volta à posição 0 utilizando a operação 'rear = (rear+1) % queue.length'."
+  },
+  {
+    "filename": "Slides.ED.Aula05.pdf",
+    "page": "30",
+    "question": "Qual é a complexidade da operação dequeue para as diferentes implementações da Queue?",
+    "answer": "A operação dequeue é O(1) para a Queue em lista ligada e em array circular, mas é O(n) para a versão em array não circular devido à necessidade de fazer um shift aos elementos da Queue."
+  }
+]

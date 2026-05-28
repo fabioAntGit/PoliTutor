@@ -1,0 +1,67 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "3",
+    "question": "Qual é a diferença entre listas ordenadas e listas não ordenadas segundo o contexto apresentado?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "4",
+    "question": "Como são referenciados os elementos numa lista indexada?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "5",
+    "question": "Quais são algumas das operações que podem ser incluídas numa List ADT?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "6",
+    "question": "Quais são as operações específicas para adicionar elementos em listas não ordenadas?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "7",
+    "question": "Qual é a diferença na organização das interfaces dos ADTs em comparação com o que foi feito anteriormente?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "8",
+    "question": "Quais métodos na interface ListADT são responsáveis por remover elementos da lista?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "9",
+    "question": "Qual é o método que a interface OrderedListADT<T> possui para adicionar elementos a uma lista ordenada?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "10",
+    "question": "Quais são as três formas distintas de adicionar elementos na interface UnorderedListADT<T>?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "11",
+    "question": "Quais são as vantagens e desvantagens de implementar uma lista com um array fixo em comparação com um array dinâmico?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "12",
+    "question": "Quais são as vantagens de usar uma lista duplamente ligada em comparação com uma lista simplesmente ligada na implementação de uma List ADT?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "13",
+    "question": "Qual é a vantagem de manter uma referência do final da lista em uma lista ligada?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "15",
+    "question": "Quais são os métodos obrigatórios da interface Iterator?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP8.pdf",
+    "page": "17",
+    "question": "Quais são as duas cláusulas que devem ser seguidas ao usar o método Iterator.remove()?"
+  }
+]

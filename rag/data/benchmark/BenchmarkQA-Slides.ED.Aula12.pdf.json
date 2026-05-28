@@ -1,0 +1,260 @@
+[
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "2",
+    "question": "Como são referenciados os vértices e as arestas num grafo?",
+    "answer": "Os vértices são referenciados pelo rótulo (ex. A, B, C, D) e as arestas são referenciadas por uma relação de vértices (por exemplo (A, B) que representa uma aresta entre A e B)."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "3",
+    "question": "O que significa listar uma aresta como (A, B) num grafo não direccionado?",
+    "answer": "Listar uma aresta como (A, B) num grafo não direccionado significa que existe uma aresta entre A e B que pode ser percorrida em qualquer direcção, sendo equivalente a (B, A)."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "5",
+    "question": "O que é um grafo não direcionado completo?",
+    "answer": "Um grafo não direcionado é considerado completo se tiver o número máximo de arestas a ligar os vértices (n (n-1) / 2)."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "6",
+    "question": "O que significa um grafo não direcionado ser considerado conexo?",
+    "answer": "Um grafo não direcionado é considerado conexo se para quaisquer dois vértices do grafo, existir um caminho entre eles."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "8",
+    "question": "O que é um circuito simples?",
+    "answer": "Um circuito simples é um circuito em que todos os vértices aparecem no máximo uma vez, à excepção do primeiro e últimos vértices."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "9",
+    "question": "O que é um grafo direccionado?",
+    "answer": "Um grafo direccionado ou dirigido ou dígrafo é um grafo onde as arestas são pares ordenados de vértices."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "11",
+    "question": "Quais são os vértices e arestas mencionados no grafo?",
+    "answer": "Os vértices são A, B, C, D e as arestas são (A, B), (A, C), (B, C), (B, D), (C, D)."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "13",
+    "question": "O que é uma ordem topológica em um grafo sem ciclos?",
+    "answer": "Uma ordem topológica em um grafo sem ciclos é uma organização dos vértices tal que o vértice A precede o vértice B se existe uma aresta de A para B."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "14",
+    "question": "O que é uma rede ou um grafo pesado?",
+    "answer": "Uma rede ou um grafo pesado é um grafo com pesos ou custos associados a cada aresta."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "18",
+    "question": "Quais são as duas categorias principais de travessias para grafos mencionadas?",
+    "answer": "As duas categorias principais de travessias para grafos mencionadas são travessia em largura (breadth-first traversal) e travessia em profundidade (depth-first traversal)."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "19",
+    "question": "Como podemos implementar uma travessia em largura de um grafo?",
+    "answer": "Podemos implementar uma travessia em largura de um grafo semelhante à travessia nível-ordem de uma árvore, usando uma fila para gerir a travessia e uma lista não-ordenada para construir o resultado."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "21",
+    "question": "Qual é o propósito do método iteratorBFS na implementação apresentada?",
+    "answer": "O método iteratorBFS realiza uma travessia em largura (breadth first search) a partir de um índice inicial fornecido, retornando um iterador que executa essa travessia."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "22",
+    "question": "O que o código faz com os vértices adjacentes a 'x' que ainda não foram visitados?",
+    "answer": "O código coloca os vértices adjacentes a 'x' que ainda não foram visitados na fila 'traversalQueue' e marca-os como visitados."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "23",
+    "question": "Como podemos implementar uma travessia em profundidade para um grafo?",
+    "answer": "Podemos implementar uma travessia em profundidade para um grafo substituindo a fila por uma pilha, usando a pilha para gerir a travessia e uma lista não-ordenada para construir o resultado."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "24",
+    "question": "O que o método iteratorDFS(int startIndex) retorna?",
+    "answer": "O método iteratorDFS(int startIndex) retorna um iterador que realiza uma travessia em profundidade (depth first search) começando no índice fornecido."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "25",
+    "question": "O que acontece quando não é encontrado um vértice adjacente a 'x' que não tenha sido visitado?",
+    "answer": "Quando não é encontrado um vértice adjacente a 'x' que não tenha sido visitado, o vértice no topo da pilha 'traversalStack' é removido (pop)."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "26",
+    "question": "Como poderia o algoritmo DepthFirstSearch ser implementado?",
+    "answer": "O algoritmo DepthFirstSearch poderia ser implementado de forma recursiva, visitando o nó atual, adicionando-o ao final da lista de resultados e chamando recursivamente para cada nó adjacente que ainda não foi visitado."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "27",
+    "question": "O que determina se um grafo é conexo?",
+    "answer": "Um grafo é conexo se e somente se, para cada vértice v num grafo que contém n vértices, o tamanho do resultado de uma travessia em largura a partir de v é n."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "29",
+    "question": "Qual é a sequência de travessia em largura para o vértice inicial A num grafo conexo não direcionado?",
+    "answer": "ABCD"
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "30",
+    "question": "Qual é a sequência de travessia em largura a partir do vértice A num grafo não conexo e não direcionado?",
+    "answer": "A sequência de travessia em largura a partir do vértice A é A, B, C."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "32",
+    "question": "Quais são os exemplos apresentados na tabela de BFS?",
+    "answer": "Os exemplos apresentados na tabela de BFS incluem os vértices V5, V3, V4 e V2, com diferentes estados como 'VAZIA' e combinações como 'V3, V4 v4'."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "34",
+    "question": "O que é uma árvore geradora?",
+    "answer": "Uma árvore geradora é uma árvore que inclui todos os vértices de um grafo."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "37",
+    "question": "O que é uma árvore geradora de custo mínimo?",
+    "answer": "Uma árvore geradora de custo mínimo é uma árvore geradora, onde a soma dos pesos das arestas é menor ou igual à soma dos pesos de qualquer outra árvore geradora para o mesmo grafo."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "39",
+    "question": "O que o método mstNetwork() retorna?",
+    "answer": "O método mstNetwork() retorna uma árvore geradora mínima da rede."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "40",
+    "question": "O que o código faz após inicializar o array 'visited' e marcar o primeiro vértice como visitado?",
+    "answer": "Após inicializar o array 'visited' e marcar o primeiro vértice como visitado, o código adiciona todas as arestas adjacentes ao vértice inicial na heap e, em seguida, entra num ciclo que continua enquanto o grafo resultante não atingir o tamanho do grafo original e a heap não estiver vazia. Durante o ciclo, a aresta com o menor peso que possui exatamente um vértice já no grafo resultante é selecionada."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "41",
+    "question": "O que acontece quando o vértice 'index' é adicionado ao 'resultGraph'?",
+    "answer": "O vértice 'index' é adicionado ao 'resultGraph' copiando-o de 'this.vertices[index]', marcando-o como visitado em 'visited[index]', incrementando o número de vértices em 'resultGraph.numVertices' e atualizando a matriz de adjacência 'resultGraph.adjMatrix' com os valores correspondentes de 'this.adjMatrix' para as arestas entre 'x' e 'y'."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "42",
+    "question": "O que o código faz com as arestas adjacentes ao vértice recém-adicionado?",
+    "answer": "O código adiciona todas as arestas adjacentes ao vértice recém-adicionado ao heap, desde que o vértice de destino ainda não tenha sido visitado e o peso da aresta seja menor que Double.POSITIVE_INFINITY."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "43",
+    "question": "Quais são as duas possibilidades para determinar o caminho mais curto de um grafo?",
+    "answer": "Determinar o caminho mais curto em termos de número de arestas e determinar o caminho menos caro numa rede."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "44",
+    "question": "Quais são os dois elementos de informação adicionais que devem ser armazenados para cada vértice na solução apresentada?",
+    "answer": "O comprimento do percurso desde o ponto de partida até este vértice e o vértice que é o antecessor do vértice no caminho."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "45",
+    "question": "Qual é a limitação do algoritmo de Dijkstra mencionado no contexto?",
+    "answer": "O algoritmo de Dijkstra não garante a exactidão da solução caso haja a presença de adjacências com valores negativos."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "47",
+    "question": "O que é uma lista de adjacências e como ela é utilizada na representação de grafos?",
+    "answer": "Uma lista de adjacências é uma lista ligada de referências para outros nós, utilizada para representar um grafo. Um grafo é representado usando n listas ligadas, onde n é o número de vértices."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "48",
+    "question": "O que é uma matriz de adjacências e como pode ser utilizada em grafos?",
+    "answer": "Uma matriz de adjacências é uma matriz bidimensional onde ambas as dimensões são indexadas pelos vértices do grafo. Cada posição da matriz contém um valor booleano que será true se os dois vértices associados estiverem ligados por uma aresta, e false caso contrário. Além disso, pode armazenar os pesos em cada célula, em vez de um valor booleano."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "50",
+    "question": "O que representa uma matriz de adjacências em um grafo não direcionado?",
+    "answer": "Uma matriz de adjacências em um grafo não direcionado representa as conexões entre os vértices do grafo, indicando quais vértices estão ligados entre si."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "53",
+    "question": "O que define a interface GraphADT?",
+    "answer": "A interface GraphADT define a estrutura de dados de um grafo."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "54",
+    "question": "Como se remove um vértice de um grafo utilizando o método fornecido no contexto?",
+    "answer": "Utiliza-se o método 'removeVertex(T vertex)', passando como parâmetro o vértice a ser removido do grafo."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "55",
+    "question": "Que tipo de iterador é retornado pelo método iteratorBFS?",
+    "answer": "O método iteratorBFS retorna um iterador em largura (breadth first iterator) começando no vértice dado."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "56",
+    "question": "O que o método 'isConnected' verifica num grafo?",
+    "answer": "O método 'isConnected' verifica se o grafo está conectado, retornando 'true' se estiver conectado e 'false' caso contrário."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "57",
+    "question": "O que o método 'size' retorna?",
+    "answer": "O método 'size' retorna o número inteiro de vértices neste grafo."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "58",
+    "question": "O que define a interface NetworkADT?",
+    "answer": "A interface NetworkADT define a interface para uma rede."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "59",
+    "question": "Qual é o retorno do método shortestPathWeight?",
+    "answer": "O método shortestPathWeight retorna o peso do caminho mais curto nesta rede."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "60",
+    "question": "O que representa a classe 'Graph' na implementação apresentada?",
+    "answer": "A classe 'Graph' representa uma implementação de um grafo utilizando uma matriz de adjacência."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "61",
+    "question": "O que acontece quando o método 'addEdge' é chamado com dois índices válidos?",
+    "answer": "Quando o método 'addEdge' é chamado com dois índices válidos, a matriz de adjacência é atualizada para indicar uma aresta entre os dois vértices, definindo 'adjMatrix[index1][index2]' e 'adjMatrix[index2][index1]' como 'true'."
+  },
+  {
+    "filename": "Slides.ED.Aula12.pdf",
+    "page": "62",
+    "question": "O que acontece quando o método addVertex é chamado e o número de vértices atinge a capacidade atual do grafo?",
+    "answer": "Quando o método addVertex é chamado e o número de vértices atinge a capacidade atual do grafo, a capacidade do grafo é expandida através do método expandCapacity()."
+  }
+]

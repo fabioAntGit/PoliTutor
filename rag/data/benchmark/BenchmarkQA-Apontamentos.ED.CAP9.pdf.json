@@ -1,0 +1,47 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "3",
+    "question": "O que é necessário para que um algoritmo recursivo seja bem-sucedido?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "4",
+    "question": "Como pode ser definido recursivamente o problema de somar todos os números entre 1 e N?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "6",
+    "question": "Qual é a desvantagem de usar recursividade para resolver a soma de 1 a N, conforme discutido no contexto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "7",
+    "question": "Qual é a desvantagem de usar uma solução recursiva para calcular a sequência de Fibonacci em comparação com uma solução iterativa?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "8",
+    "question": "O que é recursividade indireta e como ela difere da recursividade direta?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "9",
+    "question": "Qual é o objetivo do quebra-cabeça das Torres de Hanói descrito no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "10",
+    "question": "Qual é a abordagem normalmente utilizada para resolver o problema de mover uma pilha de discos entre pinos, e por que é preferida?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "12",
+    "question": "Qual é o propósito do método 'moveTower' no contexto do problema das Torres de Hanói?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP9.pdf",
+    "page": "13",
+    "question": "Quais as componentes que compõem uma definição recursiva?"
+  }
+]

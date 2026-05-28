@@ -1,0 +1,242 @@
+[
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "2",
+    "question": "O que é um acervo (heap) no caso das minheaps?",
+    "answer": "Um acervo (heap) no caso das minheaps é uma árvore binária completa onde, para cada nó, o nó é menor ou igual ao filho esquerdo e ao filho direito."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "6",
+    "question": "Qual é o propósito do método 'addElement' na interface HeapADT?",
+    "answer": "O método 'addElement' adiciona o objeto especificado ao heap."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "7",
+    "question": "O que faz o método addElement na heap?",
+    "answer": "O método addElement adiciona um determinado elemento para o local apropriado na heap, mantendo a integridade da árvore. O local adequado é a próxima posição livre da esquerda no nível h ou a primeira posição no nível h+1 se o nível h estiver cheio."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "8",
+    "question": "O que deve ser feito após localizar a posição correta para o novo nó numa heap?",
+    "answer": "Após localizar a posição correta para o novo nó numa heap, deve-se comparar o valor do novo nó com o valor do pai e realizar a troca de valores caso seja necessário. Este processo continua subindo pela árvore até que o novo valor seja maior que o seu pai ou se torne a raiz da heap."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "12",
+    "question": "O que faz o método removeMin numa heap?",
+    "answer": "O método removeMin remove o elemento mínimo da heap, que está armazenado na raiz, substituindo-o pela última folha, que é o último elemento no nível h."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "14",
+    "question": "O que acontece após o elemento armazenado na última folha ser transferido para a raiz na heap?",
+    "answer": "A heap deve ser reordenada comparando o novo elemento de raiz com os seus filhos de valor menor (direito e esquerdo) e trocando-os com a raiz caso seja necessário. Este processo é repetido até que o elemento seja uma folha ou menor que ambos os seus filhos."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "16",
+    "question": "Quais são as duas regras de ordenação seguidas por uma fila de prioridade?",
+    "answer": "Os itens que têm maior prioridade saem primeiro e itens com a mesma prioridade usam um método primeiro a entrar primeiro a sair (first in first out) para determinar sua ordenação."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "18",
+    "question": "O que é armazenado no objecto PriorityQueueNode?",
+    "answer": "O objecto PriorityQueueNode armazena o elemento a ser colocado na fila, a prioridade do elemento e a ordem de chegada do elemento."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "19",
+    "question": "O que representa a classe PriorityQueueNode?",
+    "answer": "A classe PriorityQueueNode representa um nó numa fila de prioridade que contém um objeto comparável, uma ordem e um valor de prioridade."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "20",
+    "question": "O que o método getElement() retorna?",
+    "answer": "O método getElement() retorna o elemento contido dentro do nó."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "21",
+    "question": "O que o método getPriority() retorna?",
+    "answer": "O método getPriority() retorna o valor inteiro da prioridade deste nó."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "22",
+    "question": "O que retorna o método compareTo quando o nó atual tem maior prioridade do que o nó fornecido?",
+    "answer": "O método compareTo retorna 1 quando o nó atual tem maior prioridade do que o nó fornecido."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "23",
+    "question": "O que a classe PriorityQueue demonstra?",
+    "answer": "A classe PriorityQueue demonstra uma fila de prioridade utilizando um Heap."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "24",
+    "question": "O que faz o método 'addElement' na classe PriorityQueue?",
+    "answer": "O método 'addElement' adiciona um elemento à PriorityQueue com uma prioridade específica, criando um novo nó PriorityQueueNode com o elemento e a prioridade fornecidos, e em seguida chama o método 'addElement' da classe superior para adicionar o nó à fila."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "25",
+    "question": "O que é necessário para implementar um minheap com uma lista ligada?",
+    "answer": "É necessário estender a classe LinkedBinaryTree e criar uma classe HeapNode que estenda a classe BinaryTreeNode usada anteriormente, uma vez que cada nó precisa ter uma referência para o pai."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "26",
+    "question": "O que representa a classe HeapNode na página 26?",
+    "answer": "A classe HeapNode representa um nó de heap que estende a classe BinaryTreeNode e inclui um atributo adicional chamado 'parent' para referenciar o nó pai."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "28",
+    "question": "O que a classe LinkedHeap implementa?",
+    "answer": "A classe LinkedHeap implementa um heap."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "29",
+    "question": "O que acontece quando elementos iguais são adicionados ao heap?",
+    "answer": "Elementos iguais são adicionados à direita."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "30",
+    "question": "Quais são os dois métodos privados utilizados pela operação addElement na LinkedHeap?",
+    "answer": "Os dois métodos privados utilizados pela operação addElement na LinkedHeap são getNextParentAdd, que retorna uma referência para o nó que será o pai do novo nó, e heapifyAdd, que reordena a heap após a inserção."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "31",
+    "question": "Qual é a função do método 'getNextParentAdd' no código apresentado?",
+    "answer": "O método 'getNextParentAdd' retorna o nó que será o pai do novo nó a ser adicionado."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "32",
+    "question": "Qual é o propósito do método heapifyAdd na implementação apresentada?",
+    "answer": "O propósito do método heapifyAdd é reorganizar o heap após a adição de um novo nó."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "33",
+    "question": "Quais são as três tarefas realizadas pela operação removeMin na LinkedHeap?",
+    "answer": "Substituir o elemento armazenado na raiz pelo elemento armazenado na última folha, reordenar a heap, se necessário, e retornar o elemento raiz original."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "34",
+    "question": "O que acontece se o método removeMin() for chamado num heap vazio?",
+    "answer": "Se o método removeMin() for chamado num heap vazio, será lançada uma exceção do tipo EmptyCollectionException com a mensagem 'Empty Heap'."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "35",
+    "question": "O que acontece ao nó pai do 'lastNode' quando 'lastNode' é o filho esquerdo?",
+    "answer": "O nó pai do 'lastNode' tem o seu filho esquerdo definido como null."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "36",
+    "question": "Quais são os dois métodos privados utilizados pela operação removeMin?",
+    "answer": "Os dois métodos privados utilizados pela operação removeMin são getNewLastNode, que retorna uma referência para o novo último nó na heap, e heapifyRemove, que reordena a heap após a remoção."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "37",
+    "question": "Qual é a função do método getNewLastNode() no código apresentado?",
+    "answer": "O método getNewLastNode() retorna o nó que será o novo último nó após uma remoção."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "38",
+    "question": "O que acontece se os nós esquerdo e direito forem nulos no método heapifyRemove?",
+    "answer": "Se os nós esquerdo e direito forem nulos no método heapifyRemove, a variável 'next' será definida como null."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "39",
+    "question": "O que acontece no código quando 'left' e 'right' são ambos nulos?",
+    "answer": "Quando 'left' e 'right' são ambos nulos, a variável 'next' é atribuída a null."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "40",
+    "question": "Como se calcula a posição dos filhos e do pai de um nó numa heap implementada com arrays?",
+    "answer": "Para um nó na posição n do array, o filho esquerdo está na posição 2n + 1, o filho direito está na posição 2(n + 1) e o pai está na posição (n-1) / 2."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "41",
+    "question": "O que é a classe ArrayHeap?",
+    "answer": "A classe ArrayHeap fornece uma implementação de um minheap utilizando um array."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "42",
+    "question": "Quais são as três tarefas que a operação addElement deve realizar na implementação em array de uma heap?",
+    "answer": "Adicionar o novo nó, reordenar a heap e incrementar a contagem por um."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "43",
+    "question": "O que acontece quando o número de elementos no heap atinge o tamanho do array 'tree'?",
+    "answer": "Quando o número de elementos no heap atinge o tamanho do array 'tree', o método 'expandCapacity()' é chamado para expandir a capacidade do array."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "44",
+    "question": "Qual é o objetivo do método 'heapifyAdd' no código apresentado?",
+    "answer": "O objetivo do método 'heapifyAdd' é reorganizar o heap para manter a propriedade de ordenação após a adição de um nó."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "45",
+    "question": "Quais são as três tarefas realizadas pela operação removeMin em um ArrayHeap?",
+    "answer": "Substituir o elemento armazenado na raiz pelo elemento armazenado na última folha, reordenar a heap, se necessário, e retornar o elemento da raiz original."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "46",
+    "question": "O que acontece se o método removeMin() for chamado quando o heap está vazio?",
+    "answer": "Se o método removeMin() for chamado quando o heap está vazio, será lançada uma exceção do tipo EmptyCollectionException com a mensagem 'Empty Heap'."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "47",
+    "question": "Qual é o propósito do método heapifyRemove na implementação apresentada?",
+    "answer": "O propósito do método heapifyRemove é reorganizar o heap para manter a propriedade de ordenação."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "48",
+    "question": "O que acontece quando 'tree[left]' e 'tree[right]' são ambos nulos no código apresentado?",
+    "answer": "Quando 'tree[left]' e 'tree[right]' são ambos nulos, a variável 'next' é atribuída ao valor de 'count'."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "49",
+    "question": "Qual é a complexidade da operação addElement numa heap?",
+    "answer": "A complexidade da operação addElement numa heap é O (log n)."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "50",
+    "question": "Como se pode usar uma heap para ordenar uma lista de objectos?",
+    "answer": "Pode-se adicionar todos os objectos numa heap e depois removê-los um de cada vez em ordem crescente."
+  },
+  {
+    "filename": "Slides.ED.Aula11.pdf",
+    "page": "51",
+    "question": "Qual é a complexidade de tempo para construir uma heap com n nós utilizando inserções?",
+    "answer": "A complexidade de tempo para construir uma heap com n nós utilizando inserções é O(n log n)."
+  }
+]

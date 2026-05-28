@@ -1,0 +1,104 @@
+[
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "2",
+    "question": "O que é recursividade em programação?",
+    "answer": "A recursividade é uma técnica de programação em que um método se pode chamar a ele próprio para resolver um dado problema."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "6",
+    "question": "O que acontece se uma definição recursiva não tiver uma parte não-recursiva?",
+    "answer": "Se uma definição recursiva não tiver uma parte não-recursiva, ocorre uma recursão infinita, semelhante a um ciclo infinito."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "7",
+    "question": "O que é um método recursivo em Java?",
+    "answer": "Um método recursivo em Java é um método que pode chamar a si próprio, desde que seja definido dessa forma. O código de um método recursivo deve ser estruturado para lidar com o caso base e o caso recursivo, e cada chamada cria um novo ambiente de execução com novos parâmetros e novas variáveis locais."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "8",
+    "question": "Como pode ser definida recursivamente a soma de todos os números entre 1 e N?",
+    "answer": "A soma de 1 até N é N mais a soma de 1 até N-1."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "12",
+    "question": "Por que motivo normalmente não se utiliza a recursividade para resolver a soma de 1 a N?",
+    "answer": "Porque a versão iterativa é mais fácil de entender e existe uma fórmula que é superior tanto à versão recursiva como iterativa neste caso."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "13",
+    "question": "Qual é uma vantagem das soluções recursivas em relação às iterativas?",
+    "answer": "Para alguns problemas, as soluções recursivas são geralmente mais simples e elegantes do que as soluções iterativas."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "14",
+    "question": "O que é recursividade indirecta?",
+    "answer": "Recursividade indirecta ocorre quando um método invoca outro método, que chama outro, e assim sucessivamente, até que o método original é chamado novamente. Por exemplo, o método m1 pode invocar m2, que invoca m3, que chama m1 novamente."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "16",
+    "question": "Quantos pinos verticais compõem o quebra-cabeça das Torres de Hanói?",
+    "answer": "Três pinos verticais."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "17",
+    "question": "Quais são as regras para mover os discos de um pino para outro?",
+    "answer": "Apenas um disco pode ser movido num dado momento; um disco não pode ser colocado em cima de um disco menor; todos os discos devem estar em algum pino (excepto para o em trânsito)."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "20",
+    "question": "Qual é o caso base no problema das Torres de Hanói?",
+    "answer": "O caso base ocorre quando uma 'pilha' contém apenas um disco."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "21",
+    "question": "Como varia o número de movimentos à medida que aumenta o número de discos?",
+    "answer": "O número de movimentos aumenta exponencialmente à medida que aumenta o número de discos."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "22",
+    "question": "O que faz o método main na classe SolveTowers?",
+    "answer": "O método main na classe SolveTowers cria um puzzle TowersOfHanoi com 4 discos e resolve-o utilizando o método solve()."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "23",
+    "question": "Qual é o objetivo do método 'solve' na classe 'TowersOfHanoi'?",
+    "answer": "O objetivo do método 'solve' é realizar a chamada inicial ao método 'moveTower' para resolver o puzzle, movendo os discos da torre 1 para a torre 3 utilizando a torre 2."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "24",
+    "question": "Qual é o caso base no método 'moveTower'?",
+    "answer": "O caso base no método 'moveTower' é quando há apenas 1 disco para mover."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "25",
+    "question": "Qual é a função do método 'moveOneDisk' no código apresentado?",
+    "answer": "A função do método 'moveOneDisk' é imprimir instruções para mover um disco de uma torre inicial especificada para uma torre final especificada."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "27",
+    "question": "Como se determina a ordem de um ciclo ao analisar algoritmos recursivos?",
+    "answer": "A ordem do corpo do ciclo é determinada e multiplicada pelo número de vezes que o ciclo é executado."
+  },
+  {
+    "filename": "Slides.ED.Aula07.pdf",
+    "page": "28",
+    "question": "Qual é a complexidade do algoritmo para resolver o problema das Torres de Hanói?",
+    "answer": "O algoritmo tem uma complexidade exponencial, O(2^n)."
+  }
+]

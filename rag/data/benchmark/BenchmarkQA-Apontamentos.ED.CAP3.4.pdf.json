@@ -1,0 +1,72 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "3",
+    "question": "Por que a busca pela eficiência dos programas continua relevante apesar do aumento da velocidade dos computadores?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "4",
+    "question": "O que é um Tipo de Dados Abstrato (ADT) e como ele se diferencia de uma estrutura de dados?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "5",
+    "question": "Quais são os tipos de listas mencionados nas estruturas de dados lineares?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "6",
+    "question": "Quais são as estruturas de dados não lineares mencionadas no contexto e como elas diferem das estruturas lineares?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "7",
+    "question": "Quais são os dois tipos de grafos mencionados no texto e como se diferenciam?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "8",
+    "question": "Quais são as duas principais considerações de eficiência ao desenvolver algoritmos mencionadas no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "9",
+    "question": "Por que é importante considerar tanto o desempenho médio quanto o pior caso ao avaliar a eficiência de um programa?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "10",
+    "question": "O que é a função de crescimento em relação à complexidade de tempo de um algoritmo?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "11",
+    "question": "Qual é a vantagem de usar uma lista ligada em vez de um array para adicionar um elemento no início?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "12",
+    "question": "Qual é a complexidade assintótica aproximada do algoritmo discutido no contexto e qual termo da função de crescimento a determina?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "13",
+    "question": "Qual é a ordem de complexidade de tempo de execução para a função de crescimento f(n) = 20n-4?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "14",
+    "question": "Qual é a abordagem utilizada para analisar a eficiência de algoritmos segundo o contexto fornecido?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "15",
+    "question": "Qual é a eficiência Big-O do ciclo aninhado apresentado no exemplo?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP3.4.pdf",
+    "page": "16",
+    "question": "Porquê que a ordem de crescimento de uma função é pertinente para a análise de algoritmos?"
+  }
+]

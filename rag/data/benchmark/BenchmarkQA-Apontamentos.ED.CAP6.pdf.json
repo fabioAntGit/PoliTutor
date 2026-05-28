@@ -1,0 +1,57 @@
+[
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "3",
+    "question": "O que é uma pilha e como funciona a sua estrutura de dados?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "4",
+    "question": "Quais são algumas das aplicações das pilhas mencionadas no contexto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "5",
+    "question": "Quais são os axiomas mencionados para a Stack ADT e o que eles indicam sobre as operações da pilha?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "6",
+    "question": "O que acontece com os argumentos e valores de retorno na implementação orientada a objetos da Stack ADT?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "8",
+    "question": "Quais são as duas abordagens para implementar uma Stack ADT mencionadas no texto?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "9",
+    "question": "Como é determinado quando o array dinâmico da pilha deve ser expandido na implementação da Stack ADT?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "10",
+    "question": "Qual é a capacidade padrão do array na classe ArrayStack<T>?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "11",
+    "question": "O que é uma lista simplesmente ligada e como ela difere de uma lista duplamente ligada?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "12",
+    "question": "Como é implementada a operação push() em uma estrutura de dados de pilha ligada?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "13",
+    "question": "Qual é o propósito do método getNext() na classe LinearNode?"
+  },
+  {
+    "filename": "Apontamentos.ED.CAP6.pdf",
+    "page": "14",
+    "question": "Quais são as vantagens ou desvantagens de implementar uma LinkedStack usando uma lista duplamente ligada?"
+  }
+]

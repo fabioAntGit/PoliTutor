@@ -1,0 +1,26 @@
+fastapi
+uvicorn[standard]
+langchain-text-splitters
+langchain-huggingface
+unstructured
+python-dotenv
+chromadb
+sentence-transformers
+renumics-spotlight
+requests
+ranx
+# CUDA: pip install torch --index-url https://download.pytorch.org/whl/cu124
+torch
+numpy>=2.1.0
+pandas
+matplotlib
+accelerate
+einops
+transformers>=4.48.0
+nltk
+regex
+redis
+pymongo
+PyJWT
+pwdlib[argon2]
+python-multipart

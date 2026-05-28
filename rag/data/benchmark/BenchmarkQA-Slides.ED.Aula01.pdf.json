@@ -1,0 +1,248 @@
+[
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "2",
+    "question": "O que será estudado nesta aula?",
+    "answer": "Serão analisadas questões relativas à herança, interfaces, classes abstractas e Java generics."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "3",
+    "question": "Qual foi a desvantagem inicial dos arrays nas linguagens de programação?",
+    "answer": "A desvantagem inicial dos arrays era a obrigatoriedade das 'coisas' serem todas semelhantes (do mesmo tipo)."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "5",
+    "question": "O que foi introduzido no Java 1.2 relacionado com colecções?",
+    "answer": "No Java 1.2, foi introduzida uma plataforma para gerir colecções."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "6",
+    "question": "O que é a Java Collection Framework (JCF)?",
+    "answer": "A JCF é uma colecção de interfaces, classes concretas e abstractas que fornecem um conjunto standard de tipos de colecções (containers)."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "8",
+    "question": "O que é uma interface em programação?",
+    "answer": "As interfaces são declaradas com recurso à palavra reservada interface e podem conter apenas assinaturas de métodos e declarações de constantes."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "9",
+    "question": "Por que é impraticável implementar uma nova classe colecção para cada tipo específico de objecto?",
+    "answer": "Porque é impossível prever quais os tipos de objectos que um dia iremos querer armazenar no grande número de potenciais aplicações que poderão usar a nossa classe colecção."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "10",
+    "question": "Que tipo de objeto é adicionado à coleção 'myc' na classe 'ShapeApp'?",
+    "answer": "Um objeto do tipo 'Rectangle' é adicionado à coleção 'myc'."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "11",
+    "question": "Que tipo de operações podem ser realizadas pelos objectos na colecção?",
+    "answer": "Os comportamentos/operações pretendidos pela aplicação cliente que usar esta colecção terão de ser do tipo Object."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "12",
+    "question": "Qual é a solução apresentada para verificar se todos os objetos de uma coleção são do mesmo tipo?",
+    "answer": "A solução apresentada é utilizar uma classe genérica (Generic Class), que funciona como um template e pode ser concretizada para conter objetos de um tipo específico uma vez instanciada."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "13",
+    "question": "O que permite o Java desde a versão 5.0 em relação a classes?",
+    "answer": "O Java permite a definição de classes com tipos parametrizados desde a versão 5.0."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "14",
+    "question": "O que é necessário fazer antes de usar uma classe parametrizada num programa?",
+    "answer": "O tipo parametrizado na classe terá de ser especificado antes de ser usada num programa."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "15",
+    "question": "O que representa o 'T' na definição da classe 'Demo<T>'?",
+    "answer": "T é o tipo parametrizado."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "16",
+    "question": "O que é uma classe genérica ou classe parametrizada?",
+    "answer": "Uma classe que é definida à custa de um tipo parametrizado é denominada de classe genérica ou classe parametrizada."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "17",
+    "question": "O que é definido pela classe genérica Pair<T> apresentada no contexto?",
+    "answer": "A classe genérica Pair<T> define uma estrutura que pode armazenar dois objetos do mesmo tipo genérico T, com métodos para obter e definir os valores desses objetos."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "18",
+    "question": "O que o método 'equals' verifica na classe apresentada?",
+    "answer": "O método 'equals' verifica se o objeto passado como parâmetro é nulo, se pertence à mesma classe e se os atributos 'first' e 'second' do objeto atual são iguais aos do objeto passado como parâmetro."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "19",
+    "question": "O que acontece se o utilizador introduzir as palavras 'Happy' e 'Day' na ordem correta no programa apresentado?",
+    "answer": "Se o utilizador introduzir as palavras 'Happy' e 'Day' na ordem correta, o programa irá imprimir: 'You guesses the secret words' e 'in the correct order!'."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "21",
+    "question": "O que é necessário ao instanciar uma classe genérica?",
+    "answer": "Ao instanciar uma classe genérica, é necessário usar os '<>'."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "22",
+    "question": "Que tipo de dados pode ser usado como tipo parametrizado em Java?",
+    "answer": "O tipo usado como tipo parametrizado tem de ser uma referência e não pode ser um tipo primitivo como int, double ou char. No entanto, com o automatic boxing em Java, esta restrição não é significativa. Além disso, podem ser usados arrays."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "23",
+    "question": "O que permite o Automatic Boxing no contexto do código apresentado?",
+    "answer": "O Automatic Boxing permite-nos usar um argumento int para um parâmetro Integer."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "25",
+    "question": "O que permite a definição de uma classe genérica com múltiplos tipos parametrizados?",
+    "answer": "A definição de uma classe genérica pode ter qualquer número de tipos parametrizados, que são listados dentro de '<>' separados por vírgulas."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "26",
+    "question": "O que representa a classe 'TwoTypePair' no contexto apresentado?",
+    "answer": "A classe 'TwoTypePair' é uma classe genérica que permite armazenar e manipular dois objetos de tipos diferentes, definidos pelos parâmetros genéricos T1 e T2."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "27",
+    "question": "O que verifica o método equals na classe apresentada?",
+    "answer": "O método equals verifica se o objeto passado como parâmetro é nulo, se pertence à mesma classe e, caso positivo, compara se os atributos 'first' e 'second' do objeto atual são iguais aos do objeto passado, utilizando os métodos equals dos tipos T1 e T2, respetivamente."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "29",
+    "question": "O que é necessário para restringir os tipos possíveis que podem ser usados para o tipo parametrizado T?",
+    "answer": "É necessário definir a classe utilizando limites, como por exemplo 'public class DemoBounds<T extends Comparable>', para garantir que apenas as classes que implementam a interface Comparable sejam passadas pelo tipo T."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "30",
+    "question": "O que acontece se for passado um tipo para T que não implemente a interface Comparable?",
+    "answer": "Qualquer tentativa de passar um tipo para T que não implemente a interface Comparable irá resultar numa mensagem de erro do compilador."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "31",
+    "question": "O que pode ser usado como limite num tipo parametrizado?",
+    "answer": "Um limite num tipo pode ser o nome de uma classe (em vez de uma interface)."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "32",
+    "question": "O que o código da classe 'Pair' apresentado faz?",
+    "answer": "O código da classe 'Pair' define uma classe genérica parametrizada com um limite, onde o tipo genérico 'T' deve implementar a interface 'Comparable'. A classe possui dois atributos privados 'first' e 'second' do tipo 'T', e um método 'max' que retorna o maior dos dois valores com base na comparação entre eles."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "34",
+    "question": "O que acontece ao tipo parametrizado de um método genérico?",
+    "answer": "O tipo parametrizado de um método genérico é local a esse método e não à classe."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "35",
+    "question": "Como deve ser colocado o tipo parametrizado num método genérico?",
+    "answer": "O tipo parametrizado deve ser colocado entre '<>' depois de todos os modificadores e antes do tipo de retorno."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "36",
+    "question": "Qual é a relação entre G<A> e G<B> quando G é uma classe genérica?",
+    "answer": "Não existe nenhum relacionamento entre G<A> e G<B>, independentemente do relacionamento entre as classes A e B."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "37",
+    "question": "O que verifica o método equals na classe UnorderedPair?",
+    "answer": "O método equals na classe UnorderedPair verifica se o objeto passado como argumento é igual ao par não ordenado atual, considerando que a ordem dos elementos não importa. Ele retorna true se ambos os elementos forem iguais, independentemente da ordem, e false caso contrário."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "38",
+    "question": "O que o programa UnorderedPairDemo demonstra ao ser executado?",
+    "answer": "O programa UnorderedPairDemo demonstra que o par 'peanuts' e 'beer' é considerado igual ao par 'beer' e 'peanuts', exibindo a mensagem: 'peanuts and beer is the same as beer and peanuts'."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "39",
+    "question": "Qual é o propósito do método 'printCollection' apresentado no contexto?",
+    "answer": "O propósito do método 'printCollection' é imprimir todos os elementos de uma colecção."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "40",
+    "question": "Por que a tentativa de usar 'printCollection(stones)' não compila na 1ª tentativa com o uso de generics?",
+    "answer": "A tentativa de usar 'printCollection(stones)' não compila porque o método 'printCollection' está definido para aceitar 'Collection<Object>', mas 'stones' não é necessariamente uma coleção de objetos do tipo 'Object', o que causa incompatibilidade."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "41",
+    "question": "Que tipo abrange todos os tipos de colecções?",
+    "answer": "O tipo que abrange todos os tipos de colecções é 'Colecção de tipo desconhecido', onde o tipo dos elementos pode ser qualquer um, representado pelo wildcard."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "42",
+    "question": "Por que ocorre um erro de compilação ao tentar adicionar elementos à lista 'c' declarada como 'List<?> c = new ArrayList<String>();'?",
+    "answer": "O erro de compilação ocorre porque a lista 'c' é declarada com um tipo curinga não limitado ('List<?>'), o que significa que não é possível garantir a segurança de tipo ao adicionar elementos à lista. Como resultado, o compilador impede a adição de qualquer elemento à lista para evitar possíveis inconsistências de tipo."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "43",
+    "question": "O que pretende fazer a aplicação de desenho mencionada no contexto?",
+    "answer": "Pretende desenhar formas como círculos e retângulos."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "46",
+    "question": "O que significa '? extends E' em Java?",
+    "answer": "'? extends E' significa qualquer coisa que seja subclasse de E (incluindo E)."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "47",
+    "question": "O que acontece quando se pretende adicionar o sexto objeto a um ArrayList que já está cheio?",
+    "answer": "O ArrayList verifica que está cheio e redimensiona-se automaticamente para acomodar o novo objeto."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "48",
+    "question": "O que acontece quando a capacidade de um array é excedida?",
+    "answer": "É alocado um novo array com capacidade de 10 (o dobro do anterior com capacidade de 5), todos os itens do array antigo são copiados para o novo, o novo item a ser adicionado é acrescentado ao novo array e a referência interna para a colecção é alterada do antigo array para o novo array, sendo o anterior eliminado pelo garbage collector."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "49",
+    "question": "O que acontece quando o ArrayList enche a sua capacidade inicial de 10 localizações e é introduzido um novo elemento?",
+    "answer": "Um novo array de 20 posições é criado para acomodar os elementos."
+  },
+  {
+    "filename": "Slides.ED.Aula01.pdf",
+    "page": "50",
+    "question": "Que estrutura de dados o ArrayList utiliza?",
+    "answer": "O ArrayList utiliza um array como estrutura de dados."
+  }
+]

@@ -1,0 +1,278 @@
+[
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "2",
+    "question": "O que define uma árvore como uma estrutura não-linear?",
+    "answer": "Uma árvore é definida pelo conceito de que cada nó da árvore, com excepção do primeiro nó ou nó raiz, tem exactamente um pai."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "3",
+    "question": "O que é um nó numa árvore?",
+    "answer": "Um nó refere-se a um local na árvore onde um elemento está armazenado."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "4",
+    "question": "O que é um nó interno numa árvore?",
+    "answer": "Um nó interno é um nó que não é a raiz e tem pelo menos um filho."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "6",
+    "question": "O que é uma árvore n-ária?",
+    "answer": "Uma árvore que limita cada nó para não mais do que n filhos é chamada de árvore n-ária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "7",
+    "question": "O que determina o nível de um nó numa árvore?",
+    "answer": "O nível de um nó é determinado pelo comprimento do caminho desde a raiz até o nó, ou seja, pelo número de links que devem ser seguidos para alcançar o nó a partir da raiz."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "8",
+    "question": "Qual é a altura ou ordem da árvore apresentada no slide seguinte?",
+    "answer": "A altura ou ordem da árvore no slide seguinte é 3."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "10",
+    "question": "O que significa uma árvore ser considerada equilibrada?",
+    "answer": "Uma árvore é considerada equilibrada quando todas as folhas da árvore estão aproximadamente na mesma profundidade. Alguns algoritmos definem equilibrado quando todas as folhas estão no nível h ou h-1, onde h é a altura da árvore e onde logNn h = é uma árvore n-ária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "12",
+    "question": "O que significa uma árvore ser considerada completa?",
+    "answer": "Uma árvore é considerada completa se estiver balanceada e se todas as folhas no nível h estiverem no lado esquerdo da árvore."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "14",
+    "question": "Qual é a implementação mais óbvia de uma árvore?",
+    "answer": "A implementação mais óbvia da árvore é uma estrutura ligada."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "15",
+    "question": "O que cada nó deve conter em uma estrutura de dados?",
+    "answer": "Cada nó deve conter uma referência para o elemento a ser armazenado no nó, assim como as referências para cada um dos possíveis filhos desse nó. Dependendo da aplicação, pode também ser útil armazenar uma referência em cada nó para o seu pai."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "16",
+    "question": "Como podem ser armazenadas árvores binárias utilizando um array?",
+    "answer": "Árvores binárias podem ser armazenadas utilizando um array onde, para qualquer elemento na posição n do array, o filho esquerdo é armazenado na posição ((2 * n) + 1) e o filho direito na posição (2 * (n + 1))."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "17",
+    "question": "Quais são os inconvenientes de armazenar uma árvore num array se esta não estiver completa ou relativamente completa?",
+    "answer": "Se a árvore não estiver completa ou relativamente completa, poderá haver um grande desperdício de memória alocada no array para posições da árvore livres que não contêm dados."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "19",
+    "question": "Como é modelada a segunda possibilidade para a implementação em array das árvores?",
+    "answer": "A segunda possibilidade para a implementação em array das árvores é modelada segundo a forma de gestão de memória dos Sistemas Operativos, onde as posições do array são alocadas de forma contígua, seguindo o princípio de 'primeiro a chegar, primeiro a ser servido'."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "20",
+    "question": "Qual é a vantagem de armazenar o índice do array de cada filho em vez das variáveis da referência do objecto?",
+    "answer": "A vantagem é que os elementos podem ser armazenados de forma contígua no array, evitando o desperdício de espaço."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "22",
+    "question": "O que caracteriza uma árvore binária completa com altura h?",
+    "answer": "Uma árvore binária completa com altura h é uma em que todos os nós do nível 1 ao h-2 têm dois filhos e todos os filhos dos nós no nível h-1 são contíguos e à esquerda da árvore."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "23",
+    "question": "Qual é a altura de uma árvore binária cheia com n nós?",
+    "answer": "A altura de uma árvore binária cheia com n nós é log2n."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "27",
+    "question": "O que é a travessia pré-ordem e qual seria o percurso pré-ordem para a árvore binária completa apresentada no slide seguinte?",
+    "answer": "A travessia pré-ordem é realizada visitando cada nó, começando pela raiz e de seguida pelos seus filhos. O percurso pré-ordem para a árvore binária completa apresentada no slide seguinte seria: A B D E C."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "29",
+    "question": "O que é a travessia em-ordem e qual é a ordem resultante para a árvore apresentada?",
+    "answer": "A travessia em-ordem é realizada ao visitar o filho esquerdo do nó, o nó, então todos os nós do filho restantes a partir da raiz. A ordem resultante para a árvore apresentada é: D B E A C."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "32",
+    "question": "Qual é o objetivo do algoritmo de travessia nível-ordem descrito em pseudocódigo?",
+    "answer": "O objetivo do algoritmo de travessia nível-ordem é percorrer uma árvore binária em ordem de nível, utilizando uma fila para armazenar os nós e uma lista desordenada para guardar os resultados."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "33",
+    "question": "O que é a travessia nível-ordem?",
+    "answer": "A travessia nível-ordem é realizada, visitando todos os nós em cada nível, um nível de cada vez, começando pela raiz."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "35",
+    "question": "Qual é a ordem de visitação dos nós na travessia inorder?",
+    "answer": "A ordem de visitação dos nós na travessia inorder é DBEAFCG."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "36",
+    "question": "Que tipo de árvore está a ser implementada no exemplo dado?",
+    "answer": "Uma árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "37",
+    "question": "É possível definir uma operação para adicionar um elemento à árvore com base no contexto atual?",
+    "answer": "Não, não é possível definir uma operação para adicionar um elemento à árvore até sabermos mais sobre como a árvore irá ser usada."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "38",
+    "question": "Qual operação de uma árvore binária retorna uma referência à raiz da árvore?",
+    "answer": "A operação 'getRoot' retorna uma referência à raiz da árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "40",
+    "question": "O que o método 'getRoot' da interface 'BinaryTreeADT' retorna?",
+    "answer": "O método 'getRoot' retorna uma referência ao elemento raiz da árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "41",
+    "question": "O que o método 'contains' verifica numa árvore binária?",
+    "answer": "O método 'contains' verifica se a árvore binária contém um elemento que corresponde ao elemento especificado, retornando 'true' se o elemento for encontrado e 'false' caso contrário."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "42",
+    "question": "Que tipo de travessia é realizada pelo método iteratorInOrder() nesta árvore binária?",
+    "answer": "O método iteratorInOrder() realiza uma travessia inorder nesta árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "43",
+    "question": "Que tipo de travessia utiliza uma fila para percorrer a árvore binária?",
+    "answer": "A travessia levelorder utiliza uma fila para percorrer a árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "44",
+    "question": "O que a implementação de uma árvore binária com listas ligadas deve acompanhar?",
+    "answer": "Deve acompanhar o nó que é a raiz da árvore e a contagem de elementos na árvore."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "46",
+    "question": "O que a classe LinkedBinaryTree implementa?",
+    "answer": "A classe LinkedBinaryTree implementa a interface BinaryTreeADT."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "47",
+    "question": "Como é criado um árvore binária vazia na classe LinkedBinaryTree?",
+    "answer": "Uma árvore binária vazia é criada utilizando o construtor LinkedBinaryTree(), que inicializa o atributo 'count' com 0 e o atributo 'root' com null."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "48",
+    "question": "O que representa a classe BinaryTreeNode?",
+    "answer": "A classe BinaryTreeNode representa cada nó na árvore binária, contendo uma referência ao elemento armazenado no nó e referências para cada um dos seus filhos."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "49",
+    "question": "O que representa a classe BinaryTreeNode no contexto apresentado?",
+    "answer": "A classe BinaryTreeNode representa um nó numa árvore binária com um filho à esquerda e um filho à direita."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "50",
+    "question": "O que o método 'numChildren' retorna?",
+    "answer": "O método 'numChildren' retorna o número inteiro de filhos não nulos deste nó."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "51",
+    "question": "Qual é o propósito do método findagain no contexto do método find?",
+    "answer": "O método findagain é usado para suportar o método público find, permitindo uma maior distinção entre a invocação do método original e as chamadas recursivas subsequentes."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "52",
+    "question": "O que acontece se o elemento alvo especificado não for encontrado na árvore binária?",
+    "answer": "Se o elemento alvo especificado não for encontrado na árvore binária, será lançada uma exceção do tipo ElementNotFoundException com a mensagem 'binary tree'."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "53",
+    "question": "Qual é o propósito do método findAgain na árvore binária?",
+    "answer": "O método findAgain retorna uma referência ao elemento alvo especificado, caso este seja encontrado na árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "54",
+    "question": "Qual é o propósito do método iteratorInOrder?",
+    "answer": "O método iteratorInOrder utiliza um método privado para a travessia em-ordem, suportando a recursividade."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "55",
+    "question": "O que o método iteratorInOrder() realiza nesta árvore binária?",
+    "answer": "O método iteratorInOrder() realiza uma travessia em ordem nesta árvore binária, chamando um método recursivo sobrecarregado que começa na raiz e retorna um iterador em ordem sobre a árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "56",
+    "question": "Qual é o propósito do método 'inorder' apresentado no contexto?",
+    "answer": "O método 'inorder' realiza uma travessia recursiva em ordem numa árvore binária, adicionando os elementos dos nós a uma lista temporária na ordem correta."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "57",
+    "question": "O que é necessário para implementar uma árvore binária em array?",
+    "answer": "É necessário manter o controlo do array que contém a árvore, assim como a contagem dos elementos na árvore."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "59",
+    "question": "Qual é a capacidade inicial do array utilizado na classe ArrayBinaryTree?",
+    "answer": "A capacidade inicial do array é 50."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "60",
+    "question": "O que acontece se o elemento alvo especificado não for encontrado na árvore binária?",
+    "answer": "Se o elemento alvo especificado não for encontrado na árvore binária, é lançada uma exceção do tipo ElementNotFoundException com a mensagem 'binary tree'."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "61",
+    "question": "Qual é o método privado utilizado pelo método iteratorInOrder na implementação da árvore com listas ligadas?",
+    "answer": "O método iteratorInOrder utiliza o método privado inorder para suportar a recursividade."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "62",
+    "question": "Qual é o propósito do método iteratorInOrder() na árvore binária?",
+    "answer": "O método iteratorInOrder() realiza uma travessia inorder na árvore binária, chamando um método recursivo sobrecarregado que começa na raiz, e retorna um iterador sobre a árvore binária."
+  },
+  {
+    "filename": "Slides.ED.Aula09.pdf",
+    "page": "63",
+    "question": "O que faz o método 'inorder' apresentado no contexto?",
+    "answer": "O método 'inorder' realiza uma travessia recursiva em ordem (inorder traversal) de uma árvore binária, adicionando os elementos visitados a uma lista temporária (templist)."
+  }
+]
