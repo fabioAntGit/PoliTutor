@@ -17,14 +17,14 @@ class AppError(Exception):
         super().__init__(self.message)
 
 
-class ProjectNotFoundError(AppError):
+class CourseNotFoundError(AppError):
     status_code = 404
-    code = "project_not_found"
-    message = "Projeto nao encontrado"
+    code = "course_not_found"
+    message = "Cadeira nao encontrada"
 
-    def __init__(self, project_id: str) -> None:
-        self.project_id = project_id
-        super().__init__(details={"project_id": project_id})
+    def __init__(self, course_code: str) -> None:
+        self.course_code = course_code
+        super().__init__(details={"course_code": course_code})
 
 
 class ChatNotFoundError(AppError):
@@ -50,6 +50,33 @@ class AccessDeniedError(AppError):
     status_code = 403
     code = "access_denied"
     message = "Acesso negado a este recurso"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
+class AuthError(AppError):
+    status_code = 401
+    code = "auth_error"
+    message = "Credenciais invalidas"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
+class UserNotFoundError(AppError):
+    status_code = 404
+    code = "user_not_found"
+    message = "Utilizador nao encontrado"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
+class MemoryNotFoundError(AppError):
+    status_code = 404
+    code = "memory_not_found"
+    message = "Memory not found"
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(message=message)

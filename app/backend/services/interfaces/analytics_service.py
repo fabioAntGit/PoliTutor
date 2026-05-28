@@ -12,15 +12,19 @@ from app.backend.schemas.analytics.response import (
 
 class IAnalyticsService(ABC):
     @abstractmethod
-    async def get_overview(self) -> OverviewRead:
+    async def get_overview(self, course_filter: list[str] | None = None) -> OverviewRead:
         ...
 
     @abstractmethod
-    async def get_activity(self, range_param: Literal["7d", "30d", "90d"]) -> ActivityRead:
+    async def get_activity(
+        self,
+        range_param: Literal["7d", "30d", "90d"],
+        course_filter: list[str] | None = None,
+    ) -> ActivityRead:
         ...
 
     @abstractmethod
-    async def get_courses(self) -> CoursesRead:  # returns list of course names
+    async def get_courses(self, course_filter: list[str] | None = None) -> CoursesRead:
         ...
 
     @abstractmethod

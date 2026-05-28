@@ -2,7 +2,9 @@ import redis.asyncio as redis
 from app.backend.core.config import REDIS_TTL
 from app.backend.schemas.message.models import Message
 
-class RedisRepository:
+from app.backend.repositories.interfaces.redis_repository import IRedisRepository
+
+class RedisRepository(IRedisRepository):
     def __init__(self, client: redis.Redis) -> None:
         self.client = client
         self.ttl = REDIS_TTL
@@ -64,3 +66,11 @@ class RedisRepository:
         summary = await self.get_summary(session_id)
         messages = await self.get_messages(session_id)
         return summary, messages
+
+    async def add_token_to_blacklist(self, token: str, expire_in_seconds: int) -> None:
+        key = f"blacklist:{token}"
+        await self.client.set(key, "revoked", ex=expire_in_seconds)
+
+    async def is_token_blacklisted(self, token: str) -> bool:
+        key = f"blacklist:{token}"
+        return await self.client.exists(key) > 0

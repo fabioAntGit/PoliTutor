@@ -31,11 +31,11 @@ def get_client() -> ClientAPI:
 
     if _chroma_client is None:
         _chroma_client = chromadb.CloudClient(
-            api_key=os.getenv("CHROMA_API_KEY"),
-            tenant=os.getenv("CHROMA_TENANT"),
-            database=os.getenv("CHROMA_DATABASE"),
+            api_key=os.environ["CHROMA_API_KEY"],
+            tenant=os.environ["CHROMA_TENANT"],
+            database=os.environ["CHROMA_DATABASE"],
         )
-        logger.info("Connected to ChromaDB Cloud | Database: %s", os.getenv("CHROMA_DATABASE"))
+        logger.info("Connected to ChromaDB Cloud | Database: %s", os.environ["CHROMA_DATABASE"])
 
     return _chroma_client
 

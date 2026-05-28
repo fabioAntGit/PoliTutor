@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends
 
 from app.backend.schemas.message.request import MessageSend
-from app.backend.schemas.auth import IAEduAuthHeaders
 from app.backend.schemas.message.response import MessageResponse
 from app.backend.services.interfaces.message_service import IMessageService
-from app.backend.api.deps import get_message_service
+from app.backend.api.deps import get_message_service, require_role
+from app.backend.schemas.user.enums import UserRole
 
 router = APIRouter()
 
@@ -13,13 +13,11 @@ router = APIRouter()
 async def send_message(
     conversation_id: str,
     body: MessageSend,
-    headers: IAEduAuthHeaders = Header(...),
+    payload: dict = Depends(require_role(UserRole.STUDENT)),
     service: IMessageService = Depends(get_message_service)
 ):
     return await service.send_message(
         conversation_id=conversation_id,
         question=body.question,
-        iaedu_api_key=headers.x_iaedu_api_key,
-        iaedu_endpoint=headers.x_iaedu_endpoint,
-        iaedu_channel_id=headers.x_iaedu_channel_id
+        user_id=payload["id"],
     )

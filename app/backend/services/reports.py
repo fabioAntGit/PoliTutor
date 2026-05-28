@@ -8,11 +8,11 @@ from app.backend.repositories.interfaces.chat_repository import IChatRepository
 class ReportService(IReportService):
     def __init__(
         self, 
-        repository: IReportRepository,
+        report_repository: IReportRepository,
         message_repository: IMessageRepository,
         chat_repository: IChatRepository
     ) -> None:
-        self.repository = repository
+        self.report_repository = report_repository
         self.message_repository = message_repository
         self.chat_repository = chat_repository
 
@@ -40,7 +40,7 @@ class ReportService(IReportService):
         if not next_msg or next_msg.role != "assistant":
             raise ReportError(message="Esta mensagem ainda nao tem uma resposta do assistente")
 
-        if await self.repository.exists_by_message_id(message_id):
+        if await self.report_repository.exists_by_message_id(message_id):
             return True 
 
         report = Report(
@@ -50,7 +50,7 @@ class ReportService(IReportService):
             assistant_content=next_msg.content
         )
 
-        success = await self.repository.create(report)
+        success = await self.report_repository.create(report)
         if success:
             await self.message_repository.update_report_status(message_id, True)
             
@@ -69,7 +69,7 @@ class ReportService(IReportService):
         if not chat or chat.user_id != requester_user_id:
             raise AccessDeniedError("Nao tens permissao para remover reports deste chat.")
 
-        deleted = await self.repository.delete_by_message_id(message_id)
+        deleted = await self.report_repository.delete_by_message_id(message_id)
         
         await self.message_repository.update_report_status(message_id, False)
         

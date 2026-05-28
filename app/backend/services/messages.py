@@ -1,6 +1,5 @@
 import asyncio
 
-from rag.src.shared.models import IaEduCredentials
 from rag.src.runtime.retrieval import ask
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
@@ -32,16 +31,14 @@ class MessageService(IMessageService):
         self,
         conversation_id: str,
         question: str,
-        iaedu_endpoint: str,
-        iaedu_api_key: str,
-        iaedu_channel_id: str
+        user_id: str,
     ) -> MessageResponse:
         conversation = await self.chat_repository.get_chat(conversation_id)
 
         if conversation is None:
             raise ChatNotFoundError(conversation_id)
 
-        if conversation.user_id != iaedu_channel_id:
+        if conversation.user_id != user_id:
             raise AccessDeniedError("Nao tens permissao para enviar mensagens para este chat.")
 
         summary, history = await self.context_service.get_or_load_context(conversation_id)
@@ -51,26 +48,19 @@ class MessageService(IMessageService):
             conversation.user_id, conversation.course
         )
 
-        user_msg = Message(conversation_id=conversation_id, role="user", content=question)
-
-        user_msg.id = await self.message_repository.create(user_msg)
-        await self.redis_repository.add_message(user_msg)
-
-        iaedu_creds = IaEduCredentials(
-            url=iaedu_endpoint,
-            channel_id=iaedu_channel_id,
-            api_key=iaedu_api_key
-        )
-
         response = await asyncio.to_thread(
             ask,
             conversation.course,
             question,
             summary,
             history,
-            iaedu_creds,
+            None,
             memory_context or "",
         )
+
+        user_msg = Message(conversation_id=conversation_id, role="user", content=question)
+        user_msg.id = await self.message_repository.create(user_msg)
+        await self.redis_repository.add_message(user_msg)
 
         assistant_msg = Message(
             conversation_id=conversation_id,
@@ -81,6 +71,8 @@ class MessageService(IMessageService):
 
         assistant_msg.id = await self.message_repository.create(assistant_msg)
         await self.redis_repository.add_message(assistant_msg)
+
+        await self.chat_repository.touch(conversation_id)
 
         await self.context_service.check_and_trigger_summary(
             conversation_id, conversation.user_id, conversation.course

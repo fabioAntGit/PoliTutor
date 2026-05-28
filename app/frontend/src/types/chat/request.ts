@@ -1,3 +1,3 @@
 export interface ChatCreate {
-  project_id: string;
+  course_code: string;
 }

@@ -74,7 +74,7 @@ class ContextService(IContextService):
                     await self.redis_repository.set_summary(conversation_id, new_summary)
                     logger.info("Summary updated for conversation %s", conversation_id)
 
-                    # Fire memory extraction in background — does not block the response
+                    # Fire memory extraction in background - does not block the response
                     asyncio.create_task(
                         self.user_memory_service.extract_and_upsert(user_id, course, new_summary)
                     )

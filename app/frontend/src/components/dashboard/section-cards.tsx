@@ -30,22 +30,22 @@ export function SectionCards({ data, variant = "global" }: SectionCardsProps) {
     {
       label: "Alunos Ativos",
       value: data ? fmt(data.active_students) : null,
-      sub: isCourse ? "Alunos que interagiram neste curso" : "Alunos com pelo menos uma conversa",
+      sub: isCourse ? "Alunos que interagiram nesta cadeira" : "Alunos com pelo menos uma conversa",
     },
     {
       label: "Total de Conversas",
       value: data ? fmt(data.total_conversations) : null,
-      sub: isCourse ? "Conversas iniciadas neste curso" : "Em todos os projetos ativos",
+      sub: isCourse ? "Conversas iniciadas nesta cadeira" : "Em todos os projetos ativos",
     },
     {
       label: "Total de Mensagens",
       value: data ? fmt(data.total_messages) : null,
-      sub: isCourse ? "Perguntas colocadas neste curso" : "Perguntas colocadas pelos alunos",
+      sub: isCourse ? "Perguntas colocadas nesta cadeira" : "Perguntas colocadas pelos alunos",
     },
     {
       label: "Média de Perguntas / Conversa",
       value: data ? fmtDec(data.avg_questions_per_conversation) : null,
-      sub: isCourse ? "Média de perguntas por conversa neste curso" : "Média geral de perguntas por conversa",
+      sub: isCourse ? "Média de perguntas por conversa nesta cadeira" : "Média geral de perguntas por conversa",
     },
   ]
 
