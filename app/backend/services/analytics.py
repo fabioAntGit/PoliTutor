@@ -47,16 +47,20 @@ class AnalyticsService(IAnalyticsService):
     def __init__(self, analytics_repository: IAnalyticsRepository) -> None:
         self.repo = analytics_repository
 
-    async def get_activity(self, range_param: Literal["7d", "30d", "90d"]) -> ActivityRead:
+    async def get_activity(
+        self,
+        range_param: Literal["7d", "30d", "90d"],
+        course_filter: list[str] | None = None,
+    ) -> ActivityRead:
         days = _DAYS_MAP[range_param]
-        raw = await self.repo.get_activity(days)
+        raw = await self.repo.get_activity(days, course_filter=course_filter)
         return _fill_activity_dates(raw, days)
 
-    async def get_overview(self) -> OverviewRead:
-        total_conversations = await self.repo.get_total_conversations()
-        active_students = await self.repo.get_active_students()
-        total_messages = await self.repo.get_total_messages()
-        avg_questions = await self.repo.get_avg_questions_per_conversation()
+    async def get_overview(self, course_filter: list[str] | None = None) -> OverviewRead:
+        total_conversations = await self.repo.get_total_conversations(course_filter=course_filter)
+        active_students = await self.repo.get_active_students(course_filter=course_filter)
+        total_messages = await self.repo.get_total_messages(course_filter=course_filter)
+        avg_questions = await self.repo.get_avg_questions_per_conversation(course_filter=course_filter)
 
         return OverviewRead(
             total_conversations=total_conversations,
@@ -65,8 +69,8 @@ class AnalyticsService(IAnalyticsService):
             avg_questions_per_conversation=avg_questions,
         )
 
-    async def get_courses(self) -> CoursesRead:
-        return CoursesRead(data=await self.repo.get_courses())
+    async def get_courses(self, course_filter: list[str] | None = None) -> CoursesRead:
+        return CoursesRead(data=await self.repo.get_courses(course_filter=course_filter))
 
     async def get_course_overview(self, course: str) -> CourseOverviewRead:
         data = await self.repo.get_course_overview(course)

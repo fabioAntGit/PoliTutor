@@ -3,3 +3,9 @@ export interface CourseCreateRequest {
   name: string;
   description: string;
 }
+
+export interface CourseUpdateRequest {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+}

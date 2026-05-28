@@ -20,13 +20,6 @@ class ChatRepository(IChatRepository):
             return None
         return Chat.model_validate(document)
 
-    async def get_chat_by_project_and_user(self, project_id: str, user_id: str) -> Chat | None:
-        document = await self.collection.find_one({"project_id": project_id, "user_id": user_id})
-
-        if document is None:
-            return None
-        return Chat.model_validate(document)
-
     async def get_chats(self, user_id: str) -> list[Chat]:
         query = self.collection.find({"user_id": user_id})
         documents = await query.to_list(length=None)
@@ -58,3 +51,9 @@ class ChatRepository(IChatRepository):
         )
         res = document.get("last_summarized_message_id") if document else None
         return str(res) if res else None
+
+    async def touch(self, conversation_id: str) -> None:
+        await self.collection.update_one(
+            {"_id": ObjectId(conversation_id)},
+            {"$set": {"updated_at": datetime.now(timezone.utc)}},
+        )

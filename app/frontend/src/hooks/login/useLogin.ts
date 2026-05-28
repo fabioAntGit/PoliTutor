@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormValues } from "@/schemas/login";
 import { login } from "@/api/auth";
 import { authService } from "@/services/auth.service";
+import { landingForRole } from "@/lib/landing";
 
 export function useLogin() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export function useLogin() {
     try {
       const tokens = await login(data.username, data.password);
       authService.setTokens(tokens.access_token);
-      navigate("/", { replace: true });
+      navigate(landingForRole(authService.getRole()), { replace: true });
     } catch (err) {
       let message = "Erro ao autenticar. Tenta novamente.";
       if (axios.isAxiosError(err)) {

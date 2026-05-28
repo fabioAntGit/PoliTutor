@@ -48,6 +48,19 @@ export const authService = {
     return (this.getPayload()?.role as string) ?? null;
   },
 
+  getFullName(): string | null {
+    return (this.getPayload()?.full_name as string) ?? null;
+  },
+
+  getUsername(): string | null {
+    return (this.getPayload()?.username as string) ?? null;
+  },
+
+  getCourses(): string[] {
+    const raw = this.getPayload()?.courses;
+    return Array.isArray(raw) ? (raw as string[]) : [];
+  },
+
   mustChangePassword(): boolean {
     return Boolean(this.getPayload()?.must_change_password);
   },

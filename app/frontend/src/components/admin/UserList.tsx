@@ -6,12 +6,6 @@ import { useUsers } from "@/hooks/admin/useUsers";
 import EditUserDialog from "@/components/admin/EditUserDialog";
 import type { UserResponse } from "@/types/user";
 
-const ROLE_LABELS: Record<string, string> = {
-  student: "Estudante",
-  teacher: "Professor",
-  admin: "Admin",
-};
-
 export default function UserList() {
   const { users, courses, loading, query, setQuery, refresh } = useUsers();
   const [editing, setEditing] = useState<UserResponse | null>(null);
@@ -47,13 +41,8 @@ export default function UserList() {
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium truncate">{user.full_name}</p>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider">
-                    {ROLE_LABELS[user.role] ?? user.role}
+                    {user.role}
                   </span>
-                  {!user.is_active && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium uppercase tracking-wider">
-                      Inativo
-                    </span>
-                  )}
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 {user.courses.length > 0 && (

@@ -6,15 +6,21 @@ from app.backend.core.config import MONGO_DB, MONGO_URI, REDIS_HOST, REDIS_PORT
 
 _client: AsyncMongoClient | None = None
 _db: AsyncDatabase | None = None
+_db_deprecated: AsyncDatabase | None = None
 _redis: redis.Redis | None = None
+
+DEPRECATED_RETENTION_SECONDS = 30 * 24 * 60 * 60  # 30 dias
+DEPRECATED_COLLECTIONS = ("users", "chats", "messages", "user_memory", "reports")
 
 
 async def connect_to_mongo() -> None:
-    global _client, _db
+    global _client, _db, _db_deprecated
     _client = AsyncMongoClient(MONGO_URI, tlsAllowInvalidCertificates=True)
     await _client.admin.command("ping")
     _db = _client[MONGO_DB]
+    _db_deprecated = _client[f"{MONGO_DB}_deprecated"]
     await _ensure_indexes(_db)
+    await _ensure_deprecated_indexes(_db_deprecated)
 
 async def _ensure_indexes(db: AsyncDatabase) -> None:
     await db["chats"].create_index("user_id")
@@ -27,6 +33,13 @@ async def _ensure_indexes(db: AsyncDatabase) -> None:
     await db["user_memory"].create_index([("user_id", 1), ("course", 1)])
     await db["user_memory"].create_index([("user_id", 1), ("course", 1), ("type", 1), ("topic", 1)], unique=True)
 
+async def _ensure_deprecated_indexes(db: AsyncDatabase) -> None:
+    for name in DEPRECATED_COLLECTIONS:
+        await db[name].create_index(
+            "deleted_at",
+            expireAfterSeconds=DEPRECATED_RETENTION_SECONDS,
+        )
+
 async def connect_to_redis() -> None:
     global _redis
     _redis = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
@@ -37,6 +50,12 @@ def get_db() -> AsyncDatabase:
     if _db is None:
         raise RuntimeError("MongoDB not initialized")
     return _db
+
+
+def get_deprecated_db() -> AsyncDatabase:
+    if _db_deprecated is None:
+        raise RuntimeError("MongoDB deprecated database not initialized")
+    return _db_deprecated
 
 
 def get_redis() -> redis.Redis:

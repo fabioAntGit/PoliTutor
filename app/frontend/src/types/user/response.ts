@@ -6,6 +6,5 @@ export interface UserResponse {
   full_name: string;
   role: UserRole;
   courses: string[];
-  is_active: boolean;
   must_change_password: boolean;
 }

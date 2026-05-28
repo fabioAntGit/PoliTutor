@@ -13,5 +13,4 @@ export interface UserUpdateRequest {
   full_name?: string;
   role?: UserRole;
   courses?: string[];
-  is_active?: boolean;
 }

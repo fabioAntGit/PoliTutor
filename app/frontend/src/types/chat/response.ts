@@ -6,9 +6,15 @@ export interface ChatCreated {
 
 export interface ChatRead {
   conversation_id: string;
-  project_id: string;
-  project_name: string;
+  course_code: string;
+  course_name: string;
   user_id: string;
   summary?: string | null;
   messages: Message[];
+}
+
+export interface ChatListItem {
+  conversation_id: string;
+  course_name: string;
+  updated_at: string;
 }

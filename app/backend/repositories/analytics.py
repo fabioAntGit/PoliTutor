@@ -4,26 +4,59 @@ from pymongo.asynchronous.database import AsyncDatabase
 import re
 
 from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
-    
+
+
+def _course_match(course_filter: list[str] | None) -> dict:
+    if course_filter is None:
+        return {}
+    return {"course": {"$in": course_filter}}
+
+
 class AnalyticsRepository(IAnalyticsRepository):
     def __init__(self, db: AsyncDatabase) -> None:
         self.chats = db["chats"]
         self.messages = db["messages"]
 
-    async def get_total_conversations(self) -> int:
-        return await self.chats.count_documents({})
+    async def _scoped_conversation_ids(self, course_filter: list[str] | None) -> list[str] | None:
+        """Returns None when no filter; otherwise list of conversation ids for the given courses."""
+        if course_filter is None:
+            return None
+        if not course_filter:
+            return []
+        ids = await self.chats.distinct("_id", {"course": {"$in": course_filter}})
+        return [str(cid) for cid in ids]
 
-    async def get_active_students(self) -> int:
-        result = await self.chats.distinct("user_id")
+    async def get_total_conversations(self, course_filter: list[str] | None = None) -> int:
+        return await self.chats.count_documents(_course_match(course_filter))
+
+    async def get_active_students(self, course_filter: list[str] | None = None) -> int:
+        if course_filter is None:
+            result = await self.chats.distinct("user_id")
+        else:
+            if not course_filter:
+                return 0
+            result = await self.chats.distinct("user_id", {"course": {"$in": course_filter}})
         return len(result)
 
-    async def get_total_messages(self) -> int:
-        return await self.messages.count_documents({"role": "user"})
+    async def get_total_messages(self, course_filter: list[str] | None = None) -> int:
+        match: dict = {"role": "user"}
+        if course_filter is not None:
+            conversation_ids = await self._scoped_conversation_ids(course_filter)
+            if not conversation_ids:
+                return 0
+            match["conversation_id"] = {"$in": conversation_ids}
+        return await self.messages.count_documents(match)
 
-    async def get_activity(self, days: int) -> list[dict]:
+    async def get_activity(self, days: int, course_filter: list[str] | None = None) -> list[dict]:
         start_date = datetime.now(timezone.utc) - timedelta(days=days)
+        match: dict = {"role": "user", "created_at": {"$gte": start_date}}
+        if course_filter is not None:
+            conversation_ids = await self._scoped_conversation_ids(course_filter)
+            if not conversation_ids:
+                return []
+            match["conversation_id"] = {"$in": conversation_ids}
         pipeline = [
-            {"$match": {"role": "user", "created_at": {"$gte": start_date}}},
+            {"$match": match},
             {"$group": {
                 "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}},
                 "questions": {"$sum": 1},
@@ -34,9 +67,15 @@ class AnalyticsRepository(IAnalyticsRepository):
         cursor = await self.messages.aggregate(pipeline)
         return await cursor.to_list(length=None)
 
-    async def get_avg_questions_per_conversation(self) -> float:
+    async def get_avg_questions_per_conversation(self, course_filter: list[str] | None = None) -> float:
+        match: dict = {"role": "user"}
+        if course_filter is not None:
+            conversation_ids = await self._scoped_conversation_ids(course_filter)
+            if not conversation_ids:
+                return 0.0
+            match["conversation_id"] = {"$in": conversation_ids}
         pipeline = [
-            {"$match": {"role": "user"}},
+            {"$match": match},
             {"$group": {"_id": "$conversation_id", "count": {"$sum": 1}}},
             {"$group": {"_id": None, "avg": {"$avg": "$count"}}},
         ]
@@ -48,8 +87,13 @@ class AnalyticsRepository(IAnalyticsRepository):
 
     # --- Course-scoped methods ---
 
-    async def get_courses(self) -> list[str]:
-        result = await self.chats.distinct("course")
+    async def get_courses(self, course_filter: list[str] | None = None) -> list[str]:
+        if course_filter is None:
+            result = await self.chats.distinct("course")
+        else:
+            if not course_filter:
+                return []
+            result = await self.chats.distinct("course", {"course": {"$in": course_filter}})
         return sorted(result)
 
     async def get_course_overview(self, course: str) -> dict:
@@ -113,7 +157,7 @@ class AnalyticsRepository(IAnalyticsRepository):
                     concepts.extend(tags)
                 else:
                     concepts.extend(parsed.get("concepts_covered", []))
-                    
+
             except json.JSONDecodeError:
                 continue
 

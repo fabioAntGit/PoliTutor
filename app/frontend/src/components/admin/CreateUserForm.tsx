@@ -1,10 +1,7 @@
 import { Controller } from "react-hook-form";
-import { Loader2, X, Sparkles } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { generatePassword } from "@/lib/password";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/password-input";
 import {
   Select,
   SelectContent,
@@ -12,6 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormField } from "@/components/form/FormField";
+import { FormPasswordField } from "@/components/form/FormPasswordField";
+import { FormRootError } from "@/components/form/FormRootError";
+import { SubmitButton } from "@/components/form/SubmitButton";
 import { useCreateUser } from "@/hooks/admin/useCreateUser";
 import CreatedUserDialog from "@/components/admin/CreatedUserDialog";
 
@@ -26,36 +27,28 @@ export default function CreateUserForm() {
   return (
     <>
       <form onSubmit={onSubmit} className="space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="full_name">Nome completo</Label>
-          <Input
-            id="full_name"
-            placeholder="João Silva"
-            aria-invalid={!!errors.full_name}
-            {...register("full_name")}
-          />
-          {errors.full_name && (
-            <p className="text-xs text-destructive">{errors.full_name.message}</p>
-          )}
-        </div>
+        <FormField
+          id="full_name"
+          label="Nome completo"
+          placeholder="João Silva"
+          error={errors.full_name?.message}
+          {...register("full_name")}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="joao.silva@estg.ipp.pt"
-            aria-invalid={!!errors.email}
-            {...register("email")}
-          />
-          {errors.email && (
-            <p className="text-xs text-destructive">{errors.email.message}</p>
-          )}
-        </div>
+        <FormField
+          id="email"
+          label="Email"
+          type="email"
+          placeholder="joao.silva@estg.ipp.pt"
+          error={errors.email?.message}
+          {...register("email")}
+        />
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+        <FormPasswordField
+          id="password"
+          label="Password"
+          error={errors.password?.message}
+          headerEnd={
             <button
               type="button"
               onClick={() =>
@@ -69,16 +62,9 @@ export default function CreateUserForm() {
               <Sparkles className="size-3" />
               Gerar password
             </button>
-          </div>
-          <PasswordInput
-            id="password"
-            aria-invalid={!!errors.password}
-            {...register("password")}
-          />
-          {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
-          )}
-        </div>
+          }
+          {...register("password")}
+        />
 
         <div className="space-y-2">
           <Label>Role</Label>
@@ -91,8 +77,8 @@ export default function CreateUserForm() {
                   <SelectValue placeholder="Seleciona um role" />
                 </SelectTrigger>
                 <SelectContent position="popper" align="start">
-                  <SelectItem value="student">Estudante</SelectItem>
-                  <SelectItem value="teacher">Professor</SelectItem>
+                  <SelectItem value="student">student</SelectItem>
+                  <SelectItem value="teacher">teacher</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -173,20 +159,9 @@ export default function CreateUserForm() {
           </div>
         )}
 
-        {errors.root && (
-          <p className="text-sm text-destructive p-2 bg-destructive/10 rounded-md text-center">
-            {errors.root.message}
-          </p>
-        )}
+        <FormRootError message={errors.root?.message} />
 
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full h-12 text-base font-semibold"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : "Criar utilizador"}
-        </Button>
+        <SubmitButton loading={isSubmitting}>Criar utilizador</SubmitButton>
       </form>
 
       <CreatedUserDialog user={createdUser} onClose={dismissCreatedUser} />

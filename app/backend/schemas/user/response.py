@@ -8,5 +8,4 @@ class UserResponse(BaseModel):
     full_name: str
     role: UserRole
     courses: list[str]
-    is_active: bool
     must_change_password: bool = False

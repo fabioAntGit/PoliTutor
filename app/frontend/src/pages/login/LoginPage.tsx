@@ -1,8 +1,7 @@
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/password-input";
+import { FormField } from "@/components/form/FormField";
+import { FormPasswordField } from "@/components/form/FormPasswordField";
+import { FormRootError } from "@/components/form/FormRootError";
+import { SubmitButton } from "@/components/form/SubmitButton";
 import { useLogin } from "@/hooks/login/useLogin";
 
 export default function LoginPage() {
@@ -22,48 +21,27 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              placeholder="ist1234567"
-              autoComplete="username"
-              aria-invalid={!!errors.username}
-              {...register("username")}
-            />
-            {errors.username && (
-              <p className="text-xs text-destructive">{errors.username.message}</p>
-            )}
-          </div>
+          <FormField
+            id="username"
+            label="Username"
+            placeholder="ist1234567"
+            autoComplete="username"
+            error={errors.username?.message}
+            {...register("username")}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <PasswordInput
-              id="password"
-              autoComplete="current-password"
-              aria-invalid={!!errors.password}
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive">{errors.password.message}</p>
-            )}
-          </div>
+          <FormPasswordField
+            id="password"
+            label="Password"
+            autoComplete="current-password"
+            error={errors.password?.message}
+            {...register("password")}
+          />
         </div>
 
-        {errors.root && (
-          <p className="text-sm text-destructive p-2 bg-destructive/10 rounded-md text-center">
-            {errors.root.message}
-          </p>
-        )}
+        <FormRootError message={errors.root?.message} />
 
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full h-12 text-base font-semibold"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : "Entrar"}
-        </Button>
+        <SubmitButton loading={isSubmitting}>Entrar</SubmitButton>
       </form>
     </main>
   );

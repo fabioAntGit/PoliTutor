@@ -4,11 +4,12 @@ from pymongo.asynchronous.database import AsyncDatabase
 import redis.asyncio as redis
 from pwdlib import PasswordHash
 
-from app.backend.core.database import get_db, get_redis
-from app.backend.core.exceptions import AuthError, AccessDeniedError
+from app.backend.core.database import get_db, get_deprecated_db, get_redis
+from app.backend.core.exceptions import AuthError, AccessDeniedError, CourseNotFoundError
 from app.backend.schemas.user.enums import UserRole
 
 from app.backend.repositories.analytics import AnalyticsRepository
+from app.backend.repositories.deletion import DeletionRepository
 from app.backend.repositories.redis import RedisRepository
 from app.backend.repositories.reports import ReportRepository
 from app.backend.repositories.chats import ChatRepository
@@ -19,6 +20,7 @@ from app.backend.repositories.courses import CourseRepository
 
 from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
+from app.backend.repositories.interfaces.deletion_repository import IDeletionRepository
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.repositories.interfaces.redis_repository import IRedisRepository
 from app.backend.repositories.interfaces.report_repository import IReportRepository
@@ -30,7 +32,6 @@ from app.backend.services.chats import ChatService
 from app.backend.services.analytics import AnalyticsService
 from app.backend.services.context import ContextService
 from app.backend.services.messages import MessageService
-from app.backend.services.projects import ProjectService
 from app.backend.services.reports import ReportService
 from app.backend.services.user_memory import UserMemoryService
 from app.backend.services.security import SecurityService
@@ -41,7 +42,6 @@ from app.backend.services.interfaces.analytics_service import IAnalyticsService
 from app.backend.services.interfaces.chat_service import IChatService
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.message_service import IMessageService
-from app.backend.services.interfaces.project_service import IProjectService
 from app.backend.services.interfaces.report_service import IReportService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
 from app.backend.services.interfaces.security_service import ISecurityService
@@ -75,6 +75,12 @@ def get_user_repository(db: AsyncDatabase = Depends(get_db)) -> IUserRepository:
 
 def get_course_repository(db: AsyncDatabase = Depends(get_db)) -> ICourseRepository:
     return CourseRepository(db)
+
+def get_deletion_repository(
+    db_main: AsyncDatabase = Depends(get_db),
+    db_deprecated: AsyncDatabase = Depends(get_deprecated_db),
+) -> IDeletionRepository:
+    return DeletionRepository(db_main=db_main, db_deprecated=db_deprecated)
 
 # ============================================
 # Services
@@ -123,15 +129,16 @@ def get_message_service(
 
 def get_chat_service(
     chat_repository: IChatRepository = Depends(get_chat_repository),
+    course_repository: ICourseRepository = Depends(get_course_repository),
+    user_repository: IUserRepository = Depends(get_user_repository),
     message_service: IMessageService = Depends(get_message_service),
 ) -> IChatService:
     return ChatService(
         chat_repository=chat_repository,
+        course_repository=course_repository,
+        user_repository=user_repository,
         message_service=message_service,
     )
-
-def get_project_service() -> IProjectService:
-    return ProjectService()
 
 def get_report_service(
     report_repository: IReportRepository = Depends(get_report_repository),
@@ -160,10 +167,14 @@ def get_authentication_service(
 def get_user_service(
     user_repository: IUserRepository = Depends(get_user_repository),
     course_repository: ICourseRepository = Depends(get_course_repository),
+    chat_repository: IChatRepository = Depends(get_chat_repository),
+    deletion_repository: IDeletionRepository = Depends(get_deletion_repository),
 ) -> IUserService:
     return UserService(
         user_repository=user_repository,
         course_repository=course_repository,
+        chat_repository=chat_repository,
+        deletion_repository=deletion_repository,
     )
 
 # ============================================
@@ -219,3 +230,33 @@ def require_role(*roles: UserRole):
     return guard
 
 require_admin = require_role(UserRole.ADMIN)
+require_teacher_or_admin = require_role(UserRole.TEACHER, UserRole.ADMIN)
+
+
+async def _analytics_course_scope(
+    course: str,
+    payload: dict = Depends(require_teacher_or_admin),
+    repo: ICourseRepository = Depends(get_course_repository),
+) -> str:
+    found = await repo.find_by_code(course)
+    if found is None or not found.is_active:
+        raise CourseNotFoundError(course)
+    if payload.get("role") != UserRole.ADMIN.value:
+        if course not in (payload.get("courses") or []):
+            raise AccessDeniedError(message="Não tens acesso a esta cadeira.")
+    return course
+
+
+async def _analytics_filter_scope(
+    payload: dict = Depends(require_teacher_or_admin),
+    repo: ICourseRepository = Depends(get_course_repository),
+) -> list[str]:
+    active_codes = {c.code for c in await repo.get_active_courses()}
+    if payload.get("role") == UserRole.ADMIN.value:
+        return sorted(active_codes)
+    user_courses = set(payload.get("courses") or [])
+    return sorted(user_courses & active_codes)
+
+
+def analytics_scope(per_course: bool = False):
+    return _analytics_course_scope if per_course else _analytics_filter_scope

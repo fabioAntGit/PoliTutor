@@ -3,7 +3,6 @@ import { Controller } from "react-hook-form";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Loader2, X, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormField } from "@/components/form/FormField";
+import { FormRootError } from "@/components/form/FormRootError";
 import { useEditUser } from "@/hooks/admin/useEditUser";
 import type { UserResponse } from "@/types/user";
 import type { CourseResponse } from "@/types/course";
@@ -50,30 +51,20 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
           </DialogPrimitive.Description>
 
           <form onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-full_name">Nome completo</Label>
-              <Input
-                id="edit-full_name"
-                aria-invalid={!!errors.full_name}
-                {...register("full_name")}
-              />
-              {errors.full_name && (
-                <p className="text-xs text-destructive">{errors.full_name.message}</p>
-              )}
-            </div>
+            <FormField
+              id="edit-full_name"
+              label="Nome completo"
+              error={errors.full_name?.message}
+              {...register("full_name")}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                aria-invalid={!!errors.email}
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
-              )}
-            </div>
+            <FormField
+              id="edit-email"
+              label="Email"
+              type="email"
+              error={errors.email?.message}
+              {...register("email")}
+            />
 
             <div className="space-y-2">
               <Label>Role</Label>
@@ -86,9 +77,8 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent position="popper" align="start">
-                      <SelectItem value="student">Estudante</SelectItem>
-                      <SelectItem value="teacher">Professor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="student">student</SelectItem>
+                      <SelectItem value="teacher">teacher</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -101,74 +91,100 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                 name="courses"
                 control={control}
                 render={({ field }) => {
-                  const available = courses.filter((c) => !field.value.includes(c.code));
-                  const selected = courses.filter((c) => field.value.includes(c.code));
+                  const selectedCodes = new Set(field.value);
+                  const knownSelected = courses.filter((c) => selectedCodes.has(c.code));
+                  const unknownSelected = field.value.filter(
+                    (code) => !courses.some((c) => c.code === code),
+                  );
+                  const available = courses.filter((c) => !selectedCodes.has(c.code));
                   return (
                     <div className="space-y-2">
+                      <div className="rounded-md border bg-muted/30 p-2 min-h-[2.5rem]">
+                        {field.value.length === 0 ? (
+                          <p className="px-1 py-1 text-xs text-muted-foreground">
+                            Este utilizador ainda não tem cadeiras atribuídas.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                            {knownSelected.map((course) => (
+                              <span
+                                key={course.code}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full"
+                              >
+                                <span className="font-mono uppercase">{course.code}</span>
+                                <span className="opacity-70">·</span>
+                                {course.name}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    field.onChange(field.value.filter((c) => c !== course.code))
+                                  }
+                                  className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                                  aria-label={`Remover ${course.name}`}
+                                >
+                                  <X className="size-3" />
+                                </button>
+                              </span>
+                            ))}
+                            {unknownSelected.map((code) => (
+                              <span
+                                key={code}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full"
+                                title="Cadeira inexistente ou inativa"
+                              >
+                                <span className="font-mono uppercase">{code}</span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    field.onChange(field.value.filter((c) => c !== code))
+                                  }
+                                  className="hover:bg-foreground/10 rounded-full p-0.5 transition-colors"
+                                  aria-label={`Remover ${code}`}
+                                >
+                                  <X className="size-3" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       <Select
                         key={field.value.length}
                         onValueChange={(code) => {
-                          if (code && !field.value.includes(code)) {
+                          if (code && !selectedCodes.has(code)) {
                             field.onChange([...field.value, code]);
                           }
                         }}
+                        disabled={available.length === 0}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Adicionar cadeira" />
+                          <SelectValue
+                            placeholder={
+                              available.length === 0
+                                ? "Todas as cadeiras já estão atribuídas"
+                                : "Adicionar cadeira"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent position="popper" align="start" className="max-h-60">
-                          {available.length === 0 ? (
-                            <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                              Sem cadeiras disponíveis
-                            </div>
-                          ) : (
-                            available.map((course) => (
-                              <SelectItem key={course.code} value={course.code}>
-                                <span className="font-mono text-xs uppercase mr-1">
-                                  {course.code}
-                                </span>
-                                {course.name}
-                              </SelectItem>
-                            ))
-                          )}
+                          {available.map((course) => (
+                            <SelectItem key={course.code} value={course.code}>
+                              <span className="font-mono text-xs uppercase mr-1">
+                                {course.code}
+                              </span>
+                              {course.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
-
-                      {selected.length > 0 && (
-                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 border rounded-md">
-                          {selected.map((course) => (
-                            <span
-                              key={course.code}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full"
-                            >
-                              <span className="font-mono uppercase">{course.code}</span>
-                              <span className="opacity-70">·</span>
-                              {course.name}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  field.onChange(field.value.filter((c) => c !== course.code))
-                                }
-                                className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                                aria-label={`Remover ${course.name}`}
-                              >
-                                <X className="size-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   );
                 }}
               />
             </div>
 
-            {errors.root && (
-              <p className="text-sm text-destructive p-2 bg-destructive/10 rounded-md text-center">
-                {errors.root.message}
-              </p>
-            )}
+            <FormRootError message={errors.root?.message} />
 
             <div className="flex gap-2 pt-2">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
@@ -180,7 +196,7 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
             </div>
           </form>
 
-          {user?.is_active && (
+          {user && (
             <div className="mt-6 pt-4 border-t">
               {!confirmDelete ? (
                 <Button
@@ -197,8 +213,8 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="size-4 text-destructive flex-shrink-0 mt-0.5" />
                     <p className="text-sm">
-                      Tens a certeza? O utilizador <strong>@{user.username}</strong> deixa de poder
-                      aceder à plataforma.
+                      Tens a certeza? Os dados do utilizador <strong>@{user.username}</strong> sao
+                      removidos e apagados permanentemente em 30 dias.
                     </p>
                   </div>
                   {deleteError && (
