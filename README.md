@@ -195,7 +195,7 @@ To stop:
 docker compose down
 ```
 
-> **First build:** The backend image downloads ML models (~2.3 GB) on first build. Subsequent builds are fast thanks to the `huggingface_cache` volume.
+> **First start:** The backend downloads the retrieval models (~3.4 GB) on first start into the `huggingface_cache` volume and reuses them on subsequent runs. The first boot therefore needs network access and takes longer.
 
 > **GPU (optional):** The stack runs on CPU by default. If you have an NVIDIA GPU with `nvidia-container-toolkit` installed, you can enable it by adding the following to the `backend` service in `docker-compose.yml`:
 >
@@ -232,7 +232,7 @@ docker run --env-file .env poli-tutor-ingestion \
 
 ## Deploy (pre-built images from Docker Hub)
 
-On a push to `main`, CI builds and pushes the `backend` and `frontend` images to Docker Hub. The backend image ships with the retrieval models baked in, so it runs fully offline.
+On a push to `main`, CI builds and pushes the `backend` and `frontend` images to Docker Hub. The retrieval models are **not** baked into the image — the backend downloads them on first start into the `huggingface_cache` volume and reuses them across restarts (the first boot needs network access).
 
 To run the whole stack on any machine with Docker — no source code or build needed:
 

@@ -28,10 +28,10 @@ ENV PATH=/root/.local/bin:$PATH
 ENV PYTHONPATH="/app"
 ENV PYTHONUNBUFFERED=1
 
-# Pre-download the retrieval models into the image's HuggingFace cache so the
-# container starts fully offline (HF_HUB_OFFLINE=1 in docker-compose.hub.yml).
-# Keep these IDs in sync with EMBEDDING_MODEL / RERANKER_MODEL in rag/src/shared/config.py.
-RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; SentenceTransformer('BAAI/bge-m3'); CrossEncoder('BAAI/bge-reranker-base', trust_remote_code=True)"
+# Retrieval models (BAAI/bge-m3, BAAI/bge-reranker-base) are NOT baked into the
+# image. They are downloaded on first start into the huggingface_cache volume
+# (see docker-compose.hub.yml) and reused across restarts. This keeps the image
+# small; the first boot needs network access.
 
 COPY app/ ./app/
 COPY rag/ ./rag/
