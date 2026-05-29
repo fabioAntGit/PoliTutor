@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePagination } from "@/hooks/usePagination";
 
-/**
- * Generic list resource: fetches an array, supports text filtering and
- * pagination, and exposes a `refresh`. The `fetcher` and `filterFn` are kept
- * in refs so passing inline functions does not retrigger the fetch effect.
- */
 export function usePaginatedResource<T>(
   fetcher: () => Promise<T[]>,
   filterFn: (item: T, query: string) => boolean,
