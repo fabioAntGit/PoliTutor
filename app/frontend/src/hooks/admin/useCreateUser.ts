@@ -5,7 +5,7 @@ import { createUserSchema, type CreateUserFormValues } from "@/schemas/createUse
 import { createUser } from "@/api/users";
 import { listCourses } from "@/api/courses";
 import type { CourseResponse } from "@/types/course";
-import { ApiError } from "@/lib/errors";
+import { setFormRootError } from "@/lib/formErrors";
 
 export interface CreatedUserCredentials {
   username: string;
@@ -39,11 +39,7 @@ export function useCreateUser() {
       setCreatedUser({ username: user.username, password: data.password });
       form.reset();
     } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : "Erro ao criar utilizador. Tenta novamente.";
-      form.setError("root", { message });
+      setFormRootError(form, err, "Erro ao criar utilizador. Tenta novamente.");
     }
   };
 

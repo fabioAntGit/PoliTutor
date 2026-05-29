@@ -31,5 +31,10 @@ export function useChangePassword() {
     }
   };
 
-  return { form, onSubmit: form.handleSubmit(onSubmit) };
+  return {
+    form,
+    onSubmit: form.handleSubmit(onSubmit),
+    mustChange: authService.mustChangePassword(),
+    goBack: () => navigate(-1),
+  };
 }

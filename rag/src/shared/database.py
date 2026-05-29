@@ -11,7 +11,7 @@ import os
 import chromadb
 from chromadb.api import ClientAPI
 
-from .config import CHROMA_COLLECTION_NAME
+from .config import CHROMA_COLLECTION_NAME, CHROMA_METADATA
 
 logger = logging.getLogger(__name__)
 
@@ -58,5 +58,6 @@ def get_collection(name: str | None = None) -> chromadb.Collection:
     collection_name = name or CHROMA_COLLECTION_NAME
 
     return client.get_or_create_collection(
-        name=collection_name
+        name=collection_name,
+        metadata=CHROMA_METADATA
     )

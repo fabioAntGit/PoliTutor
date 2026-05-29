@@ -23,7 +23,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof AppShellSid
   const { courses } = useSidebarCourses()
 
   return (
-    <AppShellSidebar homeTo="/dashboard" {...props}>
+    <AppShellSidebar {...props}>
       <NavMain items={navMain} />
 
       <SidebarGroup>

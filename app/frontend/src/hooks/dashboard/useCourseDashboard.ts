@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 import { AnalyticsService } from "@/services/analytics.service";
 import type { CourseOverview, TopicPoint, SourcePoint } from "@/api/analytics";
+import type { RankedListItem } from "@/components/dashboard/ranked-list-card";
 
 type Status = "loading" | "valid" | "not_found";
 
 export function useCourseDashboard() {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
 
   const [status, setStatus] = useState<Status>("loading");
   const [overview, setOverview] = useState<CourseOverview | null>(null);
@@ -43,5 +45,40 @@ export function useCourseDashboard() {
       .catch(() => setStatus("not_found"));
   }, [courseId]);
 
-  return { courseId, status, overview, topics, sources };
+  const topicItems = useMemo<RankedListItem[] | null>(
+    () =>
+      topics
+        ? topics.map(({ topic, count }) => ({
+            key: topic,
+            label: topic,
+            value: count,
+            valueLabel: `${count}×`,
+          }))
+        : null,
+    [topics],
+  );
+
+  const sourceItems = useMemo<RankedListItem[] | null>(
+    () =>
+      sources
+        ? sources.map(({ filename, references }) => ({
+            key: filename,
+            label: filename,
+            rawLabel: filename,
+            value: references,
+            valueLabel: `${references} ref.`,
+          }))
+        : null,
+    [sources],
+  );
+
+  return {
+    courseId,
+    status,
+    isLoading: status === "loading",
+    overview,
+    topicItems,
+    sourceItems,
+    goToOverview: () => navigate("/dashboard"),
+  };
 }

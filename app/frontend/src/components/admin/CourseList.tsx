@@ -6,8 +6,26 @@ import { useCourses } from "@/hooks/admin/useCourses";
 import EditCourseDialog from "@/components/admin/EditCourseDialog";
 import type { CourseResponse } from "@/types/course";
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
 export default function CourseList() {
-  const { courses, loading, query, setQuery, refresh } = useCourses();
+  const {
+    courses,
+    paginatedCourses,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    loading,
+    query,
+    setQuery,
+    refresh,
+  } = useCourses();
   const [editing, setEditing] = useState<CourseResponse | null>(null);
 
   return (
@@ -31,41 +49,81 @@ export default function CourseList() {
           Nenhuma cadeira encontrada.
         </p>
       ) : (
-        <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
-          {courses.map((course) => (
-            <div
-              key={course.code}
-              className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider font-mono">
-                    {course.code}
-                  </span>
-                  <p className="text-sm font-medium truncate">{course.name}</p>
-                  {!course.is_active && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium uppercase tracking-wider">
-                      Inativa
+        <div className="space-y-4">
+          <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
+            {paginatedCourses.map((course) => (
+              <div
+                key={course.code}
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider font-mono">
+                      {course.code}
                     </span>
+                    <p className="text-sm font-medium truncate">{course.name}</p>
+                    {!course.is_active && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium uppercase tracking-wider">
+                        Inativa
+                      </span>
+                    )}
+                  </div>
+                  {course.description && (
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      {course.description}
+                    </p>
                   )}
                 </div>
-                {course.description && (
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">
-                    {course.description}
-                  </p>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditing(course)}
+                  aria-label={`Editar ${course.code}`}
+                >
+                  <Pencil className="size-4" />
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setEditing(course)}
-                aria-label={`Editar ${course.code}`}
-              >
-                <Pencil className="size-4" />
-              </Button>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage((p) => Math.max(1, p - 1));
+                    }}
+                    className={
+                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                    }
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <span className="text-sm font-medium px-4">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    }}
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
       )}
 

@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import type { Message } from "@/types/message";
 import { MessageService } from "@/services/message.service";
 import { ChatService } from "@/services/chat.service";
-import type { ChatRead } from "@/types/chat";
+import type { ChatRead, ChatListItem } from "@/types/chat";
 
 export function useChat() {
   const { conversationId } = useParams();
@@ -15,13 +15,22 @@ export function useChat() {
   const [chat, setChat] = useState<ChatRead | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [chats, setChats] = useState<ChatListItem[]>([]);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const initialSentRef = useRef(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  const handleScroll = useCallback(() => {
+    if (scrollRef.current) {
+      setHasScrolled(scrollRef.current.scrollTop > 8);
+    }
+  }, []);
 
   useEffect(() => {
     if (!conversationId) {
@@ -55,6 +64,23 @@ export function useChat() {
       cancelled = true;
     };
   }, [conversationId]);
+
+  useEffect(() => {
+    ChatService.listChats()
+      .then(setChats)
+      .catch((err) => console.error("Erro ao carregar lista de chats:", err));
+  }, []);
+
+  const openChat = useCallback(
+    (id: string) => {
+      navigate(`/chat/${id}`);
+    },
+    [navigate]
+  );
+
+  const goHome = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -177,5 +203,11 @@ export function useChat() {
     bottomRef,
     handleSubmit,
     handleCancel,
+    chats,
+    openChat,
+    goHome,
+    scrollRef,
+    hasScrolled,
+    handleScroll,
   };
 }

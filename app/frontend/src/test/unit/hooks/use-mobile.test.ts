@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 
 beforeEach(() => {
   window.matchMedia = vi.fn().mockReturnValue({
