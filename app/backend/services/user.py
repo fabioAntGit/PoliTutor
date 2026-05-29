@@ -106,7 +106,7 @@ class UserService(IUserService):
 
         await self.user_repository.update(username, update_data)
 
-        return await self.get_user(new_username)
+        return user.model_copy(update=update_data)
 
     async def delete_user(self, username: str) -> bool:
         user = await self.get_user(username)
@@ -148,4 +148,4 @@ class UserService(IUserService):
             username,
             {"hashed_password": new_hash, "must_change_password": False},
         )
-        return await self.get_user(username)
+        return user.model_copy(update={"hashed_password": new_hash, "must_change_password": False})
