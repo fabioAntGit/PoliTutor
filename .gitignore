@@ -26,6 +26,7 @@ coverage/
 htmlcov/
 .coverage
 .pytest_cache/
+junit*.xml
 
 # OS
 .DS_Store
