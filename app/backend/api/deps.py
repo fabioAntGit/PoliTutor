@@ -200,7 +200,7 @@ async def _verify_token(
 
 def _enforce_password_change(payload: dict, request: Request) -> None:
     if payload.get("must_change_password") and request.url.path not in PASSWORD_CHANGE_ALLOWED_PATHS:
-        raise AccessDeniedError(message="Tens de alterar a tua password antes de continuar")
+        raise AccessDeniedError(message="Tem de alterar a sua password antes de continuar")
 
 
 async def require_authenticated(
