@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
-  Brain,
   ChevronsUpDown,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Moon,
+  Settings,
   Shield,
   Sun,
-  Trash2,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -21,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DeleteAccountDialog } from "@/components/account/delete-account-dialog";
+import { SettingsDialog } from "@/components/settings/settings-dialog";
 import { useTheme } from "@/components/theme/theme-provider";
 import { authService } from "@/services/auth.service";
 import { logout } from "@/api/auth";
@@ -42,10 +40,9 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
   const username = authService.getUsername();
   const role = authService.getRole();
   const isAdmin = role === "admin";
-  const isStudent = role === "student";
   const onAdminPage = pathname.startsWith("/admin");
   const onDashboardPage = pathname.startsWith("/dashboard");
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
     const accessToken = authService.getAccessToken();
@@ -120,15 +117,9 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
             {isDark ? <Sun /> : <Moon />}
             {isDark ? "Modo claro" : "Modo escuro"}
           </DropdownMenuItem>
-          {isStudent && (
-            <DropdownMenuItem onSelect={() => navigate("/memories")}>
-              <Brain />
-              Memórias guardadas
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onSelect={() => navigate("/change-password")}>
-            <KeyRound />
-            Alterar password
+          <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+            <Settings />
+            Definições
           </DropdownMenuItem>
           {isAdmin && !onAdminPage && (
             <DropdownMenuItem onSelect={() => navigate("/admin")}>
@@ -143,13 +134,6 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={() => setDeleteOpen(true)}
-          >
-            <Trash2 />
-            Eliminar conta
-          </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleLogout}>
             <LogOut />
             Terminar sessão
@@ -157,7 +141,7 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }

@@ -35,6 +35,7 @@ export function NewChatComposer({
   const canSubmit = !submitting && !!input.trim() && !!selectedCourse;
   const nearLimit = input.length >= MAX_CHARS * 0.9;
 
+  // Auto-grow: arranca numa linha e cresce até um máximo.
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;

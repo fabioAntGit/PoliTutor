@@ -61,15 +61,15 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
                 Eliminar conta
               </DialogPrimitive.Title>
               <DialogPrimitive.Description className="text-sm text-muted-foreground">
-                Esta acao remove a tua conta, conversas e memoria do tutor. Os dados ficam
-                retidos durante 30 dias e depois sao apagados de forma permanente.
+                Esta ação remove a sua conta, conversas e memórias do tutor. Os dados ficam
+                retidos durante 30 dias e depois são apagados de forma permanente.
               </DialogPrimitive.Description>
             </div>
           </div>
 
           <div className="mt-4 space-y-2">
             <Label htmlFor="delete-confirm">
-              Para confirmar, escreve <span className="font-mono font-semibold">{CONFIRM_PHRASE}</span>
+              Para confirmar, escreva <span className="font-mono font-semibold">{CONFIRM_PHRASE}</span>
             </Label>
             <Input
               id="delete-confirm"

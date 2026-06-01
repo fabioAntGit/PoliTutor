@@ -43,9 +43,8 @@ export function DeleteMemoryDialog({
           </div>
 
           {memory && (
-            <div className="mt-4 rounded-md border bg-muted/40 p-3 text-sm">
-              <p className="font-medium">{memory.topic}</p>
-              <p className="text-muted-foreground">{memory.content}</p>
+            <div className="mt-4 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+              {memory.content}
             </div>
           )}
 
