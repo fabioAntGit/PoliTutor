@@ -93,9 +93,45 @@ jobs:
           path: htmlcov/
           retention-days: 14
 
+  integration:
+    name: Backend (integration tests)
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            rag/requirements.txt
+            app/backend/tests/requirements.txt
+
+      - name: Install RAG dependencies (CPU-only torch)
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r rag/requirements.txt
+
+      - name: Install test dependencies
+        run: pip install -r app/backend/tests/requirements.txt
+
+      - name: Run integration tests
+        run: pytest app/backend/tests/integration --no-cov --junitxml=integration-junit.xml
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v3.0.0
+        with:
+          name: Backend integration tests
+          path: integration-junit.xml
+          reporter: java-junit
+
   publish:
     name: Build & push images
-    needs: [frontend, backend]
+    needs: [frontend, backend, integration]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
