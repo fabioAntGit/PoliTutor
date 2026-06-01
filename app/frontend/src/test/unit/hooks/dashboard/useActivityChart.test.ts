@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useActivityChart } from "@/hooks/dashboard/useActivityChart";
 import { AnalyticsService } from "@/services/analytics.service";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 
 vi.mock("@/services/analytics.service");
-vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: vi.fn(() => false) }));
+vi.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: vi.fn(() => false) }));
 
 const service = vi.mocked(AnalyticsService);
 

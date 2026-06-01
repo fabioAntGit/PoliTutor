@@ -12,7 +12,7 @@ export function useLogin() {
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const onSubmit = async (data: LoginFormValues) => {

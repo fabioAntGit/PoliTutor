@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createCourseSchema, type CreateCourseFormValues } from "@/schemas/createCourse";
 import { createCourse } from "@/api/courses";
-import { ApiError } from "@/lib/errors";
+import { setFormRootError } from "@/lib/formErrors";
 
 export function useCreateCourse() {
   const [success, setSuccess] = useState(false);
@@ -21,9 +21,7 @@ export function useCreateCourse() {
       setSuccess(true);
       form.reset();
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Erro ao criar cadeira. Tenta novamente.";
-      form.setError("root", { message });
+      setFormRootError(form, err, "Erro ao criar cadeira. Tenta novamente.");
     }
   };
 

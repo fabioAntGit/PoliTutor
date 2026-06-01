@@ -1,21 +1,16 @@
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { FormPasswordField } from "@/components/form/FormPasswordField";
 import { FormRootError } from "@/components/form/FormRootError";
 import { SubmitButton } from "@/components/form/SubmitButton";
 import { useChangePassword } from "@/hooks/auth/useChangePassword";
-import { authService } from "@/services/auth.service";
 
 export default function ChangePasswordPage() {
-  const navigate = useNavigate();
-  const { form, onSubmit } = useChangePassword();
+  const { form, onSubmit, mustChange, goBack } = useChangePassword();
   const {
     register,
     formState: { errors, isSubmitting },
   } = form;
-
-  const mustChange = authService.mustChangePassword();
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-background relative">
@@ -25,7 +20,7 @@ export default function ChangePasswordPage() {
             variant="ghost"
             size="icon"
             title="Voltar"
-            onClick={() => navigate(-1)}
+            onClick={goBack}
           >
             <ArrowLeft className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
           </Button>

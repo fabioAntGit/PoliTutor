@@ -6,8 +6,27 @@ import { useUsers } from "@/hooks/admin/useUsers";
 import EditUserDialog from "@/components/admin/EditUserDialog";
 import type { UserResponse } from "@/types/user";
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
 export default function UserList() {
-  const { users, courses, loading, query, setQuery, refresh } = useUsers();
+  const {
+    users,
+    paginatedUsers,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    courses,
+    loading,
+    query,
+    setQuery,
+    refresh,
+  } = useUsers();
   const [editing, setEditing] = useState<UserResponse | null>(null);
 
   return (
@@ -31,37 +50,77 @@ export default function UserList() {
           Nenhum utilizador encontrado.
         </p>
       ) : (
-        <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
-          {users.map((user) => (
-            <div
-              key={user.username}
-              className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{user.full_name}</p>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider">
-                    {user.role}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                {user.courses.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-0.5 font-mono uppercase">
-                    {user.courses.join(" · ")}
-                  </p>
-                )}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setEditing(user)}
-                aria-label={`Editar ${user.username}`}
+        <div className="space-y-4">
+          <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
+            {paginatedUsers.map((user) => (
+              <div
+                key={user.username}
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
               >
-                <Pencil className="size-4" />
-              </Button>
-            </div>
-          ))}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">{user.full_name}</p>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider">
+                      {user.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  {user.courses.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5 font-mono uppercase">
+                      {user.courses.join(" · ")}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditing(user)}
+                  aria-label={`Editar ${user.username}`}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage((p) => Math.max(1, p - 1));
+                    }}
+                    className={
+                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                    }
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <span className="text-sm font-medium px-4">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    }}
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
       )}
 

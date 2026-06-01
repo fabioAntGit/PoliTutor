@@ -5,7 +5,7 @@ import { AnalyticsService } from "@/services/analytics.service";
 import { useParams } from "react-router";
 
 vi.mock("@/services/analytics.service");
-vi.mock("react-router", () => ({ useParams: vi.fn() }));
+vi.mock("react-router", () => ({ useParams: vi.fn(), useNavigate: () => vi.fn() }));
 
 const service = vi.mocked(AnalyticsService);
 const params = vi.mocked(useParams);
@@ -42,8 +42,8 @@ describe("useCourseDashboard", () => {
     expect(result.current.overview?.active_students).toBe(1);
     expect(result.current.overview?.total_messages).toBe(1);
     expect(result.current.overview?.avg_questions_per_conversation).toBe(1);
-    expect(result.current.topics).toHaveLength(1);
-    expect(result.current.sources).toHaveLength(1);
+    expect(result.current.topicItems).toHaveLength(1);
+    expect(result.current.sourceItems).toHaveLength(1);
   });
 
   it("marks the course not_found when it is not in the course list", async () => {
