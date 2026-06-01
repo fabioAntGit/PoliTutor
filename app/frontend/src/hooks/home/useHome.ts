@@ -30,7 +30,7 @@ export function useHome() {
         }
       })
       .catch(() => {
-        setError("Nao foi possivel carregar os dados. Tenta novamente mais tarde.");
+        setError("Nao foi possivel carregar os dados. Tente novamente mais tarde.");
       })
       .finally(() => {
         setLoading(false);

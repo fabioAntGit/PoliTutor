@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
+  Brain,
   ChevronsUpDown,
   KeyRound,
   LayoutDashboard,
@@ -41,6 +42,7 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
   const username = authService.getUsername();
   const role = authService.getRole();
   const isAdmin = role === "admin";
+  const isStudent = role === "student";
   const onAdminPage = pathname.startsWith("/admin");
   const onDashboardPage = pathname.startsWith("/dashboard");
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -64,7 +66,7 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
               aria-label="Conta"
               className="flex items-center justify-center rounded-full outline-none transition-shadow ring-ring/50 hover:ring-3 focus-visible:ring-3 aria-expanded:ring-3"
             >
-              <Avatar size="sm">
+              <Avatar size="default">
                 <AvatarFallback>{initialsFor(fullName, username)}</AvatarFallback>
               </Avatar>
             </button>
@@ -118,6 +120,12 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
             {isDark ? <Sun /> : <Moon />}
             {isDark ? "Modo claro" : "Modo escuro"}
           </DropdownMenuItem>
+          {isStudent && (
+            <DropdownMenuItem onSelect={() => navigate("/memories")}>
+              <Brain />
+              Memórias guardadas
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => navigate("/change-password")}>
             <KeyRound />
             Alterar password

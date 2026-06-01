@@ -26,7 +26,7 @@ export default function HomePage() {
       error={error}
       onRetry={() => window.location.reload()}
     >
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider defaultOpen>
         <ChatHistorySidebar chats={chats} onSelectChat={openChat} onHome={() => window.location.reload()} />
 
         <SidebarInset>
@@ -34,17 +34,17 @@ export default function HomePage() {
             <SidebarTrigger />
             <span className="text-base font-semibold">PoliTutor</span>
           </div>
-          <div className="fixed right-4 top-2.5 z-30">
+          <div className="fixed right-4 top-4 z-30">
             <UserMenu compact />
           </div>
           <main className="relative flex flex-1 items-center justify-center overflow-hidden px-6">
             <div className="relative z-10 w-full max-w-2xl space-y-6">
               <div className="space-y-1 text-center">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  Começa uma nova conversa
+                  Inicie uma nova conversa
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Escolhe a cadeira e escreve a tua primeira pergunta.
+                  Escolha a cadeira e escreva a sua primeira pergunta.
                 </p>
               </div>
 

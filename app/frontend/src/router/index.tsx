@@ -5,6 +5,7 @@ import RootLayout from "@/layouts/RootLayout";
 import HomePage from "@/pages/home/HomePage";
 import LoginPage from "@/pages/login/LoginPage";
 import ChatPage from "@/pages/chat/ChatPage";
+import MemoriesPage from "@/pages/memories/MemoriesPage";
 import DashboardPage from "@/pages/dashboard/DashboardPage";
 import CourseDashboardPage from "@/pages/dashboard/CourseDashboardPage";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
@@ -49,6 +50,10 @@ export const router = createBrowserRouter([
                   {
                     path: "chat/:conversationId",
                     element: <ChatPage />,
+                  },
+                  {
+                    path: "memories",
+                    element: <MemoriesPage />,
                   },
                 ],
               },
