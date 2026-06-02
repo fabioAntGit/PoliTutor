@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
 import { ArrowUp } from "lucide-react";
+import { useAutoGrowTextarea } from "@/hooks/chat/useAutoGrowTextarea";
 
 import {
   Select,
@@ -31,17 +31,10 @@ export function NewChatComposer({
   onSubmit,
   submitting,
 }: NewChatComposerProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useAutoGrowTextarea(input, 160);
+  
   const canSubmit = !submitting && !!input.trim() && !!selectedCourse;
   const nearLimit = input.length >= MAX_CHARS * 0.9;
-
-  // Auto-grow: arranca numa linha e cresce até um máximo.
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
-  }, [input]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
