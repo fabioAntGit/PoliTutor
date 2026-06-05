@@ -10,6 +10,11 @@ the tests pass on any day they happen to run.
 
 from datetime import datetime, timedelta, timezone
 
+from bson import ObjectId
+from pwdlib import PasswordHash
+
+_password_hash = PasswordHash.recommended()
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -67,6 +72,40 @@ async def insert_message(
             "sources": sources or [],
         }
     )
+
+
+async def insert_user(
+    db,
+    *,
+    username: str,
+    password: str = "password123",
+    email: str | None = None,
+    full_name: str = "Test User",
+    role: str = "student",
+    courses: list[str] | None = None,
+    must_change_password: bool = False,
+) -> str:
+    """Insert a user with a real password hash and return its id as a string.
+
+    The id is a freshly generated ObjectId so it can be fed back into a JWT's
+    `id` claim for routes that resolve the user via `find_by_id` (e.g. create chat).
+    """
+    user_id = ObjectId()
+    await db["users"].insert_one(
+        {
+            "_id": user_id,
+            "email": email or f"{username}@estg.ipp.pt",
+            "username": username,
+            "role": role,
+            "hashed_password": _password_hash.hash(password),
+            "full_name": full_name,
+            "courses": courses or [],
+            "must_change_password": must_change_password,
+            "created_at": _now(),
+            "updated_at": _now(),
+        }
+    )
+    return str(user_id)
 
 
 async def insert_memory(

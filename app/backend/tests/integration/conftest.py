@@ -17,12 +17,18 @@ import os
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
 os.environ.setdefault("JWT_SECRET_KEY", "integration-test-secret-key-0123456789")
 
+from datetime import datetime, timedelta, timezone
+
+import jwt
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from pymongo import AsyncMongoClient
-
 from testcontainers.mongodb import MongoDbContainer
+
+from app.backend.main import app
+from app.backend.api.deps import get_db, get_deprecated_db, get_redis_repository
+from app.backend.core.config import JWT_ALGORITHM, JWT_SECRET_KEY
 
 _TEST_DB_NAME = "poli_tutor_test"
 
@@ -47,20 +53,26 @@ async def db(mongo_url):
         await client.close()
 
 class _FakeRedisRepo:
-    """Stand-in for the Redis repository: no token is ever blacklisted."""
+    """In-memory stand-in for the Redis repository."""
+
+    def __init__(self) -> None:
+        self._blacklist: set[str] = set()
 
     async def is_token_blacklisted(self, token: str) -> bool:
-        return False
+        return token in self._blacklist
+
+    async def add_token_to_blacklist(self, token: str, expire_in_seconds: int) -> None:
+        self._blacklist.add(token)
 
 
 @pytest_asyncio.fixture
 async def api_client(db):
-    """In-process httpx client against the app, with DB/Redis pointed at the test DB."""
-    from app.backend.main import app
-    from app.backend.api.deps import get_db, get_redis_repository
-
+    """In-process httpx client against the app, with DB/Redis pointed at the test DB.
+    """
+    redis_repo = _FakeRedisRepo()
     app.dependency_overrides[get_db] = lambda: db
-    app.dependency_overrides[get_redis_repository] = lambda: _FakeRedisRepo()
+    app.dependency_overrides[get_deprecated_db] = lambda: db.client[f"{_TEST_DB_NAME}_deprecated"]
+    app.dependency_overrides[get_redis_repository] = lambda: redis_repo
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -72,9 +84,6 @@ async def api_client(db):
 @pytest.fixture
 def make_token():
     """Factory for real JWTs, so the auth guards run for real in route tests."""
-    import jwt
-
-    from app.backend.core.config import JWT_ALGORITHM, JWT_SECRET_KEY
 
     def _make(role: str = "teacher", courses: list[str] | None = None, **extra) -> str:
         payload = {
@@ -83,6 +92,7 @@ def make_token():
             "full_name": "Prof Example",
             "role": role,
             "courses": courses or [],
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             **extra,
         }
         return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
