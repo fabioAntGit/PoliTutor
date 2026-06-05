@@ -8,6 +8,7 @@ Run from the repository root with:
 """
 
 import logging
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +29,8 @@ from rag.src.ingestion.embedding import get_embedder
 from rag.src.runtime.reranker import get_reranker
 
 logger = logging.getLogger(__name__)
+
+RAG_PRELOAD = os.getenv("RAG_PRELOAD", "1") != "0"
 
 app = FastAPI(title="Poli Tutor API", version="1.0.0")
 
@@ -64,10 +67,13 @@ async def startup_event():
     await connect_to_mongo()
     logger.info("Connecting to Redis...")
     await connect_to_redis()
-    logger.info("Pre-loading embedding and reranker models...")
-    get_embedder()
-    get_reranker()
-    logger.info("Models loaded and ready.")
+    if RAG_PRELOAD:
+        logger.info("Pre-loading embedding and reranker models...")
+        get_embedder()
+        get_reranker()
+        logger.info("Models loaded and ready.")
+    else:
+        logger.info("RAG_PRELOAD=0 — skipping model pre-load (lean backend).")
 
 
 app.include_router(authentication_router, prefix="/api/v1", tags=["auth"])
