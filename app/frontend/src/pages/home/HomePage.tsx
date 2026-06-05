@@ -4,6 +4,14 @@ import { ChatHistorySidebar } from "@/components/home/chat-history-sidebar";
 import { NewChatComposer } from "@/components/home/new-chat-composer";
 import { UserMenu } from "@/components/account/user-menu";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { authService } from "@/services/auth.service";
+
+function greetingForNow(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 20) return "Boa tarde";
+  return "Boa noite";
+}
 
 export default function HomePage() {
   const {
@@ -20,13 +28,16 @@ export default function HomePage() {
     openChat,
   } = useHome();
 
+  const firstName = authService.getFullName()?.trim().split(/\s+/)[0];
+  const heading = firstName ? `${greetingForNow()}, ${firstName}` : "Inicie uma nova conversa";
+
   return (
     <PageState
       loading={loading}
       error={error}
       onRetry={() => window.location.reload()}
     >
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider defaultOpen>
         <ChatHistorySidebar chats={chats} onSelectChat={openChat} onHome={() => window.location.reload()} />
 
         <SidebarInset>
@@ -34,17 +45,17 @@ export default function HomePage() {
             <SidebarTrigger />
             <span className="text-base font-semibold">PoliTutor</span>
           </div>
-          <div className="fixed right-4 top-2.5 z-30">
+          <div className="fixed right-4 top-4 z-30">
             <UserMenu compact />
           </div>
           <main className="relative flex flex-1 items-center justify-center overflow-hidden px-6">
-            <div className="relative z-10 w-full max-w-2xl space-y-6">
-              <div className="space-y-1 text-center">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  Começa uma nova conversa
+            <div className="relative z-10 -mt-12 w-full max-w-2xl space-y-7">
+              <div className="space-y-2 text-center">
+                <h1 className="text-3xl font-semibold tracking-tight">
+                  {heading}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Escolhe a cadeira e escreve a tua primeira pergunta.
+                  Escolha a cadeira e faça a sua primeira pergunta.
                 </p>
               </div>
 
@@ -57,7 +68,6 @@ export default function HomePage() {
                 onSubmit={submit}
                 submitting={submitting}
               />
-
             </div>
 
             <img

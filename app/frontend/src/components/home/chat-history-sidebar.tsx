@@ -47,7 +47,7 @@ export function ChatHistorySidebar({
         <SidebarGroupContent>
           {chats.length === 0 ? (
             <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-              Ainda não tens conversas.
+              Ainda não tem conversas.
             </p>
           ) : (
             <SidebarMenu>
