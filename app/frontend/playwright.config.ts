@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./src/test/e2e",
+  testDir: "./src/test/system",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -15,14 +15,25 @@ export default defineConfig({
     {
       name: "teacher",
       testMatch: /teacher-.*\.spec\.ts/,
-      use: { ...devices["Desktop Chrome"], storageState: "src/test/e2e/.auth/teacher.json" },
+      use: { ...devices["Desktop Chrome"], storageState: "src/test/system/.auth/teacher.json" },
       dependencies: ["setup"],
     },
     {
       name: "student",
       testMatch: /student-.*\.spec\.ts/,
-      use: { ...devices["Desktop Chrome"], storageState: "src/test/e2e/.auth/student.json" },
+      use: { ...devices["Desktop Chrome"], storageState: "src/test/system/.auth/student.json" },
       dependencies: ["setup"],
+    },
+    {
+      name: "admin",
+      testMatch: /admin-.*\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], storageState: "src/test/system/.auth/admin.json" },
+      dependencies: ["setup"],
+    },
+    {
+      name: "no-auth",
+      testMatch: /first-login\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 });

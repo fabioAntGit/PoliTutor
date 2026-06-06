@@ -57,3 +57,7 @@ class ChatRepository(IChatRepository):
             {"_id": ObjectId(conversation_id)},
             {"$set": {"updated_at": datetime.now(timezone.utc)}},
         )
+
+    async def delete(self, conversation_id: str) -> bool:
+        result = await self.collection.delete_one({"_id": ObjectId(conversation_id)})
+        return result.deleted_count > 0

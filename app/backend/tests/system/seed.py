@@ -24,8 +24,15 @@ STUDENT_USERNAME = "aluno.teste"
 STUDENT_PASSWORD = "Teste1234!"
 STUDENT_EMAIL = "aluno.teste@ipp.pt"
 
+ADMIN_USERNAME = "admin.teste"
+ADMIN_PASSWORD = "Teste1234!"
+ADMIN_EMAIL = "admin.teste@ipp.pt"
+
 COURSE_CODE = "ed"
 COURSE_NAME = "Estruturas de Dados"
+
+SECOND_COURSE_CODE = "ia"
+SECOND_COURSE_NAME = "Inteligência Artificial"
 
 _password_hash = PasswordHash.recommended()
 
@@ -40,15 +47,25 @@ async def seed() -> None:
     now = datetime.now(timezone.utc)
     teacher_id = ObjectId()
     student_id = ObjectId()
+    admin_id = ObjectId()
 
-    await db["courses"].insert_one(
-        {
-            "code": COURSE_CODE,
-            "name": COURSE_NAME,
-            "description": "E2E test course.",
-            "is_active": True,
-            "created_at": now,
-        }
+    await db["courses"].insert_many(
+        [
+            {
+                "code": COURSE_CODE,
+                "name": COURSE_NAME,
+                "description": "E2E test course.",
+                "is_active": True,
+                "created_at": now,
+            },
+            {
+                "code": SECOND_COURSE_CODE,
+                "name": SECOND_COURSE_NAME,
+                "description": "E2E course nobody is enrolled in.",
+                "is_active": True,
+                "created_at": now,
+            },
+        ]
     )
 
     await db["users"].insert_many(
@@ -73,6 +90,18 @@ async def seed() -> None:
                 "hashed_password": _password_hash.hash(STUDENT_PASSWORD),
                 "full_name": "Aluno de Teste",
                 "courses": [COURSE_CODE],
+                "must_change_password": False,
+                "created_at": now,
+                "updated_at": now,
+            },
+            {
+                "_id": admin_id,
+                "email": ADMIN_EMAIL,
+                "username": ADMIN_USERNAME,
+                "role": "admin",
+                "hashed_password": _password_hash.hash(ADMIN_PASSWORD),
+                "full_name": "Admin de Teste",
+                "courses": [],
                 "must_change_password": False,
                 "created_at": now,
                 "updated_at": now,
@@ -107,9 +136,9 @@ async def seed() -> None:
             for role in ("user", "assistant"):
                 sources = []
                 if role == "assistant":
-                    sources = [{"filename": main_source}]
+                    sources = [{"filename": main_source, "pages": [1, 2]}]
                     if i == 0:
-                        sources.append({"filename": secondary_source})
+                        sources.append({"filename": secondary_source, "pages": [3]})
                 message_docs.append(
                     {
                         "conversation_id": str(chat_id),
@@ -145,6 +174,17 @@ async def seed() -> None:
                 "topic": "Exemplos",
                 "content": "Prefere explicações com exemplos de código.",
                 "importance": 5.0,
+                "last_seen_at": now,
+                "created_at": now,
+            },
+            {
+                "_id": str(ObjectId()),
+                "user_id": str(student_id),
+                "course": COURSE_CODE,
+                "type": "preference",
+                "topic": "Descartavel",
+                "content": "Memoria descartavel para o teste de remocao.",
+                "importance": 3.0,
                 "last_seen_at": now,
                 "created_at": now,
             },

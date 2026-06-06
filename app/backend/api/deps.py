@@ -131,13 +131,13 @@ def get_chat_service(
     chat_repository: IChatRepository = Depends(get_chat_repository),
     course_repository: ICourseRepository = Depends(get_course_repository),
     user_repository: IUserRepository = Depends(get_user_repository),
-    message_service: IMessageService = Depends(get_message_service),
+    message_repository: IMessageRepository = Depends(get_message_repository),
 ) -> IChatService:
     return ChatService(
         chat_repository=chat_repository,
         course_repository=course_repository,
         user_repository=user_repository,
-        message_service=message_service,
+        message_repository=message_repository,
     )
 
 def get_report_service(

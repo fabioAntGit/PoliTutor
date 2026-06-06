@@ -17,7 +17,7 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-/src/test/e2e/.auth/
+/src/test/system/.auth/
 
 # Editor directories and files
 .vscode/*

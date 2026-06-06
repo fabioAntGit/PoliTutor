@@ -36,3 +36,12 @@ async def get_chat(
     service: IChatService = Depends(get_chat_service)
 ):
     return await service.get_chat(conversation_id, requester_user_id=payload["id"])
+
+
+@router.delete("/chat/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chat(
+    conversation_id: str,
+    payload: dict = Depends(require_authenticated),
+    service: IChatService = Depends(get_chat_service)
+):
+    await service.delete_chat(conversation_id, requester_user_id=payload["id"])
