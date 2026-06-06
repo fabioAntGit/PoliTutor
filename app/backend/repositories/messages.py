@@ -52,3 +52,7 @@ class MessageRepository(IMessageRepository):
             {"$set": {"is_reported": is_reported}}
         )
         return result.modified_count > 0
+
+    async def delete_by_conversation(self, conversation_id: str) -> int:
+        result = await self.collection.delete_many({"conversation_id": conversation_id})
+        return result.deleted_count

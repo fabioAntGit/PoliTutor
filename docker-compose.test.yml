@@ -1,0 +1,73 @@
+services:
+  redis:
+    image: redis:alpine
+    container_name: poli-tutor-test-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mongo:
+    image: mongo:7
+    container_name: poli-tutor-test-mongo
+    tmpfs:
+      - /data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  seed:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: poli-tutor-test-seed
+    command: ["python3.11", "-m", "app.backend.tests.system.seed"]
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DB=poli_tutor_test
+      - JWT_SECRET_KEY=test-secret-not-for-production
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: poli-tutor-test-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - RAG_PRELOAD=0
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DB=poli_tutor_test
+      - JWT_SECRET_KEY=test-secret-not-for-production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    healthcheck:
+      test:
+        ["CMD", "python3.11", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/openapi.json')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      redis:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8000/api/v1
+    container_name: poli-tutor-test-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy

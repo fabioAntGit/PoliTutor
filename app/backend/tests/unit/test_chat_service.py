@@ -16,8 +16,8 @@ from app.backend.schemas.chat.models import Chat
 from app.backend.schemas.course.models import Course
 from app.backend.schemas.message.models import Message
 from app.backend.schemas.user.models import User
+from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.services.chats import ChatService
-from app.backend.services.interfaces.message_service import IMessageService
 
 
 def _make_course(**kwargs) -> Course:
@@ -77,17 +77,17 @@ def user_repo():
 
 
 @pytest.fixture
-def message_service():
-    return AsyncMock(spec=IMessageService)
+def message_repo():
+    return AsyncMock(spec=IMessageRepository)
 
 
 @pytest.fixture
-def service(chat_repo, course_repo, user_repo, message_service):
+def service(chat_repo, course_repo, user_repo, message_repo):
     return ChatService(
         chat_repository=chat_repo,
         course_repository=course_repo,
         user_repository=user_repo,
-        message_service=message_service,
+        message_repository=message_repo,
     )
 
 
@@ -133,10 +133,10 @@ async def test_create_chat_user_not_enrolled_throws_access_denied_error(service,
         await service.create_chat("ed", "user1")
 
 
-async def test_get_chat_owner_returns_chat_data(service, chat_repo, course_repo, message_service):
+async def test_get_chat_owner_returns_chat_data(service, chat_repo, course_repo, message_repo):
     chat_repo.get_chat.return_value = _make_chat()
     course_repo.find_by_code.return_value = _make_course()
-    message_service.get_chat_messages.return_value = [_make_message()]
+    message_repo.get_messages.return_value = [_make_message()]
 
     result = await service.get_chat("60d5ecb8b4259b3a0c4f1a01", "user1")
 

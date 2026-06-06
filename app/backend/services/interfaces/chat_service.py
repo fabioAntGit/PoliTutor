@@ -13,3 +13,6 @@ class IChatService(Protocol):
 
     async def list_user_chats(self, user_id: str) -> list[ChatListItem]:
         ...
+
+    async def delete_chat(self, conversation_id: str, requester_user_id: str) -> None:
+        ...

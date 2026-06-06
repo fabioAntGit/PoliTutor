@@ -7,10 +7,10 @@ from app.backend.core.exceptions import (
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.repositories.interfaces.user_repository import IUserRepository
+from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.schemas.chat.models import Chat
 from app.backend.schemas.chat.response import ChatRead, ChatCreated, ChatListItem
 from app.backend.services.interfaces.chat_service import IChatService
-from app.backend.services.interfaces.message_service import IMessageService
 
 
 class ChatService(IChatService):
@@ -19,12 +19,12 @@ class ChatService(IChatService):
         chat_repository: IChatRepository,
         course_repository: ICourseRepository,
         user_repository: IUserRepository,
-        message_service: IMessageService,
+        message_repository: IMessageRepository,
     ) -> None:
         self.chat_repository = chat_repository
         self.course_repository = course_repository
         self.user_repository = user_repository
-        self.message_service = message_service
+        self.message_repository = message_repository
 
     async def create_chat(self, course_code: str, user_id: str) -> ChatCreated:
         course = await self.course_repository.find_by_code(course_code)
@@ -63,7 +63,7 @@ class ChatService(IChatService):
         if course is None or not course.is_active:
             raise CourseNotFoundError(chat.course)
 
-        messages = await self.message_service.get_chat_messages(conversation_id)
+        messages = await self.message_repository.get_messages(conversation_id)
 
         return ChatRead(
             conversation_id=str(chat.id),
@@ -73,6 +73,18 @@ class ChatService(IChatService):
             summary=chat.summary,
             messages=messages,
         )
+
+    async def delete_chat(self, conversation_id: str, requester_user_id: str) -> None:
+        chat = await self.chat_repository.get_chat(conversation_id)
+
+        if chat is None:
+            raise ChatNotFoundError(conversation_id)
+
+        if chat.user_id != requester_user_id:
+            raise AccessDeniedError("Nao tens permissao para eliminar este chat.")
+
+        await self.message_repository.delete_by_conversation(conversation_id)
+        await self.chat_repository.delete(conversation_id)
 
     async def list_user_chats(self, user_id: str) -> list[ChatListItem]:
         chats = await self.chat_repository.get_chats(user_id)
