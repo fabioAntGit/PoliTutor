@@ -1,10 +1,11 @@
 """
-Teacher dashboard integration tests (endpoints /analytics/*).
+Teacher dashboard integration tests (AnalyticsService over a real DB).
 
 They exercise the `AnalyticsService` wired to the **real** `AnalyticsRepository`
 over an ephemeral MongoDB. The value is running the aggregation pipelines for
 real (`$group`, `$unwind`, `$dateToString`, `distinct`, ...) — something the unit
 tests cannot validate, since they mock the repository.
+
 """
 
 import pytest
@@ -36,10 +37,10 @@ class TestOverview:
 
         overview = await service.get_overview()
 
-        assert overview.total_conversations == 3
-        assert overview.active_students == 2  # u1, u2 (distinct)
-        assert overview.total_messages == 6  # only role=user
-        assert overview.avg_questions_per_conversation == 2.0  # (2+1+3)/3
+        assert overview["total_conversations"] == 3
+        assert overview["active_students"] == 2  # u1, u2 (distinct)
+        assert overview["total_messages"] == 6  # only role=user
+        assert overview["avg_questions_per_conversation"] == 2.0  # (2+1+3)/3
 
     async def test_scopes_to_course_filter(self, service, db):
         chat_a = await insert_chat(db, course="ed", user_id="u1")
@@ -53,10 +54,10 @@ class TestOverview:
 
         overview = await service.get_overview(course_filter=["ed"])
 
-        assert overview.total_conversations == 2
-        assert overview.active_students == 2
-        assert overview.total_messages == 3  # 2 + 1, poo excluded
-        assert overview.avg_questions_per_conversation == 1.5  # (2+1)/2
+        assert overview["total_conversations"] == 2
+        assert overview["active_students"] == 2
+        assert overview["total_messages"] == 3  # 2 + 1, poo excluded
+        assert overview["avg_questions_per_conversation"] == 1.5  # (2+1)/2
 
     async def test_empty_filter_returns_zeros(self, service, db):
         chat = await insert_chat(db, course="ed", user_id="u1")
@@ -64,10 +65,10 @@ class TestOverview:
 
         overview = await service.get_overview(course_filter=[])
 
-        assert overview.total_conversations == 0
-        assert overview.active_students == 0
-        assert overview.total_messages == 0
-        assert overview.avg_questions_per_conversation == 0.0
+        assert overview["total_conversations"] == 0
+        assert overview["active_students"] == 0
+        assert overview["total_messages"] == 0
+        assert overview["avg_questions_per_conversation"] == 0.0
 
 
 class TestActivity:
@@ -81,8 +82,8 @@ class TestActivity:
         week = await service.get_activity("7d")
         quarter = await service.get_activity("90d")
 
-        assert sum(p.questions for p in week.data) == 1  # only the one from 2 days ago
-        assert sum(p.questions for p in quarter.data) == 2  # 2 days + 40 days
+        assert sum(p["questions"] for p in week) == 1  # only the one from 2 days ago
+        assert sum(p["questions"] for p in quarter) == 2  # 2 days + 40 days
 
     async def test_fills_missing_days_with_zero(self, service, db):
         chat = await insert_chat(db, course="ed", user_id="u1")
@@ -90,8 +91,8 @@ class TestActivity:
 
         week = await service.get_activity("7d")
 
-        assert len(week.data) == 7  # continuous series, no gaps
-        assert sum(p.questions for p in week.data) == 1
+        assert len(week) == 7  # continuous series, no gaps
+        assert sum(p["questions"] for p in week) == 1
 
     async def test_groups_questions_into_per_day_buckets(self, service, db):
         chat = await insert_chat(db, course="ed", user_id="u1")
@@ -100,11 +101,11 @@ class TestActivity:
         await insert_message(db, conversation_id=chat, role="user", days_ago=1)  # another day
 
         week = await service.get_activity("7d")
-        nonzero = [p for p in week.data if p.questions > 0]
+        nonzero = [p for p in week if p["questions"] > 0]
 
         assert len(nonzero) == 2  # two distinct day buckets ($dateToString)
-        assert {p.questions for p in nonzero} == {1, 2}  # 2 on day -3, 1 on day -1
-        assert len({p.date for p in nonzero}) == 2  # buckets have distinct dates
+        assert {p["questions"] for p in nonzero} == {1, 2}  # 2 on day -3, 1 on day -1
+        assert len({p["date"] for p in nonzero}) == 2  # buckets have distinct dates
 
     async def test_course_activity_is_scoped(self, service, db):
         ed = await insert_chat(db, course="ed", user_id="u1")
@@ -114,7 +115,7 @@ class TestActivity:
 
         activity = await service.get_course_activity("ed", "7d")
 
-        assert sum(p.questions for p in activity.data) == 1
+        assert sum(p["questions"] for p in activity) == 1
 
     async def test_global_activity_with_filter_counts_only_scoped(self, service, db):
         ed = await insert_chat(db, course="ed", user_id="u1")
@@ -124,14 +125,14 @@ class TestActivity:
 
         activity = await service.get_activity("7d", course_filter=["ed"])
 
-        assert sum(p.questions for p in activity.data) == 1
+        assert sum(p["questions"] for p in activity) == 1
 
     async def test_global_activity_with_filter_without_conversations_is_empty(self, service, db):
         await insert_chat(db, course="poo", user_id="u1")  # nothing in 'ed'
 
         activity = await service.get_activity("7d", course_filter=["ed"])
 
-        assert sum(p.questions for p in activity.data) == 0
+        assert sum(p["questions"] for p in activity) == 0
 
 
 class TestCourses:
@@ -143,7 +144,7 @@ class TestCourses:
 
         courses = await service.get_courses()
 
-        assert courses.data == ["alg", "ed", "poo"]
+        assert courses == ["alg", "ed", "poo"]
 
     async def test_respects_filter(self, service, db):
         await insert_chat(db, course="ed", user_id="u1")
@@ -152,14 +153,14 @@ class TestCourses:
 
         courses = await service.get_courses(course_filter=["ed", "poo"])
 
-        assert courses.data == ["ed", "poo"]
+        assert courses == ["ed", "poo"]
 
     async def test_empty_filter_returns_empty(self, service, db):
         await insert_chat(db, course="ed", user_id="u1")
 
         courses = await service.get_courses(course_filter=[])
 
-        assert courses.data == []
+        assert courses == []
 
     async def test_scoped_conversation_ids_helper(self, db):
         repo = AnalyticsRepository(db)
@@ -183,20 +184,19 @@ class TestCourseOverview:
 
         overview = await service.get_course_overview("ed")
 
-        assert overview.course == "ed"
-        assert overview.total_conversations == 2
-        assert overview.active_students == 2
-        assert overview.total_messages == 3
-        assert overview.avg_questions_per_conversation == 1.5
+        assert overview["total_conversations"] == 2
+        assert overview["active_students"] == 2
+        assert overview["total_messages"] == 3
+        assert overview["avg_questions_per_conversation"] == 1.5
 
     async def test_course_without_data_returns_zeros(self, service, db):
         # No chats/messages at all, must not divide by zero on the average.
         overview = await service.get_course_overview("ed")
 
-        assert overview.total_conversations == 0
-        assert overview.active_students == 0
-        assert overview.total_messages == 0
-        assert overview.avg_questions_per_conversation == 0.0
+        assert overview["total_conversations"] == 0
+        assert overview["active_students"] == 0
+        assert overview["total_messages"] == 0
+        assert overview["avg_questions_per_conversation"] == 0.0
 
 
 class TestCourseTopics:
@@ -208,9 +208,8 @@ class TestCourseTopics:
         await insert_chat(db, course="poo", user_id="u5", summary='{"concept_tags": ["Herança"]}')  # other course
 
         result = await service.get_course_topics("ed")
-        counts = {t.topic: t.count for t in result.topics}
+        counts = {t["topic"]: t["count"] for t in result}
 
-        assert result.course == "ed"
         assert counts == {"recursão": 2, "listas": 2}
 
     async def test_no_summaries_yields_empty(self, service, db):
@@ -218,7 +217,7 @@ class TestCourseTopics:
 
         result = await service.get_course_topics("ed")
 
-        assert result.topics == []
+        assert result == []
 
     async def test_ignores_non_string_summary(self, service, db):
         # A non-string summary slips past the existence filter but must be skipped.
@@ -227,7 +226,7 @@ class TestCourseTopics:
 
         result = await service.get_course_topics("ed")
 
-        assert {t.topic for t in result.topics} == {"loops"}
+        assert {t["topic"] for t in result} == {"loops"}
 
     async def test_caps_at_top_15_ordered_by_count(self, service, db):
         # 16 distinct concepts with strictly decreasing frequency (t0 x16 ... t15 x1).
@@ -237,13 +236,13 @@ class TestCourseTopics:
         await insert_chat(db, course="ed", user_id="u1", summary=json.dumps({"concept_tags": tags}))
 
         result = await service.get_course_topics("ed")
-        counts = [t.count for t in result.topics]
+        counts = [t["count"] for t in result]
 
-        assert len(result.topics) == 15  # capped, t15 (count 1) dropped
-        assert result.topics[0].topic == "t0"
-        assert result.topics[0].count == 16
+        assert len(result) == 15  # capped, t15 (count 1) dropped
+        assert result[0]["topic"] == "t0"
+        assert result[0]["count"] == 16
         assert counts == sorted(counts, reverse=True)  # descending order
-        assert "t15" not in {t.topic for t in result.topics}
+        assert "t15" not in {t["topic"] for t in result}
 
 
 class TestCourseSources:
@@ -264,7 +263,6 @@ class TestCourseSources:
         )
 
         result = await service.get_course_sources("ed")
-        ranked = [(s.filename, s.references) for s in result.sources]
+        ranked = [(s["filename"], s["references"]) for s in result]
 
-        assert result.course == "ed"
         assert ranked == [("a.pdf", 2), ("b.pdf", 1)]
