@@ -112,7 +112,7 @@ def create_questions(context: str, page_number: int, filename: str) -> list[dict
         context=context,
     )
 
-    content = call_openrouter(prompt, max_tokens=800, temperature=0.7, model=OPENROUTER_MODEL_BENCHMARK)
+    content = call_openrouter([{"role": "user", "content": prompt}], max_tokens=800, temperature=0.7, model=OPENROUTER_MODEL_BENCHMARK)
 
     if content is None:
         return None
@@ -304,7 +304,7 @@ def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> dict | N
         actual_response=actual_response,
     )
 
-    content = call_openrouter(prompt, max_tokens=300, temperature=0.1, model=OPENROUTER_MODEL_BENCHMARK)
+    content = call_openrouter([{"role": "user", "content": prompt}], max_tokens=300, temperature=0.1, model=OPENROUTER_MODEL_BENCHMARK)
 
     if content is None:
         return None

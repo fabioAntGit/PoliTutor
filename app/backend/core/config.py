@@ -1,4 +1,4 @@
-from rag.src.shared.config import QUERY_MAX_LENGTH, SOCRATIC_REDIRECT
+from rag.src.shared.config import QUERY_MAX_LENGTH, QUERY_MIN_LENGTH, SOCRATIC_REDIRECT
 import os
 from dotenv import load_dotenv
 from pathlib import Path

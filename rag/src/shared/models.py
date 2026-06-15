@@ -14,19 +14,6 @@ Classes:
 
 from pydantic import BaseModel, Field
 
-class IaEduCredentials(BaseModel):
-    """
-    Per-request IAEdu API credentials supplied by the student's frontend session.
-
-    Attributes:
-        url:        IAEdu API endpoint URL.
-        channel_id: IAEdu channel identifier.
-        api_key:    IAEdu API key.
-    """
-    url: str
-    channel_id: str
-    api_key: str
-
 class RetrievalResults(BaseModel):
     """
     Encapsulates the results from a ChromaDB query and subsequent RAG operations.

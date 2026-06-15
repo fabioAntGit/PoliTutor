@@ -6,6 +6,7 @@ from app.backend.repositories.interfaces.redis_repository import IRedisRepositor
 from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
+from app.backend.core.background import run_in_background
 from rag.src.shared.call_model import call_openrouter
 from rag.src.shared.config import SUMMARIZATION_PROMPT, SUMMARIZATION_THRESHOLD, OPENROUTER_MODEL_SUMMARIZATION
 
@@ -24,7 +25,7 @@ class ContextService(IContextService):
         self.redis_repository = redis_repository
         self.user_memory_service = user_memory_service
 
-    async def get_or_load_context(self, conversation_id: str) -> tuple[str | None, str]:
+    async def get_or_load_context(self, conversation_id: str) -> tuple[str | None, list[dict]]:
         summary, messages = await self.redis_repository.get_context(conversation_id)
 
         if not messages:
@@ -41,47 +42,52 @@ class ContextService(IContextService):
             if messages:
                 await self.redis_repository.repopulate_messages(conversation_id, messages)
 
-        return summary, self._format_history(messages)
+        return summary, self._format_history_structured(messages)
 
     async def check_and_trigger_summary(self, conversation_id: str, user_id: str, course: str) -> None:
         count = await self.redis_repository.get_message_count(conversation_id)
+        if count < SUMMARIZATION_THRESHOLD:
+            return
 
-        if count >= SUMMARIZATION_THRESHOLD:
-            logger.info("Triggering background summary for conversation %s (count=%d)", conversation_id, count)
-            summary_old, messages = await self.redis_repository.get_context(conversation_id)
+        summary_old, messages = await self.redis_repository.get_context(conversation_id)
+        if not messages:
+            return
 
-            if not messages:
-                return
+        await self.redis_repository.reset_message_count(conversation_id)
 
-            history_str = self._format_history(messages)
+        logger.info("Triggering background summary for conversation %s (count=%d)", conversation_id, count)
+        run_in_background(self._summarize(conversation_id, user_id, course, summary_old, messages))
 
+    async def _summarize(
+        self,
+        conversation_id: str,
+        user_id: str,
+        course: str,
+        summary_old: str | None,
+        messages: list[Message],
+    ) -> None:
+        try:
             prompt = SUMMARIZATION_PROMPT.format(
                 old_summary=summary_old or "Não existe resumo anterior.",
-                history=history_str
+                history=self._format_history(messages),
+            )
+            new_summary = await asyncio.to_thread(
+                call_openrouter,
+                [{"role": "user", "content": prompt}],
+                model=OPENROUTER_MODEL_SUMMARIZATION,
             )
 
-            await self.redis_repository.reset_message_count(conversation_id)
-            try:
-                new_summary = await asyncio.to_thread(
-                    call_openrouter,
-                    prompt,
-                    model=OPENROUTER_MODEL_SUMMARIZATION
-                )
+            if not new_summary:
+                logger.warning("OpenRouter returned empty summary for conversation %s", conversation_id)
+                return
 
-                if new_summary:
-                    last_msg_id = messages[-1].id
-                    await self.chat_repository.set_summary(conversation_id, new_summary, last_msg_id)
-                    await self.redis_repository.set_summary(conversation_id, new_summary)
-                    logger.info("Summary updated for conversation %s", conversation_id)
+            await self.chat_repository.set_summary(conversation_id, new_summary, messages[-1].id)
+            await self.redis_repository.set_summary(conversation_id, new_summary)
+            logger.info("Summary updated for conversation %s", conversation_id)
 
-                    # Fire memory extraction in background - does not block the response
-                    asyncio.create_task(
-                        self.user_memory_service.extract_and_upsert(user_id, course, new_summary)
-                    )
-                else:
-                    logger.warning("OpenRouter returned empty summary for conversation %s", conversation_id)
-            except Exception as e:
-                logger.error("Failed to generate summary for conversation %s: %s", conversation_id, e)
+            run_in_background(self.user_memory_service.extract_and_upsert(user_id, course, new_summary))
+        except Exception as e:
+            logger.error("Failed to generate summary for conversation %s: %s", conversation_id, e)
 
     def _format_history(self, messages: list[Message]) -> str:
         history_lines = []
@@ -89,3 +95,6 @@ class ContextService(IContextService):
             role = "Student" if msg.role == "user" else "Tutor"
             history_lines.append(f"{role}: {msg.content}")
         return "\n".join(history_lines)
+
+    def _format_history_structured(self, messages: list[Message]) -> list[dict]:
+        return [{"role": msg.role.value, "content": msg.content} for msg in messages]

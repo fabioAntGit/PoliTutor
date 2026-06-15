@@ -1,12 +1,12 @@
 import asyncio
 
 from rag.src.runtime.retrieval import ask
+from rag.src.shared.models import TutorResponse
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.repositories.interfaces.redis_repository import IRedisRepository
 from app.backend.schemas.message.models import Message, Source
-from app.backend.schemas.message.response import MessageResponse
 from app.backend.services.interfaces.message_service import IMessageService
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
@@ -32,7 +32,7 @@ class MessageService(IMessageService):
         conversation_id: str,
         question: str,
         user_id: str,
-    ) -> MessageResponse:
+    ) -> tuple[Message, Message, TutorResponse]:
         conversation = await self.chat_repository.get_chat(conversation_id)
 
         if conversation is None:
@@ -54,7 +54,6 @@ class MessageService(IMessageService):
             question,
             summary,
             history,
-            None,
             memory_context or "",
         )
 
@@ -78,14 +77,7 @@ class MessageService(IMessageService):
             conversation_id, conversation.user_id, conversation.course
         )
 
-        return MessageResponse(
-            user_message_id=str(user_msg.id),
-            assistant_message_id=str(assistant_msg.id),
-            answer=response.answer,
-            sources=[Source(filename=s.filename, pages=s.pages) for s in response.sources],
-            is_fallback=response.is_fallback,
-            guardrail_triggered=response.is_guardrail or response.is_output_guardrail,
-        )
+        return user_msg, assistant_msg, response
 
     async def get_chat_messages(self, conversation_id: str) -> list[Message]:
         return await self.message_repository.get_messages(conversation_id)

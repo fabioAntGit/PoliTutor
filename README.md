@@ -14,10 +14,10 @@ Poli-Tutor is a Retrieval-Augmented Generation (RAG) system that acts as a Socra
 - Source-type aware chunking strategies (`slides` vs. `apontamentos`)
 - Multilingual embeddings with `BAAI/bge-m3` stored in ChromaDB Cloud
 - Cross-encoder reranking (`Alibaba-NLP/gte-reranker-modernbert-base` on CPU, `jinaai/jina-reranker-v2-base-multilingual` on GPU)
-- Socratic tutor generation via IAEdu API (GPT-4o) or OpenRouter — guides students through questions and hints, never gives direct answers
+- Socratic tutor generation via OpenRouter (GPT-4o) — guides students through questions and hints, never gives direct answers
 - Three-layer defence system: input guardrails (regex) → LLM system prompt → output guardrail (regex)
 - Conversation memory: Redis for recent message cache + MongoDB for persistent summaries (background summarisation via Gemini 2.5 Flash Lite)
-- `ask()` function callable by a backend, accepting per-student IAEdu credentials for production use
+- `ask()` function callable by a backend as the primary tutor-generation entry point
 - Retrieval benchmark: automated dataset generation + IR evaluation (Hit Rate, MRR, NDCG, MAP, Precision, Recall via `ranx`)
 - Tutor benchmark: LLM-as-judge evaluation of Socratic response quality (Faithfulness, Non-directiveness, Scaffolding, Clarity) with semantic similarity scoring and guardrail classification metrics (Precision, Recall, F1, FPR)
 - Threshold calibration: data-driven distance threshold sweep for ChromaDB filtering
@@ -111,14 +111,8 @@ CHROMA_API_KEY=your_key_here
 CHROMA_TENANT=your_tenant_here
 CHROMA_DATABASE=your_database_here
 
-# OpenRouter (image summarisation, benchmark dataset generation, LLM-as-judge, summarisation)
+# OpenRouter (tutor generation, image summarisation, benchmark dataset generation, LLM-as-judge, summarisation)
 OPENROUTER_KEY=your_key_here
-
-# IAEdu API (production tutor generation — per-student credentials supplied at request time)
-# These are fallback values for local development; in production, credentials come from the frontend.
-IAEDU_API_ENDPOINT=your_endpoint_here
-IAEDU_API_CHANNEL=your_channel_here
-IAEDU_API_KEY=your_key_here
 
 # Data paths (optional — defaults to rag/data/raw and rag/data/raw/ED)
 RAW_DATA_PATH=/path/to/data/raw
@@ -134,16 +128,10 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 ```
 
-### Generator backend
+### Tutor generation
 
-`GENERATOR_BACKEND` in `rag/src/shared/config.py` controls which LLM is used for tutor generation:
-
-| Value | Used for |
-| --- | --- |
-| `"openrouter"` | Local development and benchmarks (avoids IAEdu rate limits) |
-| `"iaedu"` | Production — students supply their own IAEdu credentials via the frontend |
-
-The default is `"openrouter"`. Change it in `config.py` when deploying to production.
+Tutor responses are generated via OpenRouter using `OPENROUTER_MODEL_GENERATOR`
+(default `openai/gpt-4o`), configurable in `rag/src/shared/config.py`.
 
 ---
 
@@ -429,7 +417,7 @@ Student question
       |
       v [cross-encoder reranker → top 5]
       |
-      v generator.py — build context prompt → call IAEdu or OpenRouter
+      v generator.py — build context prompt → call OpenRouter
       |
       v [output guardrail: detect direct answers → replace with Socratic redirect]
       |
@@ -440,18 +428,12 @@ Student question
 
 ## Tutor
 
-`retrieval.py` exposes `ask(course, query, iaedu_creds=None)` as the primary backend integration point:
+`retrieval.py` exposes `ask(course, query)` as the primary backend integration point:
 
 ```python
 from rag.src.runtime.retrieval import ask
-from rag.src.shared.models import IaEduCredentials
 
-# Development / benchmark (uses GENERATOR_BACKEND from config)
 response = ask(course="ed", query="O que é uma árvore AVL?")
-
-# Production (per-student IAEdu credentials from the frontend)
-creds = IaEduCredentials(url="...", channel_id="...", api_key="...")
-response = ask(course="ed", query="O que é uma árvore AVL?", iaedu_creds=creds)
 
 print(response.answer)              # Socratic guidance from the tutor
 print(response.is_fallback)         # True if no relevant content was found
@@ -652,13 +634,11 @@ Interactive API docs: http://localhost:8000/docs
 
 ### Auth headers
 
-All endpoints require IAEdu headers:
+Protected endpoints require a JWT bearer token (obtained from `/api/v1/auth/login`):
 
 | Header | Description |
 | --- | --- |
-| `X-Channel-Id` | IAEdu channel identifier |
-| `X-Api-Key` | IAEdu API key (required for message endpoints) |
-| `X-Api-Endpoint` | IAEdu API endpoint URL (required for message endpoints) |
+| `Authorization` | `Bearer <access_token>` |
 
 ---
 
@@ -670,7 +650,7 @@ All endpoints require IAEdu headers:
 | **Persistence** | MongoDB (async pymongo), Redis (async redis.asyncio) |
 | **RAG / ML** | LangChain, Sentence Transformers, ChromaDB Cloud |
 | **Document parsing** | Unstructured API |
-| **LLM** | IAEdu (GPT-4o), OpenRouter (GPT-4o, Gemini 2.5 Flash Lite) |
+| **LLM** | OpenRouter (GPT-4o, Gemini 2.5 Flash Lite) |
 | **Evaluation** | ranx, NumPy, Pandas, Matplotlib |
 | **Frontend** | React 19, React Router 7, Vite, Tailwind CSS, Shadcn/Radix UI, Axios |
 | **Testing** | pytest (backend), Vitest + Testing Library (frontend) |

@@ -5,7 +5,7 @@ Provides tools to generate question datasets from course documents and evaluate
 retrieval quality using IR metrics (Hit Rate, MRR, Recall) via the ranx library.
 
 Two main workflows:
-    - Dataset generation: calls the IAEdu LLM API to produce questions per page.
+    - Dataset generation: calls the OpenRouter LLM API to produce questions per page.
     - Evaluation: runs retrieval for each question and computes ranx metrics.
 """
 
@@ -59,7 +59,7 @@ class BenchmarkConfig(BaseModel):
 
 def create_qa(context: str, page_number: int, filename: str) -> dict | None:
     """
-    Sends a page context to the IAEdu LLM endpoint and returns a generated Q&A pair.
+    Sends a page context to the OpenRouter LLM endpoint and returns a generated Q&A pair.
 
     Args:
         context: The page text to use as the generation context.
@@ -70,14 +70,13 @@ def create_qa(context: str, page_number: int, filename: str) -> dict | None:
         A dict with 'filename', 'page', and 'question' keys, or None on failure.
     """
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    # content = call_iaedu(prompt)
-    content = call_openrouter(prompt, model=OPENROUTER_MODEL_BENCHMARK)
+    content = call_openrouter([{"role": "user", "content": prompt}], model=OPENROUTER_MODEL_BENCHMARK)
     if content is None:
         return None
     try:
         return json.loads(content)
     except (json.JSONDecodeError, TypeError):
-        logger.error("Failed to parse IAEdu response as JSON: %s", content)
+        logger.error("Failed to parse OpenRouter response as JSON: %s", content)
         return None
 
 

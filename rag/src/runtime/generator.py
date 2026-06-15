@@ -2,27 +2,23 @@
 Tutor Generation Module.
 
 Takes the retrieved chunks from ChromaDB and a student query, builds a
-grounded context prompt, and calls the configured LLM backend to generate a
-Socratic tutoring response in Portuguese.
+grounded context prompt, and calls OpenRouter (OPENROUTER_MODEL_GENERATOR) to
+generate a Socratic tutoring response in Portuguese.
 
 The tutor never gives direct answers or ready-made code — it guides the
 student via questions and scaffolding.
-
-Backends (GENERATOR_BACKEND in config):
-    - "iaedu"      — IAEdu streaming API (GPT-4o via institutional endpoint)
-    - "openrouter" — OpenRouter API using OPENROUTER_MODEL_GENERATOR
 """
 
 import json
 import logging
 import re
 
-from ..shared.config import GENERATOR_BACKEND, OPENROUTER_MODEL_GENERATOR, SOCRATIC_REDIRECT, TUTOR_API_ERROR_MESSAGE, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
+from ..shared.config import OPENROUTER_MODEL_GENERATOR, SOCRATIC_REDIRECT, TUTOR_API_ERROR_MESSAGE, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
 
 
 from .guardrails import detect_direct_answer
-from ..shared.call_model import call_iaedu, call_openrouter
-from ..shared.models import IaEduCredentials, RetrievalResults, TutorResponse, TutorSource
+from ..shared.call_model import call_openrouter
+from ..shared.models import RetrievalResults, TutorResponse, TutorSource
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +44,28 @@ def build_context(results: RetrievalResults) -> str:
         parts.append(f"[{i}] {filename} — p.{pages_str}\n{doc.strip()}")
     return "\n\n".join(parts)
 
+def build_messages(
+    system_content: str,
+    summary: str,
+    history: list[dict],
+    query: str,
+) -> list[dict]:
+    """Assembles the message list for the LLM."""
+    messages: list[dict] = [{"role": "system", "content": system_content}]
+
+    if summary:
+        messages.append({"role": "assistant", "content": f"Resumo: {summary}"})
+
+    for turn in history:
+        role = turn.get("role")
+        content = turn.get("content")
+        if role in ("user", "assistant") and content:
+            messages.append({"role": role, "content": content})
+
+    messages.append({"role": "user", "content": query})
+    return messages
+
+
 def build_sources(results: RetrievalResults) -> list[TutorSource]:
     """
     Converts retrieval metadata into a list of TutorSource objects.
@@ -70,11 +88,12 @@ def generate(
     query: str,
     results: RetrievalResults,
     summary: str = "",
-    history: str = "",
-    iaedu_creds: IaEduCredentials | None = None,
+    history: list[dict] | None = None,
     is_retrieval_fallback: bool = False,
     memory: str = "",
 ) -> TutorResponse:
+    history = history or []
+
     if results.is_empty():
         logger.info("[GENERATE] No RAG chunks — continuing dialogue from conversation context.")
         context = ""
@@ -83,22 +102,21 @@ def generate(
         context = build_context(results)
         sources = build_sources(results)
 
-    prompt = TUTOR_SYSTEM_PROMPT.format(
+    system_content = TUTOR_SYSTEM_PROMPT.format(
         student_memory=memory,
-        chat_summary=summary or "Não há resumo disponível.",
-        chat_history=history or "Não há histórico anterior.",
-        user_question=query,
         rag_context=context,
     )
+    messages = build_messages(system_content, summary, history, query)
 
-    if GENERATOR_BACKEND == "openrouter":
-        raw_answer = call_openrouter(prompt, max_tokens=2000, model=OPENROUTER_MODEL_GENERATOR)
-    else:
-        creds = iaedu_creds.model_dump() if iaedu_creds else {}
-        raw_answer = call_iaedu(prompt, **creds)
+    raw_answer = call_openrouter(
+        messages=messages,
+        max_tokens=2000,
+        model=OPENROUTER_MODEL_GENERATOR,
+        response_format={"type": "json_object"},
+    )
 
     if raw_answer is None:
-        logger.error("[GENERATE] API ERROR: %s returned no answer", GENERATOR_BACKEND)
+        logger.error("[GENERATE] API ERROR: OpenRouter returned no answer")
         return TutorResponse(
             answer=TUTOR_API_ERROR_MESSAGE,
             sources=[],

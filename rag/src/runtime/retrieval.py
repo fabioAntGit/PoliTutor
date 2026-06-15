@@ -30,7 +30,7 @@ from .guardrails import (
     sanitize_input,
     validate_input,
 )
-from ..shared.models import IaEduCredentials, RetrievalResults, TutorResponse
+from ..shared.models import RetrievalResults, TutorResponse
 from .reranker import rerank
 
 logger = logging.getLogger(__name__)
@@ -116,8 +116,7 @@ def ask(
     course: str,
     query: str,
     summary: str = "",
-    history: str = "",
-    iaedu_creds: IaEduCredentials | None = None,
+    history: list[dict] | None = None,
     memory: str = "",
 ) -> TutorResponse:
     query = sanitize_input(query)
@@ -145,7 +144,6 @@ def ask(
         results,
         summary,
         history,
-        iaedu_creds,
         is_retrieval_fallback=results.is_empty(),
         memory=memory,
     )

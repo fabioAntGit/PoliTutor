@@ -9,7 +9,8 @@ from app.backend.repositories.interfaces.course_repository import ICourseReposit
 from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.schemas.chat.models import Chat
-from app.backend.schemas.chat.response import ChatRead, ChatCreated, ChatListItem
+from app.backend.schemas.course.models import Course
+from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.chat_service import IChatService
 
 
@@ -26,7 +27,7 @@ class ChatService(IChatService):
         self.user_repository = user_repository
         self.message_repository = message_repository
 
-    async def create_chat(self, course_code: str, user_id: str) -> ChatCreated:
+    async def create_chat(self, course_code: str, user_id: str) -> str:
         course = await self.course_repository.find_by_code(course_code)
 
         if course is None or not course.is_active:
@@ -46,10 +47,11 @@ class ChatService(IChatService):
             user_id=user_id,
         )
 
-        conversation_id = await self.chat_repository.create(chat)
-        return ChatCreated(conversation_id=conversation_id)
+        return await self.chat_repository.create(chat)
 
-    async def get_chat(self, conversation_id: str, requester_user_id: str) -> ChatRead:
+    async def get_chat(
+        self, conversation_id: str, requester_user_id: str
+    ) -> tuple[Chat, Course, list[Message]]:
         chat = await self.chat_repository.get_chat(conversation_id)
 
         if chat is None:
@@ -65,14 +67,7 @@ class ChatService(IChatService):
 
         messages = await self.message_repository.get_messages(conversation_id)
 
-        return ChatRead(
-            conversation_id=str(chat.id),
-            course_code=course.code,
-            course_name=course.name,
-            user_id=chat.user_id,
-            summary=chat.summary,
-            messages=messages,
-        )
+        return chat, course, messages
 
     async def delete_chat(self, conversation_id: str, requester_user_id: str) -> None:
         chat = await self.chat_repository.get_chat(conversation_id)
@@ -86,7 +81,7 @@ class ChatService(IChatService):
         await self.message_repository.delete_by_conversation(conversation_id)
         await self.chat_repository.delete(conversation_id)
 
-    async def list_user_chats(self, user_id: str) -> list[ChatListItem]:
+    async def list_user_chats(self, user_id: str) -> list[tuple[Chat, Course]]:
         chats = await self.chat_repository.get_chats(user_id)
 
         course_codes = list({chat.course for chat in chats})
@@ -94,14 +89,10 @@ class ChatService(IChatService):
         active_by_code = {course.code: course for course in courses if course.is_active}
 
         items = [
-            ChatListItem(
-                conversation_id=str(chat.id),
-                course_name=active_by_code[chat.course].name,
-                updated_at=chat.updated_at,
-            )
+            (chat, active_by_code[chat.course])
             for chat in chats
             if chat.course in active_by_code
         ]
 
-        items.sort(key=lambda item: item.updated_at, reverse=True)
+        items.sort(key=lambda item: item[0].updated_at, reverse=True)
         return items

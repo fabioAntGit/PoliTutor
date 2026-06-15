@@ -16,8 +16,16 @@ async def send_message(
     payload: dict = Depends(require_role(UserRole.STUDENT)),
     service: IMessageService = Depends(get_message_service)
 ):
-    return await service.send_message(
+    user_msg, assistant_msg, response = await service.send_message(
         conversation_id=conversation_id,
         question=body.question,
         user_id=payload["id"],
+    )
+    return MessageResponse(
+        user_message_id=str(user_msg.id),
+        assistant_message_id=str(assistant_msg.id),
+        answer=response.answer,
+        sources=assistant_msg.sources,
+        is_fallback=response.is_fallback,
+        guardrail_triggered=response.is_guardrail or response.is_output_guardrail,
     )

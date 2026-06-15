@@ -98,7 +98,7 @@ async def test_create_chat_valid_data_returns_conversation_id(service, course_re
 
     result = await service.create_chat("ed", "user1")
 
-    assert result.conversation_id == "new_chat_id"
+    assert result == "new_chat_id"
     chat_repo.create.assert_awaited_once()
 
 
@@ -138,13 +138,13 @@ async def test_get_chat_owner_returns_chat_data(service, chat_repo, course_repo,
     course_repo.find_by_code.return_value = _make_course()
     message_repo.get_messages.return_value = [_make_message()]
 
-    result = await service.get_chat("60d5ecb8b4259b3a0c4f1a01", "user1")
+    chat, course, messages = await service.get_chat("60d5ecb8b4259b3a0c4f1a01", "user1")
 
-    assert result.conversation_id == "60d5ecb8b4259b3a0c4f1a01"
-    assert result.course_code == "ed"
-    assert result.course_name == "Estruturas de Dados"
-    assert len(result.messages) == 1
-    assert result.messages[0].content == "Olá tutor!"
+    assert str(chat.id) == "60d5ecb8b4259b3a0c4f1a01"
+    assert course.code == "ed"
+    assert course.name == "Estruturas de Dados"
+    assert len(messages) == 1
+    assert messages[0].content == "Olá tutor!"
 
 
 async def test_get_chat_not_found_throws_chat_not_found_error(service, chat_repo):
@@ -174,8 +174,8 @@ async def test_list_user_chats_returns_sorted_by_most_recent(service, chat_repo,
     result = await service.list_user_chats("user1")
 
     assert len(result) == 2
-    assert result[0].conversation_id == "60d5ecb8b4259b3a0c4f1a03"
-    assert result[1].conversation_id == "60d5ecb8b4259b3a0c4f1a02"
+    assert str(result[0][0].id) == "60d5ecb8b4259b3a0c4f1a03"
+    assert str(result[1][0].id) == "60d5ecb8b4259b3a0c4f1a02"
 
 
 async def test_list_user_chats_inactive_courses_returns_filtered(service, chat_repo, course_repo):
@@ -189,4 +189,4 @@ async def test_list_user_chats_inactive_courses_returns_filtered(service, chat_r
     result = await service.list_user_chats("user1")
 
     assert len(result) == 1
-    assert result[0].conversation_id == "60d5ecb8b4259b3a0c4f1a01"
+    assert str(result[0][0].id) == "60d5ecb8b4259b3a0c4f1a01"

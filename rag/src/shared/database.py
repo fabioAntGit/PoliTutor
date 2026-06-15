@@ -42,11 +42,10 @@ def get_client() -> ClientAPI:
 
 def get_collection(name: str | None = None) -> chromadb.Collection:
     """
-    Retrieves or creates a ChromaDB collection with the configured HNSW index parameters.
+    Retrieves or creates a ChromaDB collection with the configured HNSW distance space.
 
-    HNSW parameters (space, M, construction_ef, search_ef) are injected at creation
-    time to ensure consistent search performance. If the collection already exists,
-    the parameters are ignored by ChromaDB.
+    The HNSW distance space (cosine) is set at creation time via CHROMA_METADATA.
+    If the collection already exists, the metadata is ignored by ChromaDB.
 
     Args:
         name: Collection name to target. Uses config default if None.

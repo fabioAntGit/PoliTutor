@@ -15,10 +15,11 @@ async def create_chat(
     payload: dict = Depends(require_role(UserRole.STUDENT)),
     service: IChatService = Depends(get_chat_service)
 ):
-    return await service.create_chat(
+    conversation_id = await service.create_chat(
         course_code=body.course_code,
         user_id=payload["id"],
     )
+    return ChatCreated(conversation_id=conversation_id)
 
 
 @router.get("/chats", response_model=list[ChatListItem])
@@ -26,7 +27,15 @@ async def list_chats(
     payload: dict = Depends(require_authenticated),
     service: IChatService = Depends(get_chat_service)
 ):
-    return await service.list_user_chats(user_id=payload["id"])
+    chats = await service.list_user_chats(user_id=payload["id"])
+    return [
+        ChatListItem(
+            conversation_id=str(chat.id),
+            course_name=course.name,
+            updated_at=chat.updated_at,
+        )
+        for chat, course in chats
+    ]
 
 
 @router.get("/chat/{conversation_id}", response_model=ChatRead, response_model_by_alias=False)
@@ -35,7 +44,17 @@ async def get_chat(
     payload: dict = Depends(require_authenticated),
     service: IChatService = Depends(get_chat_service)
 ):
-    return await service.get_chat(conversation_id, requester_user_id=payload["id"])
+    chat, course, messages = await service.get_chat(
+        conversation_id, requester_user_id=payload["id"]
+    )
+    return ChatRead(
+        conversation_id=str(chat.id),
+        course_code=course.code,
+        course_name=course.name,
+        user_id=chat.user_id,
+        summary=chat.summary,
+        messages=messages,
+    )
 
 
 @router.delete("/chat/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)

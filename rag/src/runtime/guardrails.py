@@ -19,6 +19,7 @@ import logging
 
 from ..shared.config import (
     CODE_REQUEST_PATTERNS,
+    DIRECT_ANSWER_MIN_LENGTH,
     DIRECT_ANSWER_SIGNALS,
     INJECTION_PATTERNS,
     QUERY_MAX_LENGTH,
@@ -137,6 +138,10 @@ def detect_direct_answer(answer: str) -> bool:
         if re.search(pattern, answer_lower):
             logger.warning("[GUARDRAIL] Direct answer signal detected in output.")
             return True
+
+    if len(answer.strip()) > DIRECT_ANSWER_MIN_LENGTH and "?" not in answer:
+        logger.warning("[GUARDRAIL] Non-Socratic output: long response without a guiding question.")
+        return True
 
     return False
 
