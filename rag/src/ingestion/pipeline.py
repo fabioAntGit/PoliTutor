@@ -17,6 +17,7 @@ from ..shared.utils import extract_metadata_from_filename
 from .extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from .chunker import chunk_document
 from .embedding import embed_chunks
+from ..shared.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +154,9 @@ def run_pipeline(
     logger.info("Pipeline finished. Successfully processed %d/%d files.", success_count, len(files))
 
 if __name__ == "__main__":
+
+    setup_logging()
+
     parser = argparse.ArgumentParser(description="RAG Pipeline Orchestrator")
     parser.add_argument(
         "--model",

@@ -25,10 +25,13 @@ from app.backend.api.v1.endpoints.users import router as users_router
 from app.backend.core.database import close_mongo, connect_to_mongo, connect_to_redis, close_redis
 from app.backend.core.exceptions import AppError
 from app.backend.schemas.shared.api_error import ApiError
-from rag.src.ingestion.embedding import get_embedder
+from rag.src.shared.embedding import get_embedder
 from rag.src.runtime.reranker import get_reranker
+from rag.src.shared.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
+
+setup_logging()
 
 RAG_PRELOAD = os.getenv("RAG_PRELOAD", "1") != "0"
 

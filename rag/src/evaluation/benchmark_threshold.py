@@ -350,6 +350,10 @@ def run_threshold_sweep(
 # ── CLI ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     import argparse
 
     parser = argparse.ArgumentParser(description="Threshold sweep benchmark for retrieval distance calibration.")

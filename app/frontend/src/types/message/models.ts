@@ -9,8 +9,8 @@ export interface Message {
   id: string;
   role: Role;
   content: string;
-  createdAt: string;
+  created_at: string;
   sources?: Source[];
-  isFallback?: boolean;
+  is_fallback?: boolean;
   is_reported?: boolean;
 }

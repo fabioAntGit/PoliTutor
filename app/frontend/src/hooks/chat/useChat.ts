@@ -102,7 +102,7 @@ export function useChat() {
         id: Date.now().toString(),
         role: "user",
         content: question,
-        createdAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       };
 
       setMessages((prev) => [...prev, userMsg]);
@@ -123,8 +123,8 @@ export function useChat() {
           role: "assistant",
           content: response.answer,
           sources: response.sources,
-          isFallback: response.is_fallback,
-          createdAt: new Date().toISOString(),
+          is_fallback: response.is_fallback,
+          created_at: new Date().toISOString(),
         };
 
         setMessages((prev) => {
@@ -151,7 +151,7 @@ export function useChat() {
           id: `${Date.now()}-assistant-error`,
           role: "assistant",
           content: errorMessage,
-          createdAt: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         };
 
         setMessages((prev) => [...prev, assistantMsg]);

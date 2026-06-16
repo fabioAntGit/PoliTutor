@@ -2,9 +2,9 @@ import redis.asyncio as redis
 from app.backend.core.config import REDIS_TTL
 from app.backend.schemas.message.models import Message
 
-from app.backend.repositories.interfaces.redis_repository import IRedisRepository
+from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 
-class RedisRepository(IRedisRepository):
+class RedisRepository(ICacheRepository):
     def __init__(self, client: redis.Redis) -> None:
         self.client = client
         self.ttl = REDIS_TTL

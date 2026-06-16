@@ -108,7 +108,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                     </ReactMarkdown>
                 </div>
 
-                {!isUser && !message.isFallback && message.sources && message.sources.length > 0 && (
+                {!isUser && !message.is_fallback && message.sources && message.sources.length > 0 && (
                     <div className="mt-3 border-t border-border/40 pt-2 text-[11px]">
                         <button
                             onClick={() => setShowSources(!showSources)}

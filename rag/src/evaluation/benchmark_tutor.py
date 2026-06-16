@@ -51,7 +51,7 @@ from ..shared.config import (
 )
 from ..shared.call_model import call_openrouter
 from ..shared.database import get_collection
-from ..ingestion.embedding import get_embedder
+from ..shared.embedding import get_embedder
 from ..shared.models import TutorBenchmarkEntry, TutorEvaluationResult
 from ..runtime.retrieval import ask
 from ..shared.utils import extract_metadata_from_filename
@@ -768,6 +768,10 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
     return output_file
 
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         if arg == "--generate":

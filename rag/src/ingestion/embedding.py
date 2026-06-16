@@ -14,47 +14,18 @@ import re
 import requests
 import time
 
-from langchain_huggingface import HuggingFaceEmbeddings
-
 from ..shared.config import (
-    EMBEDDING_DEVICE,
-    EMBEDDING_MODEL,
-    EMBEDDING_NORMALIZE,
     IMAGE_API_DELAY,
     IMAGE_EMBEDDING_PROMPT,
     MAX_IMAGE_API_CALLS,
     OPENROUTER_MODEL_IMAGE_SUMMARIZATION,
 )
 from ..shared.database import get_collection
+from ..shared.embedding import get_embedder
 
 logger = logging.getLogger(__name__)
 
-_embedder_cache: dict[str, HuggingFaceEmbeddings] = {}
 _image_api_calls: int = 0
-
-
-def get_embedder(model_name: str | None = None) -> HuggingFaceEmbeddings:
-    """
-    Returns a cached HuggingFace embedder for the given model name.
-
-    On first call for a given model, loads and caches the model to avoid
-    repeated expensive initializations across pipeline stages.
-
-    Args:
-        model_name: HuggingFace model identifier. Uses config default if None.
-
-    Returns:
-        A ready-to-use HuggingFaceEmbeddings instance.
-    """
-    model_name = model_name or EMBEDDING_MODEL
-    if model_name not in _embedder_cache:
-        logger.info("Loading embedding model into memory: %s", model_name)
-        _embedder_cache[model_name] = HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs={"device": EMBEDDING_DEVICE},
-            encode_kwargs={"normalize_embeddings": EMBEDDING_NORMALIZE},
-        )
-    return _embedder_cache[model_name]
 
 
 def build_meta(chunk: dict, doc_type: str, **extra) -> dict:

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { deleteMyAccount } from "@/api/users";
+import { UserService } from "@/services/user.service";
 import { authService } from "@/services/auth.service";
 import { ApiError } from "@/lib/errors";
 
@@ -35,7 +35,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     if (!canDelete) return;
     setDeleting(true);
     try {
-      await deleteMyAccount();
+      await UserService.deleteMyAccount();
       authService.clearTokens();
       toast.success("Conta eliminada. Os teus dados serao apagados permanentemente daqui a 30 dias.");
       navigate("/login", { replace: true });

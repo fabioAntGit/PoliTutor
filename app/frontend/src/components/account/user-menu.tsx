@@ -22,7 +22,6 @@ import {
 import { SettingsDialog } from "@/components/settings/settings-dialog";
 import { useTheme } from "@/components/theme/theme-provider";
 import { authService } from "@/services/auth.service";
-import { logout } from "@/api/auth";
 
 function initialsFor(name: string | null, fallback: string | null): string {
   const source = name?.trim() || fallback?.trim() || "?";
@@ -47,7 +46,7 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
   const handleLogout = async () => {
     const accessToken = authService.getAccessToken();
     if (accessToken) {
-      await logout(accessToken).catch(() => {});
+      await authService.logout(accessToken).catch(() => {});
     }
     authService.clearTokens();
     navigate("/login", { replace: true });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AnalyticsService } from "@/services/analytics.service";
-import type { CourseOverview, TopicPoint, SourcePoint } from "@/api/analytics";
+import type { CourseOverviewRead, TopicPoint, SourcePoint } from "@/types/analytics";
 import type { RankedListItem } from "@/components/dashboard/ranked-list-card";
 
 type Status = "loading" | "valid" | "not_found";
@@ -11,7 +11,7 @@ export function useCourseDashboard() {
   const navigate = useNavigate();
 
   const [status, setStatus] = useState<Status>("loading");
-  const [overview, setOverview] = useState<CourseOverview | null>(null);
+  const [overview, setOverview] = useState<CourseOverviewRead | null>(null);
   const [topics, setTopics] = useState<TopicPoint[] | null>(null);
   const [sources, setSources] = useState<SourcePoint[] | null>(null);
 

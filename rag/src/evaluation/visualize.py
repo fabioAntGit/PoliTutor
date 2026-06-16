@@ -50,6 +50,10 @@ def visualize(collection_name: str | None = None) -> None:
 
 
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     parser = argparse.ArgumentParser(description="ChromaDB Spotlight Visualizer")
     parser.add_argument("--collection", type=str, help="Specific ChromaDB collection to visualize")
     args = parser.parse_args()

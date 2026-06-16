@@ -27,7 +27,7 @@ from pymongo import AsyncMongoClient
 from testcontainers.mongodb import MongoDbContainer
 
 from app.backend.main import app
-from app.backend.api.deps import get_db, get_deprecated_db, get_redis_repository
+from app.backend.api.deps import get_db, get_deprecated_db, get_cache_repository
 from app.backend.core.config import JWT_ALGORITHM, JWT_SECRET_KEY
 
 _TEST_DB_NAME = "poli_tutor_test"
@@ -72,7 +72,7 @@ async def api_client(db):
     redis_repo = _FakeRedisRepo()
     app.dependency_overrides[get_db] = lambda: db
     app.dependency_overrides[get_deprecated_db] = lambda: db.client[f"{_TEST_DB_NAME}_deprecated"]
-    app.dependency_overrides[get_redis_repository] = lambda: redis_repo
+    app.dependency_overrides[get_cache_repository] = lambda: redis_repo
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:

@@ -4,7 +4,7 @@ import pytest
 
 from app.backend.core.exceptions import AuthError
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
-from app.backend.repositories.interfaces.redis_repository import IRedisRepository
+from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.schemas.course.models import Course
 from app.backend.schemas.user.models import User
@@ -49,7 +49,7 @@ def course_repo():
 
 @pytest.fixture
 def redis_repo():
-    return AsyncMock(spec=IRedisRepository)
+    return AsyncMock(spec=ICacheRepository)
 
 
 @pytest.fixture
@@ -58,7 +58,7 @@ def service(user_repo, security, course_repo, redis_repo):
         user_repository=user_repo,
         security_service=security,
         course_repository=course_repo,
-        redis_repository=redis_repo,
+        cache_repository=redis_repo,
     )
 
 

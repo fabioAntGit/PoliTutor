@@ -1,6 +1,6 @@
 from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
-from app.backend.repositories.interfaces.redis_repository import IRedisRepository
+from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.services.interfaces.security_service import ISecurityService
 from app.backend.services.interfaces.authentication_service import IAuthenticationService
 from app.backend.schemas.user.models import User
@@ -14,12 +14,12 @@ class AuthenticationService(IAuthenticationService):
         user_repository: IUserRepository,
         security_service: ISecurityService,
         course_repository: ICourseRepository,
-        redis_repository: IRedisRepository,
+        cache_repository: ICacheRepository,
     ) -> None:
         self.user_repository = user_repository
         self.security_service = security_service
         self.course_repository = course_repository
-        self.redis_repository = redis_repository
+        self.cache_repository = cache_repository
 
     async def login(self, username: str, password: str) -> str:
         user = await self.user_repository.find_by_username(username)
@@ -84,7 +84,7 @@ class AuthenticationService(IAuthenticationService):
             if exp:
                 expire_in_seconds = int(exp - now_timestamp)
                 if expire_in_seconds > 0:
-                    await self.redis_repository.add_token_to_blacklist(access_token, expire_in_seconds)
+                    await self.cache_repository.add_token_to_blacklist(access_token, expire_in_seconds)
         except AuthError:
             pass
         return True

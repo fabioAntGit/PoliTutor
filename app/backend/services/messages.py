@@ -5,7 +5,7 @@ from rag.src.shared.models import TutorResponse
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
-from app.backend.repositories.interfaces.redis_repository import IRedisRepository
+from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.schemas.message.models import Message, Source
 from app.backend.services.interfaces.message_service import IMessageService
 from app.backend.services.interfaces.context_service import IContextService
@@ -17,13 +17,13 @@ class MessageService(IMessageService):
         self,
         message_repository: IMessageRepository,
         chat_repository: IChatRepository,
-        redis_repository: IRedisRepository,
+        cache_repository: ICacheRepository,
         context_service: IContextService,
         user_memory_service: IUserMemoryService,
     ) -> None:
         self.message_repository = message_repository
         self.chat_repository = chat_repository
-        self.redis_repository = redis_repository
+        self.cache_repository = cache_repository
         self.context_service = context_service
         self.user_memory_service = user_memory_service
 
@@ -59,7 +59,7 @@ class MessageService(IMessageService):
 
         user_msg = Message(conversation_id=conversation_id, role="user", content=question)
         user_msg.id = await self.message_repository.create(user_msg)
-        await self.redis_repository.add_message(user_msg)
+        await self.cache_repository.add_message(user_msg)
 
         assistant_msg = Message(
             conversation_id=conversation_id,
@@ -69,7 +69,7 @@ class MessageService(IMessageService):
         )
 
         assistant_msg.id = await self.message_repository.create(assistant_msg)
-        await self.redis_repository.add_message(assistant_msg)
+        await self.cache_repository.add_message(assistant_msg)
 
         await self.chat_repository.touch(conversation_id)
 

@@ -103,6 +103,10 @@ def plot(json_path: Path) -> None:
 
 
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     if len(sys.argv) < 2:
         print("Usage: python -m src.evaluation.plot_threshold_sweep <path_to_json>")
         sys.exit(1)

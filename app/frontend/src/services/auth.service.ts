@@ -1,4 +1,10 @@
-const ACCESS_TOKEN_KEY = "poli-tutor-access";
+import { tokenStore } from "@/lib/tokenStore";
+import {
+  login as loginRequest,
+  logout as logoutRequest,
+  changePassword as changePasswordRequest,
+} from "@/api/auth";
+import type { LoginResponse } from "@/types/auth";
 
 function decodePayload(token: string): Record<string, unknown> {
   try {
@@ -16,23 +22,35 @@ function isExpired(payload: Record<string, unknown>): boolean {
 }
 
 export const authService = {
+  login(username: string, password: string): Promise<LoginResponse> {
+    return loginRequest(username, password);
+  },
+
+  logout(accessToken: string): Promise<void> {
+    return logoutRequest(accessToken);
+  },
+
+  changePassword(currentPassword: string, newPassword: string): Promise<LoginResponse> {
+    return changePasswordRequest(currentPassword, newPassword);
+  },
+
   getAccessToken(): string | null {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return tokenStore.get();
   },
 
   setTokens(accessToken: string): void {
-    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    tokenStore.set(accessToken);
   },
 
   clearTokens(): void {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    tokenStore.clear();
   },
 
   isAuthenticated(): boolean {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const token = tokenStore.get();
     if (!token) return false;
     if (isExpired(decodePayload(token))) {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      tokenStore.clear();
       return false;
     }
     return true;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { AnalyticsService } from "@/services/analytics.service";
-import type { ActivityPoint } from "@/api/analytics";
+import type { ActivityPoint } from "@/types/analytics";
 
 export type Range = "7d" | "30d" | "90d";
 

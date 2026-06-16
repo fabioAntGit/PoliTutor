@@ -293,6 +293,10 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
 # ── CLI ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         if arg == "--generate":

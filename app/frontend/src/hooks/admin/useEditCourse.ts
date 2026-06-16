@@ -1,5 +1,5 @@
 import { editCourseSchema, type EditCourseFormValues } from "@/schemas/editCourse";
-import { updateCourse, deleteCourse } from "@/api/courses";
+import { CourseService } from "@/services/course.service";
 import type { CourseResponse } from "@/types/course";
 import { useEntityEditForm } from "@/hooks/admin/useEntityEditForm";
 
@@ -14,8 +14,8 @@ export function useEditCourse(course: CourseResponse | null, onSaved: () => void
       description: c.description,
       is_active: c.is_active,
     }),
-    update: (c, data) => updateCourse(c.code, data),
-    remove: (c) => deleteCourse(c.code),
+    update: (c, data) => CourseService.updateCourse(c.code, data),
+    remove: (c) => CourseService.deleteCourse(c.code),
     updateErrorMessage: "Erro ao atualizar cadeira.",
     deleteErrorMessage: "Erro ao eliminar cadeira.",
   });

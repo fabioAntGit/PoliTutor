@@ -9,7 +9,6 @@ import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from "@/schemas/changePassword";
-import { changePassword } from "@/api/auth";
 import { authService } from "@/services/auth.service";
 import { ApiError } from "@/lib/errors";
 
@@ -31,7 +30,7 @@ export function PasswordSection() {
   const onSubmit = form.handleSubmit(async (data) => {
     form.clearErrors("root");
     try {
-      const tokens = await changePassword(data.current_password, data.new_password);
+      const tokens = await authService.changePassword(data.current_password, data.new_password);
       authService.setTokens(tokens.access_token);
       toast.success("Palavra-passe alterada com sucesso.");
       form.reset();

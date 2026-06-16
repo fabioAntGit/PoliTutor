@@ -21,7 +21,7 @@ from ..shared.config import (
     RETRIEVAL_DISTANCE_THRESHOLD,
     TOP_K_RESULTS,
 )
-from ..ingestion.embedding import get_embedder
+from ..shared.embedding import get_embedder
 from ..shared.database import get_collection
 from .generator import generate
 from .guardrails import (

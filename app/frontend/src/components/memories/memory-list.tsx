@@ -1,7 +1,7 @@
 import { Loader2, Trash2 } from "lucide-react";
 
 import { formatRelativeDate } from "@/lib/date";
-import type { MemoryType, UserMemory } from "@/api/memory";
+import type { MemoryType, UserMemory } from "@/types/memory";
 
 const TYPE_LABELS: Record<MemoryType, string> = {
   difficulty: "Dificuldade",

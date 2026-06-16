@@ -144,6 +144,3 @@ def detect_direct_answer(answer: str) -> bool:
         return True
 
     return False
-
-def where_filter(course: str) -> dict:
-    return {"course": course.strip().lower()}

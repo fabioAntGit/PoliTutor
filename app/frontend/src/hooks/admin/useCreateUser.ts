@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserSchema, type CreateUserFormValues } from "@/schemas/createUser";
-import { createUser } from "@/api/users";
-import { listCourses } from "@/api/courses";
+import { UserService } from "@/services/user.service";
+import { CourseService } from "@/services/course.service";
 import type { CourseResponse } from "@/types/course";
 import { setFormRootError } from "@/lib/formErrors";
 
@@ -17,7 +17,7 @@ export function useCreateUser() {
   const [createdUser, setCreatedUser] = useState<CreatedUserCredentials | null>(null);
 
   useEffect(() => {
-    listCourses().then(setCourses).catch(() => {});
+    CourseService.listCourses().then(setCourses).catch(() => {});
   }, []);
 
   const form = useForm<CreateUserFormValues>({
@@ -35,7 +35,7 @@ export function useCreateUser() {
     form.clearErrors("root");
     setCreatedUser(null);
     try {
-      const user = await createUser(data);
+      const user = await UserService.createUser(data);
       setCreatedUser({ username: user.username, password: data.password });
       form.reset();
     } catch (err) {

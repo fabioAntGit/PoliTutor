@@ -2,7 +2,7 @@ import asyncio
 import logging
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
-from app.backend.repositories.interfaces.redis_repository import IRedisRepository
+from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
@@ -17,16 +17,16 @@ class ContextService(IContextService):
         self,
         message_repository: IMessageRepository,
         chat_repository: IChatRepository,
-        redis_repository: IRedisRepository,
+        cache_repository: ICacheRepository,
         user_memory_service: IUserMemoryService,
     ) -> None:
         self.message_repository = message_repository
         self.chat_repository = chat_repository
-        self.redis_repository = redis_repository
+        self.cache_repository = cache_repository
         self.user_memory_service = user_memory_service
 
     async def get_or_load_context(self, conversation_id: str) -> tuple[str | None, list[dict]]:
-        summary, messages = await self.redis_repository.get_context(conversation_id)
+        summary, messages = await self.cache_repository.get_context(conversation_id)
 
         if not messages:
             summary = await self.chat_repository.get_summary(conversation_id)
@@ -34,26 +34,26 @@ class ContextService(IContextService):
 
             last_summ_id = await self.chat_repository.get_last_summarized_message_id(conversation_id)
             count = await self.message_repository.get_number_of_messages_after_summary(conversation_id, last_summ_id)
-            await self.redis_repository.set_message_count(conversation_id, count)
+            await self.cache_repository.set_message_count(conversation_id, count)
 
             if summary:
-                await self.redis_repository.set_summary(conversation_id, summary)
+                await self.cache_repository.set_summary(conversation_id, summary)
 
             if messages:
-                await self.redis_repository.repopulate_messages(conversation_id, messages)
+                await self.cache_repository.repopulate_messages(conversation_id, messages)
 
         return summary, self._format_history_structured(messages)
 
     async def check_and_trigger_summary(self, conversation_id: str, user_id: str, course: str) -> None:
-        count = await self.redis_repository.get_message_count(conversation_id)
+        count = await self.cache_repository.get_message_count(conversation_id)
         if count < SUMMARIZATION_THRESHOLD:
             return
 
-        summary_old, messages = await self.redis_repository.get_context(conversation_id)
+        summary_old, messages = await self.cache_repository.get_context(conversation_id)
         if not messages:
             return
 
-        await self.redis_repository.reset_message_count(conversation_id)
+        await self.cache_repository.reset_message_count(conversation_id)
 
         logger.info("Triggering background summary for conversation %s (count=%d)", conversation_id, count)
         run_in_background(self._summarize(conversation_id, user_id, course, summary_old, messages))
@@ -82,7 +82,7 @@ class ContextService(IContextService):
                 return
 
             await self.chat_repository.set_summary(conversation_id, new_summary, messages[-1].id)
-            await self.redis_repository.set_summary(conversation_id, new_summary)
+            await self.cache_repository.set_summary(conversation_id, new_summary)
             logger.info("Summary updated for conversation %s", conversation_id)
 
             run_in_background(self.user_memory_service.extract_and_upsert(user_id, course, new_summary))

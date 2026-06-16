@@ -4,7 +4,7 @@ import pytest
 
 from app.backend.api.deps import _verify_token, _enforce_password_change, require_role
 from app.backend.core.exceptions import AuthError, AccessDeniedError
-from app.backend.repositories.interfaces.redis_repository import IRedisRepository
+from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.schemas.user.enums import UserRole
 from app.backend.services.interfaces.security_service import ISecurityService
 
@@ -15,7 +15,7 @@ def security():
 
 @pytest.fixture
 def redis_repo():
-    return AsyncMock(spec=IRedisRepository)
+    return AsyncMock(spec=ICacheRepository)
 
 
 async def test_verify_token_valid_returns_payload(security, redis_repo):
@@ -70,7 +70,7 @@ async def test_require_role_correct_role_returns_payload(security, redis_repo):
     request = MagicMock()
     request.url.path = "/api/v1/users"
 
-    result = await guard(request=request, token="token", security_service=security, redis_repository=redis_repo)
+    result = await guard(request=request, token="token", security_service=security, cache_repository=redis_repo)
 
     assert result["role"] == "admin"
 
@@ -87,4 +87,4 @@ async def test_require_role_wrong_role_throws_access_denied_error(security, redi
     request.url.path = "/api/v1/users"
 
     with pytest.raises(AccessDeniedError):
-        await guard(request=request, token="token", security_service=security, redis_repository=redis_repo)
+        await guard(request=request, token="token", security_service=security, cache_repository=redis_repo)

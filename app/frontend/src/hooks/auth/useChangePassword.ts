@@ -5,7 +5,6 @@ import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from "@/schemas/changePassword";
-import { changePassword } from "@/api/auth";
 import { authService } from "@/services/auth.service";
 import { landingForRole } from "@/lib/landing";
 import { ApiError } from "@/lib/errors";
@@ -21,7 +20,7 @@ export function useChangePassword() {
   const onSubmit = async (data: ChangePasswordFormValues) => {
     form.clearErrors("root");
     try {
-      const tokens = await changePassword(data.current_password, data.new_password);
+      const tokens = await authService.changePassword(data.current_password, data.new_password);
       authService.setTokens(tokens.access_token);
       navigate(landingForRole(authService.getRole()), { replace: true });
     } catch (err) {

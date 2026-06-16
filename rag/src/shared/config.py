@@ -13,7 +13,6 @@ Organised into sections:
     9. Tutor generation
 """
 
-import logging
 import os
 import torch
 from pathlib import Path
@@ -21,12 +20,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # 1. CORE & ENVIRONMENT INITIALIZATION
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
 BASE_DIR = Path(__file__).resolve().parent
 RAG_DIR = BASE_DIR.parent.parent  # rag/
 # Load environment variables from the root .env file

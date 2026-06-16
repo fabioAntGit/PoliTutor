@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface OverviewData {
+interface OverviewRead {
   total_conversations: number
   active_students: number
   total_messages: number
@@ -15,7 +15,7 @@ interface OverviewData {
 }
 
 interface SectionCardsProps {
-  data: OverviewData | null
+  data: OverviewRead | null
   variant?: "global" | "course"
 }
 

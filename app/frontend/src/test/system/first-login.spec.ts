@@ -35,5 +35,9 @@ test.describe("First login", () => {
     await page.getByRole("button", { name: "Alterar palavra-passe" }).click();
 
     await page.waitForURL((url) => new URL(url).pathname === "/");
+
+    await request.delete(`${API}/users/${username}`, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
   });
 });
