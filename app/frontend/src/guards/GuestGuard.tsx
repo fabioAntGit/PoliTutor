@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from "react-router";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 
 export default function GuestGuard() {
-  if (authService.isAuthenticated()) {
+  if (AuthService.isAuthenticated()) {
     return <Navigate to="/" replace />;
   }
   

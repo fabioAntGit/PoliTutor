@@ -3,7 +3,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { Brain, KeyRound, UserRound, X, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 import type { UserRole } from "@/types/user";
 import { MemoriesSection } from "@/components/settings/memories-section";
 import { PasswordSection } from "@/components/settings/password-section";
@@ -52,7 +52,7 @@ export function SettingsDialog({
   onOpenChange,
   initialSection = "memories",
 }: SettingsDialogProps) {
-  const role = authService.getRole();
+  const role = AuthService.getRole();
 
   const sections = useMemo(
     () => SECTIONS.filter((s) => !s.roles || (role && s.roles.includes(role as UserRole))),

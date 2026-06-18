@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SettingsDialog } from "@/components/settings/settings-dialog";
 import { useTheme } from "@/components/theme/theme-provider";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 
 function initialsFor(name: string | null, fallback: string | null): string {
   const source = name?.trim() || fallback?.trim() || "?";
@@ -35,20 +35,20 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
   const { pathname } = useLocation();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
-  const fullName = authService.getFullName();
-  const username = authService.getUsername();
-  const role = authService.getRole();
+  const fullName = AuthService.getFullName();
+  const username = AuthService.getUsername();
+  const role = AuthService.getRole();
   const isAdmin = role === "admin";
   const onAdminPage = pathname.startsWith("/admin");
   const onDashboardPage = pathname.startsWith("/dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
-    const accessToken = authService.getAccessToken();
+    const accessToken = AuthService.getAccessToken();
     if (accessToken) {
-      await authService.logout(accessToken).catch(() => {});
+      await AuthService.logout(accessToken).catch(() => {});
     }
-    authService.clearTokens();
+    AuthService.clearTokens();
     navigate("/login", { replace: true });
   };
 

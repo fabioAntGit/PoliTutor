@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { CourseService } from "@/services/course.service";
 import { MemoryService } from "@/services/memory.service";
 import type { UserMemory } from "@/types/memory";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 import { ApiError } from "@/lib/errors";
 import type { CourseResponse } from "@/types/course";
 
@@ -18,7 +18,7 @@ export function useMemories() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    CourseService.listMyCourses(authService.getCourses())
+    CourseService.listMyCourses(AuthService.getCourses())
       .then((mine) => {
         setCourses(mine);
         if (mine.length > 0) {

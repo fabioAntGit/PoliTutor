@@ -1,7 +1,7 @@
 import { CheckCircle } from "lucide-react";
-import { FormField } from "@/components/form/FormField";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
+import { FormField } from "@/components/form/form-field";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
 import { useCreateCourse } from "@/hooks/admin/useCreateCourse";
 
 export default function CreateCourseForm() {

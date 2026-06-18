@@ -4,7 +4,7 @@ import { ChatHistorySidebar } from "@/components/home/chat-history-sidebar";
 import { NewChatComposer } from "@/components/home/new-chat-composer";
 import { UserMenu } from "@/components/account/user-menu";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 
 function greetingForNow(): string {
   const h = new Date().getHours();
@@ -28,7 +28,7 @@ export default function HomePage() {
     openChat,
   } = useHome();
 
-  const firstName = authService.getFullName()?.trim().split(/\s+/)[0];
+  const firstName = AuthService.getFullName()?.trim().split(/\s+/)[0];
   const heading = firstName ? `${greetingForNow()}, ${firstName}` : "Inicie uma nova conversa";
 
   return (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useIsMobile } from "@/hooks/common/useMobile";
 import { AnalyticsService } from "@/services/analytics.service";
 import type { ActivityPoint } from "@/types/analytics";
 

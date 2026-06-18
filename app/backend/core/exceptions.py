@@ -76,7 +76,7 @@ class UserNotFoundError(AppError):
 class MemoryNotFoundError(AppError):
     status_code = 404
     code = "memory_not_found"
-    message = "Memory not found"
+    message = "Memoria nao encontrada"
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(message=message)

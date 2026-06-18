@@ -4,8 +4,8 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { FormField } from "@/components/form/FormField";
-import { FormRootError } from "@/components/form/FormRootError";
+import { FormField } from "@/components/form/form-field";
+import { FormRootError } from "@/components/form/form-root-error";
 import { useEditCourse } from "@/hooks/admin/useEditCourse";
 import type { CourseResponse } from "@/types/course";
 

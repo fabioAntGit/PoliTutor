@@ -2,14 +2,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
-import { FormPasswordField } from "@/components/form/FormPasswordField";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
+import { FormPasswordField } from "@/components/form/form-password-field";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
 import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from "@/schemas/changePassword";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 import { ApiError } from "@/lib/errors";
 
 export function PasswordSection() {
@@ -30,8 +30,8 @@ export function PasswordSection() {
   const onSubmit = form.handleSubmit(async (data) => {
     form.clearErrors("root");
     try {
-      const tokens = await authService.changePassword(data.current_password, data.new_password);
-      authService.setTokens(tokens.access_token);
+      const tokens = await AuthService.changePassword(data.current_password, data.new_password);
+      AuthService.setTokens(tokens.access_token);
       toast.success("Palavra-passe alterada com sucesso.");
       form.reset();
     } catch (err) {

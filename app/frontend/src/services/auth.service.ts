@@ -21,7 +21,7 @@ function isExpired(payload: Record<string, unknown>): boolean {
   return exp * 1000 <= Date.now();
 }
 
-export const authService = {
+export const AuthService = {
   login(username: string, password: string): Promise<LoginResponse> {
     return loginRequest(username, password);
   },

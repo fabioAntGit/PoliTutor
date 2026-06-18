@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserService } from "@/services/user.service";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 import { ApiError } from "@/lib/errors";
 
 interface DeleteAccountDialogProps {
@@ -36,7 +36,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     setDeleting(true);
     try {
       await UserService.deleteMyAccount();
-      authService.clearTokens();
+      AuthService.clearTokens();
       toast.success("Conta eliminada. Os teus dados serao apagados permanentemente daqui a 30 dias.");
       navigate("/login", { replace: true });
     } catch (err) {

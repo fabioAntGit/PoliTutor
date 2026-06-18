@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormField } from "@/components/form/FormField";
-import { FormRootError } from "@/components/form/FormRootError";
+import { FormField } from "@/components/form/form-field";
+import { FormRootError } from "@/components/form/form-root-error";
 import { useEditUser } from "@/hooks/admin/useEditUser";
 import type { UserResponse } from "@/types/user";
 import type { CourseResponse } from "@/types/course";

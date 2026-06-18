@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useLogin } from "@/hooks/login/useLogin";

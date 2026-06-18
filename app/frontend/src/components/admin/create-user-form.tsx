@@ -9,12 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormField } from "@/components/form/FormField";
-import { FormPasswordField } from "@/components/form/FormPasswordField";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
+import { FormField } from "@/components/form/form-field";
+import { FormPasswordField } from "@/components/form/form-password-field";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
 import { useCreateUser } from "@/hooks/admin/useCreateUser";
-import CreatedUserDialog from "@/components/admin/CreatedUserDialog";
+import CreatedUserDialog from "@/components/admin/created-user-dialog";
 
 export default function CreateUserForm() {
   const { form, courses, createdUser, dismissCreatedUser, onSubmit } = useCreateUser();
