@@ -40,8 +40,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
       toast.success("Conta eliminada. Os teus dados serao apagados permanentemente daqui a 30 dias.");
       navigate("/login", { replace: true });
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Erro ao eliminar conta.";
+      const message = err instanceof ApiError ? err.message : "Erro ao eliminar conta.";
       toast.error(message);
       setDeleting(false);
     }

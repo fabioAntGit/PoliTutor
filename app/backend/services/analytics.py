@@ -8,10 +8,6 @@ from app.backend.services.interfaces.analytics_service import IAnalyticsService
 _DAYS_MAP = {"7d": 7, "30d": 30, "90d": 90}
 
 
-# ---------------------------
-# Activity helper
-# ---------------------------
-
 def _fill_activity_dates(raw: list[dict], days: int) -> list[dict]:
     counts = {item["date"]: item["questions"] for item in raw}
     today = date.today()
@@ -26,11 +22,7 @@ def _fill_activity_dates(raw: list[dict], days: int) -> list[dict]:
         current += timedelta(days=1)
 
     return data
-
-
-# ---------------------------
-# Service
-# ---------------------------
+    
 
 class AnalyticsService(IAnalyticsService):
     def __init__(self, analytics_repository: IAnalyticsRepository) -> None:

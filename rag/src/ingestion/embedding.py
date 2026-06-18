@@ -85,12 +85,10 @@ def embed_chunks(
     texts, ids, metadatas = [], [], []
 
     for i, chunk in enumerate(valid_chunks):
-        # --- Text chunk ---
         texts.append(chunk["text"])
         ids.append(f"{file_stem}_{i}")
         metadatas.append(build_meta(chunk, "text"))
 
-        # --- Image chunks ---
         for j, image_path in enumerate(chunk.get("image_paths", [])):
             context = "\n".join(c["text"] for c in valid_chunks[i:i+3])
             result = image_resume(image_path, context)

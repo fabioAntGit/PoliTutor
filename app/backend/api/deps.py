@@ -50,9 +50,7 @@ from app.backend.services.interfaces.authentication_service import IAuthenticati
 from app.backend.services.interfaces.user_service import IUserService
 from app.backend.services.interfaces.course_service import ICourseService
 
-# ============================================
 # Repositories
-# ============================================
 
 def get_chat_repository(db: AsyncDatabase = Depends(get_db)) -> IChatRepository:
     return ChatRepository(db)
@@ -84,9 +82,7 @@ def get_deletion_repository(
 ) -> IDeletionRepository:
     return DeletionRepository(db_main=db_main, db_deprecated=db_deprecated)
 
-# ============================================
 # Services
-# ============================================
 
 def get_security_service() -> ISecurityService:
     return SecurityService(password_hash=PasswordHash.recommended())
@@ -188,9 +184,7 @@ def get_user_service(
         deletion_repository=deletion_repository,
     )
 
-# ============================================
 # Auth guards
-# ============================================
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 

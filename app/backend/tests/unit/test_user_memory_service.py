@@ -35,8 +35,6 @@ def service(repo):
     return UserMemoryService(repo)
 
 
-# --- get_context_for_prompt ---
-
 async def test_context_includes_only_important_memories(service, repo):
     repo.get_by_user_and_course.return_value = [
         _memory(id="m1", importance=5.0, topic="relevant"),
@@ -52,8 +50,6 @@ async def test_context_none_when_nothing_relevant(service, repo):
     assert await service.get_context_for_prompt("u1", "Math") is None
 
 
-# --- list_memories ---
-
 async def test_list_memories_delegates_to_repo(service, repo):
     memories = [_memory(id="m1"), _memory(id="m2")]
     repo.get_by_user_and_course.return_value = memories
@@ -61,8 +57,6 @@ async def test_list_memories_delegates_to_repo(service, repo):
     assert result == memories
     repo.get_by_user_and_course.assert_awaited_once_with("u1", "Math")
 
-
-# --- delete_memory ---
 
 async def test_delete_returns_false_for_wrong_owner(service, repo):
     repo.get_by_id.return_value = _memory(user_id="another_user")
@@ -81,8 +75,6 @@ async def test_delete_succeeds_for_owner(service, repo):
     assert await service.delete_memory("u1", "mem_1") is True
     repo.delete.assert_awaited_once_with("mem_1")
 
-
-# --- _upsert_one ---
 
 async def test_upsert_blends_importance_and_updates_content(service, repo):
     repo.get_by_key.return_value = _memory(id="m1", importance=4.0, content="old")
@@ -127,8 +119,6 @@ async def test_upsert_evicts_lowest_when_cap_reached(service, repo):
     repo.create.assert_awaited_once()
 
 
-# --- _apply_decay ---
-
 async def test_apply_decay_evicts_memory_below_threshold(service, repo):
     stale = datetime.now(timezone.utc) - timedelta(days=400)
     repo.get_by_user_and_course.return_value = [
@@ -157,8 +147,6 @@ async def test_apply_decay_updates_decayed_importance(service, repo):
     _, updates = repo.update.call_args[0]
     assert updates["importance"] < 8.0
 
-
-# --- extract_and_upsert ---
 
 async def test_extract_and_upsert_swallows_llm_failure(service, repo, mocker):
     repo.get_by_user_and_course.return_value = []

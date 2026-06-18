@@ -27,8 +27,6 @@ def _memory(**kwargs) -> UserMemory:
     return UserMemory(**defaults)
 
 
-# --- _decayed_importance ---
-
 def test_no_decay_within_ttl():
     now = datetime(2026, 1, 1, tzinfo=timezone.utc)
     last_seen = now - timedelta(days=3)
@@ -47,8 +45,6 @@ def test_naive_datetime_treated_as_utc():
     naive_last_seen = (now - timedelta(days=2)).replace(tzinfo=None)
     assert _decayed_importance(5.0, naive_last_seen, _TTL_7D, now) == 5.0
 
-
-# --- _parse_extracted ---
 
 def test_parse_valid_json_fenced_block():
     raw = '```json\n{"memories": [{"type": "goal", "topic": "exam", "content": "pass", "importance": 7}]}\n```'
@@ -75,8 +71,6 @@ def test_parse_filters_importance_out_of_range():
     raw = '{"memories": [{"type": "goal", "topic": "x", "content": "y", "importance": 11}]}'
     assert _parse_extracted(raw) == []
 
-
-# --- _format_existing ---
 
 def test_format_existing_empty_list():
     assert _format_existing([]) == "No existing memories."

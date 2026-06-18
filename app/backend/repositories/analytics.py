@@ -85,8 +85,6 @@ class AnalyticsRepository(IAnalyticsRepository):
             return 0.0
         return round(result[0]["avg"], 1)
 
-    # --- Course-scoped methods ---
-
     async def get_courses(self, course_filter: list[str] | None = None) -> list[str]:
         if course_filter is None:
             result = await self.chats.distinct("course")

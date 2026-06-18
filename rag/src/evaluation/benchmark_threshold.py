@@ -41,8 +41,6 @@ logger = logging.getLogger(__name__)
 RESULTS_DIR = BENCHMARK_OUTPUT_DIR / "results"
 
 
-# ── Distance collection ──────────────────────────────────────────────
-
 def _collect_distances(
     benchmark_files: list[Path],
     embedding_model: str,
@@ -84,8 +82,8 @@ def _collect_distances(
                 embedding_model=embedding_model,
                 collection_name=collection_name,
                 top_k=top_k,
-                reranker_model=None,       # no reranking at this stage
-                distance_threshold=None,   # no filtering — collect raw distances
+                reranker_model=None,      
+                distance_threshold=None,  
             )
 
             for meta, dist in zip(results.metadatas, results.distances):
@@ -100,8 +98,6 @@ def _collect_distances(
 
     return hit_distances, miss_distances
 
-
-# ── Per-threshold evaluation ─────────────────────────────────────────
 
 def _evaluate_threshold(
     benchmark_files: list[Path],
@@ -181,8 +177,6 @@ def _evaluate_threshold(
     }
 
 
-# ── Elbow detection ──────────────────────────────────────────────────
-
 def _suggest_threshold(rows: list[dict], alpha: float = 0.5) -> dict:
     """
     Applies two criteria to suggest the optimal threshold T*:
@@ -197,14 +191,12 @@ def _suggest_threshold(rows: list[dict], alpha: float = 0.5) -> dict:
     hit_rates = np.array([r.get("hit_rate@5", 0.0) for r in rows])
     fallback_rates = np.array([r["fallback_rate"] for r in rows])
 
-    # Criterion 1: elbow via second derivative
     if len(hit_rates) >= 3:
         second_deriv = np.gradient(np.gradient(hit_rates, thresholds), thresholds)
         elbow_idx = int(np.argmax(second_deriv))
     else:
         elbow_idx = int(np.argmax(hit_rates))
 
-    # Criterion 2: composite score
     composite = hit_rates - alpha * fallback_rates
     composite_idx = int(np.argmax(composite))
 
@@ -222,8 +214,6 @@ def _suggest_threshold(rows: list[dict], alpha: float = 0.5) -> dict:
         },
     }
 
-
-# ── Main sweep ───────────────────────────────────────────────────────
 
 def run_threshold_sweep(
     benchmark_files: list[Path],
@@ -346,8 +336,6 @@ def run_threshold_sweep(
     logger.info("Results saved to %s", output_path)
     return output_path
 
-
-# ── CLI ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     from ..shared.logging_config import setup_logging

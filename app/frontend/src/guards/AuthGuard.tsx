@@ -5,5 +5,6 @@ export default function AuthGuard() {
   if (!authService.isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
+  
   return <Outlet />;
 }

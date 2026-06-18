@@ -19,7 +19,6 @@ interface SettingsSection {
   render: () => ReactNode;
 }
 
-// Adicionar novas secções de definições = juntar uma entrada a esta lista.
 const SECTIONS: SettingsSection[] = [
   {
     id: "memories",
@@ -62,7 +61,6 @@ export function SettingsDialog({
 
   const [activeId, setActiveId] = useState<SettingsSectionId>(initialSection);
 
-  // Ao abrir, posicionar na secção pedida (caindo na primeira disponível).
   useEffect(() => {
     if (!open) return;
     const wanted = sections.find((s) => s.id === initialSection);
@@ -78,7 +76,6 @@ export function SettingsDialog({
         <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-50 flex h-[80vh] max-h-[640px] w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border bg-background shadow-xl">
           <DialogPrimitive.Title className="sr-only">Definições</DialogPrimitive.Title>
 
-          {/* Navegação lateral */}
           <nav className="hidden w-52 shrink-0 flex-col gap-1 border-r bg-muted/30 p-2 sm:flex">
             <p className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground">
               Definições
@@ -105,7 +102,6 @@ export function SettingsDialog({
             })}
           </nav>
 
-          {/* Painel de conteúdo */}
           <div className="flex min-w-0 flex-1 flex-col">
             <header className="flex shrink-0 items-center justify-between gap-2 border-b px-5 py-3.5">
               <div className="flex items-center gap-2 text-sm">
@@ -119,7 +115,6 @@ export function SettingsDialog({
               </DialogPrimitive.Close>
             </header>
 
-            {/* Seletor de secção em ecrãs pequenos (sem sidebar) */}
             <div className="flex gap-1 border-b px-3 py-2 sm:hidden">
               {sections.map((section) => (
                 <button

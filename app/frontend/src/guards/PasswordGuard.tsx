@@ -5,5 +5,6 @@ export default function PasswordGuard() {
   if (authService.mustChangePassword()) {
     return <Navigate to="/change-password" replace />;
   }
+  
   return <Outlet />;
 }

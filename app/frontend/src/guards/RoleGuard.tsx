@@ -9,8 +9,10 @@ interface RoleGuardProps {
 
 export default function RoleGuard({ roles, fallback }: RoleGuardProps) {
   const role = authService.getRole();
+
   if (!role || !roles.includes(role)) {
     return <Navigate to={fallback ?? landingForRole(role)} replace />;
   }
+  
   return <Outlet />;
 }

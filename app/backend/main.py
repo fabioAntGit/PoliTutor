@@ -35,7 +35,19 @@ setup_logging()
 
 RAG_PRELOAD = os.getenv("RAG_PRELOAD", "1") != "0"
 
-app = FastAPI(title="Poli Tutor API", version="1.0.0")
+OPENAPI_TAGS = [
+    {
+        "name": "dashboard",
+        "description": (
+            "Teacher dashboard analytics. Read-only aggregated usage metrics "
+            "(conversations, active students, message volume, activity over time, "
+            "top topics and most-referenced sources). Restricted to teacher and "
+            "admin roles, results are scoped to the courses the caller can access."
+        ),
+    },
+]
+
+app = FastAPI(title="Poli Tutor API", version="1.0.0", openapi_tags=OPENAPI_TAGS)
 
 DEV_ALLOWED_ORIGINS = [
     "http://localhost:3000",
