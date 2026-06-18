@@ -118,9 +118,7 @@ CHROMA_METADATA = {"hnsw:space": "cosine"}
 
 # 7. RETRIEVAL & RERANKING
 TOP_K_RESULTS = 20
-#   GPU → jinaai/jina-reranker-v2-base-multilingual  (best benchmark results with GPU)
-#   CPU → Alibaba-NLP/gte-reranker-modernbert-base   (best benchmark results on CPU)
-RERANKER_MODEL = "Alibaba-NLP/gte-reranker-modernbert-base"
+RERANKER_MODEL = "jinaai/jina-reranker-v2-base-multilingual"
 RERANKER_TOP_K = 5
 # Chunks with ChromaDB cosine distance above this threshold are discarded before
 # reranking. Set to None to disable (retrieves all TOP_K_RESULTS regardless of
