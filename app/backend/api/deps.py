@@ -184,14 +184,11 @@ def get_user_service(
         deletion_repository=deletion_repository,
     )
 
-# Auth guards
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 PASSWORD_CHANGE_ALLOWED_PATHS = {
     "/api/v1/auth/change-password",
 }
-
 
 async def _verify_token(
     token: str,

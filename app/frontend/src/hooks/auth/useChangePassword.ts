@@ -9,7 +9,11 @@ import { AuthService } from "@/services/auth.service";
 import { landingForRole } from "@/lib/landing";
 import { ApiError } from "@/lib/errors";
 
-export function useChangePassword() {
+interface UseChangePasswordOptions {
+  onSuccess?: () => void;
+}
+
+export function useChangePassword({ onSuccess }: UseChangePasswordOptions = {}) {
   const navigate = useNavigate();
 
   const form = useForm<ChangePasswordFormValues>({
@@ -22,7 +26,12 @@ export function useChangePassword() {
     try {
       const tokens = await AuthService.changePassword(data.current_password, data.new_password);
       AuthService.setTokens(tokens.access_token);
-      navigate(landingForRole(AuthService.getRole()), { replace: true });
+      form.reset();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate(landingForRole(AuthService.getRole()), { replace: true });
+      }
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : "Erro ao alterar password.";
