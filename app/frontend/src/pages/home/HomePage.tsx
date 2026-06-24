@@ -54,7 +54,7 @@ export default function HomePage() {
                   {heading}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Escolha a cadeira e faça a sua primeira pergunta.
+                  Escolha a unidade curricular e faça a sua primeira pergunta.
                 </p>
               </div>
 
