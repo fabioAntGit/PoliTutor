@@ -50,9 +50,6 @@ export default function ChatPage() {
                         <header className="relative flex shrink-0 items-center justify-center py-4">
                             <div className="absolute left-4 top-0 bottom-0 my-auto flex items-center gap-2">
                                 <SidebarTrigger />
-                                <span className="text-base font-semibold">
-                                    PoliTutor
-                                </span>
                             </div>
 
                             <h1 className="text-xl font-semibold">{chat?.course_name}</h1>
@@ -88,7 +85,7 @@ export default function ChatPage() {
 
                         <form onSubmit={handleSubmit} className="shrink-0 px-4 pb-5 sm:px-6">
                             <div className="mx-auto w-full max-w-3xl">
-                                <div className="flex items-end gap-2 rounded-[1.75rem] border border-border/70 bg-card/80 p-2 pl-4 shadow-lg backdrop-blur-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20">
+                                <div className="flex flex-col gap-2 rounded-[1.75rem] border border-border/70 bg-card/80 px-4 py-3 shadow-lg backdrop-blur-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20">
                                     <textarea
                                         ref={textareaRef}
                                         value={input}
@@ -102,9 +99,10 @@ export default function ChatPage() {
                                         }}
                                         placeholder="Pergunte alguma coisa"
                                         rows={1}
-                                        className="max-h-[200px] min-h-[2.25rem] min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
+                                        className="max-h-[200px] min-h-[2.25rem] w-full resize-none bg-transparent py-1 text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
                                     />
 
+                                    <div className="flex items-center justify-end">
                                     {isTyping ? (
                                         <button
                                             key="cancel-btn"
@@ -128,6 +126,7 @@ export default function ChatPage() {
                                             <ArrowUp className="size-5" />
                                         </button>
                                     )}
+                                    </div>
                                 </div>
 
                                 <div className="mt-1.5 flex items-center justify-center gap-2 px-2 text-[11px] text-muted-foreground/70">
