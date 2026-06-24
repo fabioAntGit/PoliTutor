@@ -36,8 +36,8 @@ from ..shared.config import (
     TOP_K_RESULTS,
 )
 from ..ingestion.extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from ..shared.call_model import call_openrouter
-from ..runtime.retrieval import retrieve_with_config
+from ..shared.call_model import OpenRouterClient
+from ..runtime.retrieval import retrieve
 from ..shared.utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ def create_qa(context: str, page_number: int, filename: str) -> dict | None:
         A dict with 'filename', 'page', and 'question' keys, or None on failure.
     """
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    content = call_openrouter([{"role": "user", "content": prompt}], model=OPENROUTER_MODEL_BENCHMARK)
+    content = OpenRouterClient().call([{"role": "user", "content": prompt}], model=OPENROUTER_MODEL_BENCHMARK)
     if content is None:
         return None
     try:
@@ -161,7 +161,7 @@ def build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[
         q_id = f"{file_stem}_q{i}"
         qrels_dict[q_id] = {f"{expected_file}_p{expected_page}": 1}
 
-        results = retrieve_with_config(
+        results = retrieve(
             course_code,
             question,
             embedding_model=config.embedding_model,

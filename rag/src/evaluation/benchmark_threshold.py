@@ -33,7 +33,7 @@ from ..shared.config import (
     RERANKER_TOP_K,
     TOP_K_RESULTS,
 )
-from ..runtime.retrieval import retrieve_with_config
+from ..runtime.retrieval import retrieve
 from ..shared.utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ def _collect_distances(
             expected_page = str(qa.get("page", "0"))
             expected_file = str(qa.get("filename", ""))
 
-            results = retrieve_with_config(
+            results = retrieve(
                 course_code,
                 question,
                 embedding_model=embedding_model,
@@ -136,7 +136,7 @@ def _evaluate_threshold(
             qrels_dict[q_id] = {f"{expected_file}_p{expected_page}": 1}
             n_total += 1
 
-            results = retrieve_with_config(
+            results = retrieve(
                 course_code,
                 question,
                 embedding_model=embedding_model,

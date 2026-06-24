@@ -7,8 +7,8 @@ from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
 from app.backend.core.background import run_in_background
-from rag.src.shared.call_model import call_openrouter
-from rag.src.shared.config import SUMMARIZATION_PROMPT, SUMMARIZATION_THRESHOLD, OPENROUTER_MODEL_SUMMARIZATION
+from app.backend.gateways.interfaces.model_client import IModelClient
+from app.backend.core.config import SUMMARIZATION_PROMPT, SUMMARIZATION_THRESHOLD, OPENROUTER_MODEL_SUMMARIZATION
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +19,13 @@ class ContextService(IContextService):
         chat_repository: IChatRepository,
         cache_repository: ICacheRepository,
         user_memory_service: IUserMemoryService,
+        model_client: IModelClient,
     ) -> None:
         self.message_repository = message_repository
         self.chat_repository = chat_repository
         self.cache_repository = cache_repository
         self.user_memory_service = user_memory_service
+        self.model_client = model_client
 
     async def get_or_load_context(self, conversation_id: str) -> tuple[str | None, list[dict]]:
         summary, messages = await self.cache_repository.get_context(conversation_id)
@@ -72,7 +74,7 @@ class ContextService(IContextService):
                 history=self._format_history(messages),
             )
             new_summary = await asyncio.to_thread(
-                call_openrouter,
+                self.model_client.call,
                 [{"role": "user", "content": prompt}],
                 model=OPENROUTER_MODEL_SUMMARIZATION,
             )

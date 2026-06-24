@@ -58,36 +58,6 @@ class RetrievalResults(BaseModel):
         """Returns True if the result set contains no documents."""
         return len(self.ids) == 0
 
-class TutorSource(BaseModel):
-    """
-    Represents a single source chunk cited in a tutor response.
-
-    Attributes:
-        filename: Name of the source document (e.g. 'slides.ED.CAP3.pdf').
-        pages:    List of page numbers covered by this chunk.
-        score:    Reranker relevance score in [0, 1].
-    """
-    filename: str
-    pages: list[int]
-
-class TutorResponse(BaseModel):
-    """
-    Final output of the tutor generation pipeline.
-
-    Attributes:
-        answer:       The tutor's response text (Socratic guidance or fallback message).
-        sources:      List of source chunks used to ground the response.
-        is_fallback:  True if no relevant context was found and a fallback message was returned.
-        is_guardrail: True if an input guardrail blocked the query before reaching the LLM.
-        is_retrieval_fallback: True if the distance threshold filtered all chunks (LLM may still have been called using conversation history).
-    """
-    answer: str
-    sources: list[TutorSource]
-    is_fallback: bool
-    is_guardrail: bool = False
-    is_output_guardrail: bool = False
-    is_retrieval_fallback: bool = False
-
 class TutorBenchmarkEntry(BaseModel):
     """
     A single entry in a BenchmarkTutor dataset file.

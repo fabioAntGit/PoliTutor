@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from renumics import spotlight
 
-from ..shared.database import get_collection
+from ..shared.chroma_vector_store import get_collection
 
 logger = logging.getLogger(__name__)
 

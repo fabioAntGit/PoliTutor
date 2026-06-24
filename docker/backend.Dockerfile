@@ -40,6 +40,7 @@ ENV PYTHONUNBUFFERED=1
 
 COPY app/ ./app/
 COPY rag/ ./rag/
+COPY contracts/ ./contracts/
 
 RUN find . -name "*.pyc" -delete && \
     find . -name "__pycache__" -delete

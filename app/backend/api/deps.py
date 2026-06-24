@@ -1,8 +1,14 @@
+from functools import lru_cache
+
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from pymongo.asynchronous.database import AsyncDatabase
 import redis.asyncio as redis
 from pwdlib import PasswordHash
+
+from rag.src.runtime.engine import get_engine
+from contracts.rag.interfaces import IRagEngine
+from app.backend.gateways.interfaces.model_client import IModelClient
 
 from app.backend.core.database import get_db, get_deprecated_db, get_redis
 from app.backend.core.exceptions import AuthError, AccessDeniedError, CourseNotFoundError
@@ -17,6 +23,7 @@ from app.backend.repositories.messages import MessageRepository
 from app.backend.repositories.user_memory import UserMemoryRepository
 from app.backend.repositories.users import UserRepository
 from app.backend.repositories.courses import CourseRepository
+from app.backend.gateways.model_client import OpenRouterModelClient
 
 from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
@@ -84,13 +91,18 @@ def get_deletion_repository(
 
 # Services
 
+@lru_cache
+def get_model_client() -> IModelClient:
+    return OpenRouterModelClient()
+    
 def get_security_service() -> ISecurityService:
     return SecurityService(password_hash=PasswordHash.recommended())
 
 def get_user_memory_service(
     repo: IUserMemoryRepository = Depends(get_user_memory_repository),
+    model_client: IModelClient = Depends(get_model_client),
 ) -> IUserMemoryService:
-    return UserMemoryService(repo=repo)
+    return UserMemoryService(repo=repo, model_client=model_client)
 
 def get_analytics_service(
     analytics_repository: IAnalyticsRepository = Depends(get_analytics_repository),
@@ -102,13 +114,19 @@ def get_context_service(
     chat_repository: IChatRepository = Depends(get_chat_repository),
     cache_repository: ICacheRepository = Depends(get_cache_repository),
     user_memory_service: IUserMemoryService = Depends(get_user_memory_service),
+    model_client: IModelClient = Depends(get_model_client),
 ) -> IContextService:
     return ContextService(
         message_repository=message_repository,
         chat_repository=chat_repository,
         cache_repository=cache_repository,
         user_memory_service=user_memory_service,
+        model_client=model_client,
     )
+
+@lru_cache
+def get_rag_engine() -> IRagEngine:
+    return get_engine()
 
 def get_message_service(
     message_repository: IMessageRepository = Depends(get_message_repository),
@@ -116,6 +134,7 @@ def get_message_service(
     cache_repository: ICacheRepository = Depends(get_cache_repository),
     context_service: IContextService = Depends(get_context_service),
     user_memory_service: IUserMemoryService = Depends(get_user_memory_service),
+    rag_engine: IRagEngine = Depends(get_rag_engine),
 ) -> IMessageService:
     return MessageService(
         message_repository=message_repository,
@@ -123,6 +142,7 @@ def get_message_service(
         cache_repository=cache_repository,
         context_service=context_service,
         user_memory_service=user_memory_service,
+        rag_engine=rag_engine,
     )
 
 def get_chat_service(

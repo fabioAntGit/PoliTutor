@@ -6,16 +6,15 @@ import time
 import requests
 from dotenv import load_dotenv
 
-from .config import OPENROUTER_MODEL_GENERATOR
-from .interfaces.model_client import IModelClient
+from app.backend.gateways.interfaces.model_client import IModelClient
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 
-class OpenRouterClient(IModelClient):
-    """IModelClient adapter for the OpenRouter chat-completions API."""
+class OpenRouterModelClient(IModelClient):
+    """Performs OpenRouter chat-completions requests for backend services."""
 
     def call(
         self,
@@ -25,8 +24,6 @@ class OpenRouterClient(IModelClient):
         model: str | None = None,
         response_format: dict | None = None,
     ) -> str | None:
-        model = model or OPENROUTER_MODEL_GENERATOR
-
         api_key = os.environ["OPENROUTER_KEY"].strip()
 
         payload: dict = {
@@ -73,5 +70,3 @@ class OpenRouterClient(IModelClient):
 
         logger.error("Max retries reached due to rate limiting.")
         return None
-
-

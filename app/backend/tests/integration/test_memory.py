@@ -9,16 +9,18 @@ decay, blending and cap-eviction logic.
 
 import json
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
 
-from rag.src.shared.config import (
+from app.backend.core.config import (
     MAX_MEMORIES_PER_COURSE,
     MEMORY_DELETE_IMPORTANCE_THRESHOLD,
     MEMORY_MIN_IMPORTANCE_FOR_INJECTION,
     MEMORY_TTL_BY_TYPE,
 )
 from app.backend.repositories.user_memory import UserMemoryRepository
+from app.backend.gateways.interfaces.model_client import IModelClient
 from app.backend.schemas.memory.models import UserMemory
 from app.backend.services.user_memory import UserMemoryService
 
@@ -31,12 +33,17 @@ def repo(db) -> UserMemoryRepository:
 
 
 @pytest.fixture
-def service(repo) -> UserMemoryService:
-    return UserMemoryService(repo=repo)
+def model_client() -> MagicMock:
+    return MagicMock(spec=IModelClient)
+
+
+@pytest.fixture
+def service(repo, model_client) -> UserMemoryService:
+    return UserMemoryService(repo=repo, model_client=model_client)
 
 
 def _llm_returning(memories: list[dict], *, fenced: bool = False):
-    """Build a fake call_openrouter that returns the given memories as JSON."""
+    """Build a fake model_client.call that returns the given memories as JSON."""
     payload = json.dumps({"memories": memories})
     if fenced:
         payload = f"```json\n{payload}\n```"
@@ -189,14 +196,11 @@ class TestDecay:
 
 
 class TestExtractAndUpsert:
-    async def test_creates_new_memories(self, service, repo, db, monkeypatch):
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            _llm_returning([
-                {"type": "difficulty", "topic": "Recursion", "content": "struggles", "importance": 7.0},
-                {"type": "goal", "topic": "Pointers", "content": "wants to master", "importance": 6.0},
-            ]),
-        )
+    async def test_creates_new_memories(self, service, repo, db, model_client):
+        model_client.call.side_effect = _llm_returning([
+            {"type": "difficulty", "topic": "Recursion", "content": "struggles", "importance": 7.0},
+            {"type": "goal", "topic": "Pointers", "content": "wants to master", "importance": 6.0},
+        ])
 
         await service.extract_and_upsert("u1", "ed", summary="...")
 
@@ -205,33 +209,27 @@ class TestExtractAndUpsert:
         assert set(by_topic) == {"recursion", "pointers"}  # topics normalized to lowercase
         assert by_topic["recursion"].importance == 7.0
 
-    async def test_filters_out_invalid_entries(self, service, repo, db, monkeypatch):
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            _llm_returning([
-                {"type": "difficulty", "topic": "ok", "content": "valid", "importance": 5.0},
-                {"type": "bogus", "topic": "x", "content": "bad type", "importance": 5.0},
-                {"type": "goal", "topic": "", "content": "no topic", "importance": 5.0},
-                {"type": "goal", "topic": "y", "content": "out of range", "importance": 99.0},
-            ]),
-        )
+    async def test_filters_out_invalid_entries(self, service, repo, db, model_client):
+        model_client.call.side_effect = _llm_returning([
+            {"type": "difficulty", "topic": "ok", "content": "valid", "importance": 5.0},
+            {"type": "bogus", "topic": "x", "content": "bad type", "importance": 5.0},
+            {"type": "goal", "topic": "", "content": "no topic", "importance": 5.0},
+            {"type": "goal", "topic": "y", "content": "out of range", "importance": 99.0},
+        ])
 
         await service.extract_and_upsert("u1", "ed", summary="...")
 
         stored = await repo.get_by_user_and_course("u1", "ed")
         assert {m.topic for m in stored} == {"ok"}
 
-    async def test_blends_existing_memory(self, service, repo, db, monkeypatch):
+    async def test_blends_existing_memory(self, service, repo, db, model_client):
         await insert_memory(
             db, mem_id="m1", user_id="u1", course="ed",
             mem_type="goal", topic="recursion", content="old", importance=4.0,
         )
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            _llm_returning([
-                {"type": "goal", "topic": "recursion", "content": "new", "importance": 8.0},
-            ]),
-        )
+        model_client.call.side_effect = _llm_returning([
+            {"type": "goal", "topic": "recursion", "content": "new", "importance": 8.0},
+        ])
 
         await service.extract_and_upsert("u1", "ed", summary="...")
 
@@ -239,19 +237,16 @@ class TestExtractAndUpsert:
         assert merged.importance == 6.0  # (4 + 8) / 2
         assert merged.content == "new"  # updated because new importance was higher
 
-    async def test_evicts_lowest_when_cap_reached(self, service, repo, db, monkeypatch):
+    async def test_evicts_lowest_when_cap_reached(self, service, repo, db, model_client):
         for i in range(MAX_MEMORIES_PER_COURSE):
             await insert_memory(
                 db, mem_id=f"m{i:02d}", user_id="u1", course="ed",
                 mem_type="preference", topic=f"t{i:02d}", importance=(i + 1) * 0.5,
             )
         # t00 has the lowest importance (0.5) and should be evicted.
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            _llm_returning([
-                {"type": "preference", "topic": "fresh", "content": "new", "importance": 9.0},
-            ]),
-        )
+        model_client.call.side_effect = _llm_returning([
+            {"type": "preference", "topic": "fresh", "content": "new", "importance": 9.0},
+        ])
 
         await service.extract_and_upsert("u1", "ed", summary="...")
 
@@ -261,60 +256,48 @@ class TestExtractAndUpsert:
         assert "fresh" in topics
         assert "t00" not in topics  # lowest-importance evicted
 
-    async def test_parses_fenced_json(self, service, repo, db, monkeypatch):
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            _llm_returning(
-                [{"type": "goal", "topic": "loops", "content": "c", "importance": 5.0}],
-                fenced=True,
-            ),
+    async def test_parses_fenced_json(self, service, repo, db, model_client):
+        model_client.call.side_effect = _llm_returning(
+            [{"type": "goal", "topic": "loops", "content": "c", "importance": 5.0}],
+            fenced=True,
         )
 
         await service.extract_and_upsert("u1", "ed", summary="...")
 
         assert await repo.get_by_key("u1", "ed", "goal", "loops") is not None
 
-    async def test_llm_failure_is_swallowed(self, service, repo, db, monkeypatch):
+    async def test_llm_failure_is_swallowed(self, service, repo, db, model_client):
         def _boom(prompt, *args, **kwargs):
             raise RuntimeError("LLM down")
 
-        monkeypatch.setattr("app.backend.services.user_memory.call_openrouter", _boom)
+        model_client.call.side_effect = _boom
 
         await service.extract_and_upsert("u1", "ed", summary="...")  # must not raise
 
         assert await repo.get_by_user_and_course("u1", "ed") == []
 
-    async def test_empty_response_is_noop(self, service, repo, db, monkeypatch):
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            lambda *a, **k: "",
-        )
+    async def test_empty_response_is_noop(self, service, repo, db, model_client):
+        model_client.call.side_effect = lambda *a, **k: ""
 
         await service.extract_and_upsert("u1", "ed", summary="...")
 
         assert await repo.get_by_user_and_course("u1", "ed") == []
 
-    async def test_unparseable_json_is_ignored(self, service, repo, db, monkeypatch):
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            lambda *a, **k: "this is not valid json {",
-        )
+    async def test_unparseable_json_is_ignored(self, service, repo, db, model_client):
+        model_client.call.side_effect = lambda *a, **k: "this is not valid json {"
 
         await service.extract_and_upsert("u1", "ed", summary="...")
 
         assert await repo.get_by_user_and_course("u1", "ed") == []
 
-    async def test_upsert_error_is_swallowed(self, service, repo, db, monkeypatch):
+    async def test_upsert_error_is_swallowed(self, service, repo, db, monkeypatch, model_client):
         async def _boom_create(*args, **kwargs):
             raise RuntimeError("db write failed")
 
         monkeypatch.setattr(service.repo, "create", _boom_create)
-        monkeypatch.setattr(
-            "app.backend.services.user_memory.call_openrouter",
-            _llm_returning([
-                {"type": "goal", "topic": "loops", "content": "c", "importance": 5.0},
-            ]),
-        )
+        model_client.call.side_effect = _llm_returning([
+            {"type": "goal", "topic": "loops", "content": "c", "importance": 5.0},
+        ])
 
         await service.extract_and_upsert("u1", "ed", summary="...")  # must not raise
 

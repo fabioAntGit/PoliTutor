@@ -6,9 +6,8 @@ functions to fetch and rerank information chunks corresponding
 to the user's queries against the ChromaDB document store.
 
 Functions:
-    retrieve_with_config: Flexible retrieval for benchmarking with custom parameters.
-    retrieve:             Default retrieval using config values. Called by the backend.
-    ask:                  End-to-end pipeline: retrieve → generate. Primary backend entry point.
+    retrieve: Flexible retrieval for benchmarking with custom parameters.
+    retrieve:             Default retrieval using config values. Called by the RAG engine.
 """
 
 import logging
@@ -22,20 +21,14 @@ from ..shared.config import (
     TOP_K_RESULTS,
 )
 from ..shared.embedding import get_embedder
-from ..shared.database import get_collection
-from .generator import generate
-from .guardrails import (
-    detect_code_request,
-    detect_prompt_injection,
-    sanitize_input,
-    validate_input,
-)
-from ..shared.models import RetrievalResults, TutorResponse
+from ..shared.interfaces.vector_store import IVectorStore
+from ..shared.chroma_vector_store import ChromaVectorStore
+from ..shared.models import RetrievalResults
 from .reranker import rerank
 
 logger = logging.getLogger(__name__)
 
-def retrieve_with_config(
+def retrieve(
     course: str,
     query: str,
     *,
@@ -45,37 +38,32 @@ def retrieve_with_config(
     reranker_top_k: int = RERANKER_TOP_K,
     collection_name: str = CHROMA_COLLECTION_NAME,
     distance_threshold: float | None = RETRIEVAL_DISTANCE_THRESHOLD,
+    store: IVectorStore | None = None,
 ) -> RetrievalResults:
     """
     Flexible retrieval for benchmarking. Supports custom embedding models,
-    ChromaDB collections, rerankers, and distance thresholds.
+    vector store collections, rerankers, and distance thresholds.
 
     Args:
         course:             Course unit identifier (e.g. 'ed').
         query:              The user's question.
         embedding_model:    HuggingFace model name to embed the query.
-        collection_name:    ChromaDB collection to query.
+        collection_name:    Vector store collection to query.
         top_k:              Number of initial candidates to retrieve.
         reranker_model:     Cross-encoder model name, or None to skip reranking.
         reranker_top_k:     Number of results to keep after reranking.
         distance_threshold: Maximum cosine distance allowed. Chunks above this
                             value are dropped before reranking. None disables filtering.
+        store:              Vector store to query. Defaults to ChromaVectorStore.
 
     Returns:
         Structured RetrievalResults with aligned arrays of ids, documents, metadatas, distances, scores.
     """
-    collection = get_collection(collection_name)
     embedder = get_embedder(embedding_model)
 
     query_vector = embedder.embed_query(query)
-
-    raw = collection.query(
-        query_embeddings=[query_vector],
-        n_results=top_k,
-        where={"course": course.strip().lower()},
-    )
-
-    results = RetrievalResults.from_chroma_dict(raw)
+    store = store or ChromaVectorStore(collection_name)
+    results = store.search(course, query_vector, top_k=top_k)
 
     if distance_threshold is not None and not results.is_empty():
         mask = [d <= distance_threshold for d in results.distances]
@@ -98,52 +86,4 @@ def retrieve_with_config(
     return results
 
 
-def retrieve(course: str, query: str) -> RetrievalResults:
-    """
-    Query ChromaDB and rerank results. Called by the backend.
 
-    Args:
-        course:          Course unit identifier (e.g., 'ed', 'pp').
-        query:           The user's question.
-
-    Returns:
-        Structured RetrievalResults object.
-    """
-    return retrieve_with_config(course, query)
-
-
-def ask(
-    course: str,
-    query: str,
-    summary: str = "",
-    history: list[dict] | None = None,
-    memory: str = "",
-) -> TutorResponse:
-    query = sanitize_input(query)
-
-    is_valid, reason = validate_input(query)
-    if not is_valid:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
-
-    is_injection, reason = detect_prompt_injection(query)
-    if is_injection:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
-
-    is_code_req, reason = detect_code_request(query)
-    if is_code_req:
-        return TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
-
-    results = retrieve(course, query)
-
-    if results.is_empty():
-        logger.warning("[ASK] No chunks after retrieval (threshold=%.3f) — delegating to context-aware generation.",
-                       RETRIEVAL_DISTANCE_THRESHOLD or float("inf"))
-
-    return generate(
-        query,
-        results,
-        summary,
-        history,
-        is_retrieval_fallback=results.is_empty(),
-        memory=memory,
-    )

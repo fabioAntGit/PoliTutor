@@ -25,9 +25,8 @@ from app.backend.api.v1.endpoints.users import router as users_router
 from app.backend.core.database import close_mongo, connect_to_mongo, connect_to_redis, close_redis
 from app.backend.core.exceptions import AppError
 from app.backend.schemas.shared.api_error import ApiError
-from rag.src.shared.embedding import get_embedder
-from rag.src.runtime.reranker import get_reranker
-from rag.src.shared.logging_config import setup_logging
+from app.backend.core.logging_config import setup_logging
+from app.backend.api.deps import get_rag_engine
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +83,8 @@ async def startup_event():
     await connect_to_redis()
     if RAG_PRELOAD:
         logger.info("Pre-loading embedding and reranker models...")
-        get_embedder()
-        get_reranker()
+        rag_engine = get_rag_engine()
+        rag_engine.preload_models()
         logger.info("Models loaded and ready.")
     else:
         logger.info("RAG_PRELOAD=0 — skipping model pre-load (lean backend).")

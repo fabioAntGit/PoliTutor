@@ -428,12 +428,15 @@ Student question
 
 ## Tutor
 
-`retrieval.py` exposes `ask(course, query)` as the primary backend integration point:
+`engine.py` exposes the `IRagEngine` port as the primary backend integration point.
+The backend depends on the `IRagEngine` contract (injected via DI) and never imports
+the RAG internals. For scripts, a module-level `ask` convenience function is also provided:
 
 ```python
-from rag.src.runtime.retrieval import ask
+from rag.src.runtime.engine import RagEngine
 
-response = ask(course="ed", query="O que é uma árvore AVL?")
+engine = RagEngine()  # returns an IRagEngine
+response = engine.ask(course="ed", query="O que é uma árvore AVL?")
 
 print(response.answer)              # Socratic guidance from the tutor
 print(response.is_fallback)         # True if no relevant content was found

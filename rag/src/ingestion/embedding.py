@@ -20,7 +20,8 @@ from ..shared.config import (
     MAX_IMAGE_API_CALLS,
     OPENROUTER_MODEL_IMAGE_SUMMARIZATION,
 )
-from ..shared.database import get_collection
+from ..shared.interfaces.vector_store import IVectorStore
+from ..shared.chroma_vector_store import ChromaVectorStore
 from ..shared.embedding import get_embedder
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ def embed_chunks(
     file_stem: str,
     model_name: str | None = None,
     collection_name: str | None = None,
+    store: IVectorStore | None = None,
 ) -> None:
     """
     Generates embeddings for text chunks and relevant images, then upserts
@@ -80,7 +82,7 @@ def embed_chunks(
         return
 
     embedder = get_embedder(model_name)
-    collection = get_collection(collection_name)
+    store = store or ChromaVectorStore(collection_name)
 
     texts, ids, metadatas = [], [], []
 
@@ -100,7 +102,7 @@ def embed_chunks(
 
     try:
         embeddings = embedder.embed_documents(texts)
-        collection.upsert(
+        store.upsert(
             ids=ids,
             documents=texts,
             embeddings=embeddings,

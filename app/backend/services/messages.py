@@ -1,7 +1,7 @@
 import asyncio
 
-from rag.src.runtime.retrieval import ask
-from rag.src.shared.models import TutorResponse
+from contracts.rag.interfaces import IRagEngine
+from contracts.rag.models import TutorResponse, TutorSource
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
@@ -20,12 +20,14 @@ class MessageService(IMessageService):
         cache_repository: ICacheRepository,
         context_service: IContextService,
         user_memory_service: IUserMemoryService,
+        rag_engine: IRagEngine,
     ) -> None:
         self.message_repository = message_repository
         self.chat_repository = chat_repository
         self.cache_repository = cache_repository
         self.context_service = context_service
         self.user_memory_service = user_memory_service
+        self.rag_engine = rag_engine
 
     async def send_message(
         self,
@@ -43,18 +45,26 @@ class MessageService(IMessageService):
 
         summary, history = await self.context_service.get_or_load_context(conversation_id)
 
-        # Enrich summary with semantically relevant long-term memories
         memory_context = await self.user_memory_service.get_context_for_prompt(
             conversation.user_id, conversation.course
         )
 
         response = await asyncio.to_thread(
-            ask,
+            self.rag_engine.ask,
             conversation.course,
             question,
             summary,
             history,
             memory_context or "",
+        )
+
+        backend_response = TutorResponse(
+            answer=response.answer,
+            sources=[TutorSource(filename=s.filename, pages=s.pages) for s in response.sources],
+            is_fallback=response.is_fallback,
+            is_guardrail=response.is_guardrail,
+            is_output_guardrail=response.is_output_guardrail,
+            is_retrieval_fallback=response.is_retrieval_fallback
         )
 
         user_msg = Message(conversation_id=conversation_id, role="user", content=question)
@@ -64,8 +74,8 @@ class MessageService(IMessageService):
         assistant_msg = Message(
             conversation_id=conversation_id,
             role="assistant",
-            content=response.answer,
-            sources=[Source(filename=source.filename, pages=source.pages) for source in response.sources],
+            content=backend_response.answer,
+            sources=[Source(filename=source.filename, pages=source.pages) for source in backend_response.sources],
         )
 
         assistant_msg.id = await self.message_repository.create(assistant_msg)
@@ -77,7 +87,7 @@ class MessageService(IMessageService):
             conversation_id, conversation.user_id, conversation.course
         )
 
-        return user_msg, assistant_msg, response
+        return user_msg, assistant_msg, backend_response
 
     async def get_chat_messages(self, conversation_id: str) -> list[Message]:
         return await self.message_repository.get_messages(conversation_id)

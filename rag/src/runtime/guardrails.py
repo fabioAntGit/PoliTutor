@@ -1,17 +1,15 @@
 """
 Guardrails Module.
 
-Provides input validation, prompt-injection detection, output verification,
-and sanitization functions that protect the Socratic tutor pipeline.
+Protects the Socratic tutor pipeline with input and output guardrails.
 
-INPUT guardrails (applied before retrieval):
-    sanitize_input          strips XML-like tags that could hijack prompt delimiters.
-    validate_input          checks empty / too-short / too-long queries.
-    detect_prompt_injection blocks attempts to override Socratic rules.
-    detect_code_request     blocks explicit requests for complete code/solutions.
+Public entry points (used by the RAG engine):
+    apply_input_guardrails   sanitizes + validates the query before retrieval,
+                             returning the clean query and an optional block response.
+    apply_output_guardrail   replaces non-Socratic answers with a Socratic redirect.
 
-OUTPUT guardrails (applied after generation):
-    detect_direct_answer    flags responses that appear non-Socratic.
+Internal checks: _sanitize_input, _validate_input, _detect_prompt_injection,
+_detect_code_request, _detect_direct_answer.
 """
 
 import re
@@ -24,11 +22,14 @@ from ..shared.config import (
     INJECTION_PATTERNS,
     QUERY_MAX_LENGTH,
     QUERY_MIN_LENGTH,
+    SOCRATIC_REDIRECT,
 )
+from contracts.rag.models import TutorResponse
 
 logger = logging.getLogger(__name__)
 
-def sanitize_input(query: str) -> str:
+
+def _sanitize_input(query: str) -> str:
     """
     Removes characters / sequences that could interfere with the prompt
     template delimiters (``<user_question>``, ``<rag_context>``).
@@ -40,7 +41,7 @@ def sanitize_input(query: str) -> str:
     return sanitized.strip()
 
 
-def validate_input(query: str) -> tuple[bool, str]:
+def _validate_input(query: str) -> tuple[bool, str]:
     """
     Validates the student's query before it enters the retrieval pipeline.
 
@@ -74,7 +75,7 @@ def validate_input(query: str) -> tuple[bool, str]:
     return True, ""
 
 
-def detect_prompt_injection(query: str) -> tuple[bool, str]:
+def _detect_prompt_injection(query: str) -> tuple[bool, str]:
     """
     Detects attempts to override the Socratic system prompt.
 
@@ -97,7 +98,7 @@ def detect_prompt_injection(query: str) -> tuple[bool, str]:
     return False, ""
 
 
-def detect_code_request(query: str) -> tuple[bool, str]:
+def _detect_code_request(query: str) -> tuple[bool, str]:
     """
     Detects explicit requests for complete code, solutions, or implementations.
 
@@ -119,7 +120,29 @@ def detect_code_request(query: str) -> tuple[bool, str]:
     return False, ""
 
 
-def detect_direct_answer(answer: str) -> bool:
+def apply_input_guardrails(query: str) -> tuple[str, TutorResponse | None]:
+    """
+    INPUT guardrails applied before retrieval: sanitizes the query and runs the
+    block checks (length, prompt injection, code request).
+    """
+    query = _sanitize_input(query)
+
+    is_valid, reason = _validate_input(query)
+    if not is_valid:
+        return query, TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
+
+    is_injection, reason = _detect_prompt_injection(query)
+    if is_injection:
+        return query, TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
+
+    is_code_req, reason = _detect_code_request(query)
+    if is_code_req:
+        return query, TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
+
+    return query, None
+
+
+def _detect_direct_answer(answer: str) -> bool:
     """
     Checks whether the LLM response contains signs of a non-Socratic,
     direct answer.
@@ -144,3 +167,22 @@ def detect_direct_answer(answer: str) -> bool:
         return True
 
     return False
+
+
+def apply_output_guardrail(response: TutorResponse) -> TutorResponse:
+    """
+    OUTPUT guardrail applied after generation. If a genuine answer looks
+    non-Socratic, replaces it with the Socratic redirect while preserving the
+    sources. Fallback / error responses are passed through untouched.
+    """
+    if not response.is_fallback and _detect_direct_answer(response.answer):
+        logger.warning("[GUARDRAIL] Output guardrail triggered — replacing with Socratic redirect.")
+        return TutorResponse(
+            answer=SOCRATIC_REDIRECT,
+            sources=response.sources,
+            is_fallback=False,
+            is_output_guardrail=True,
+            is_retrieval_fallback=response.is_retrieval_fallback,
+        )
+
+    return response

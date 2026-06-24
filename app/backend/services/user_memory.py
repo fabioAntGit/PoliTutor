@@ -8,8 +8,8 @@ from uuid import uuid4
 from app.backend.repositories.interfaces.user_memory_repository import IUserMemoryRepository
 from app.backend.schemas.memory.models import MemoryType, UserMemory
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
-from rag.src.shared.call_model import call_openrouter
-from rag.src.shared.config import (
+from app.backend.gateways.interfaces.model_client import IModelClient
+from app.backend.core.config import (
     MAX_MEMORIES_PER_COURSE,
     MEMORY_DECAY_RATE_PER_WEEK,
     MEMORY_DELETE_IMPORTANCE_THRESHOLD,
@@ -65,8 +65,9 @@ def _format_existing(memories: list[UserMemory]) -> str:
 
 
 class UserMemoryService(IUserMemoryService):
-    def __init__(self, repo: IUserMemoryRepository) -> None:
+    def __init__(self, repo: IUserMemoryRepository, model_client: IModelClient) -> None:
         self.repo = repo
+        self.model_client = model_client
 
     async def extract_and_upsert(self, user_id: str, course: str, summary: str) -> None:
         await self._apply_decay(user_id, course)
@@ -81,7 +82,7 @@ class UserMemoryService(IUserMemoryService):
 
         try:
             raw = await asyncio.to_thread(
-                call_openrouter,
+                self.model_client.call,
                 prompt,
                 model=OPENROUTER_MODEL_MEMORY_EXTRACTION,
                 max_tokens=600,

@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from app.backend.repositories.interfaces.user_memory_repository import IUserMemoryRepository
+from app.backend.gateways.interfaces.model_client import IModelClient
 from app.backend.schemas.memory.models import UserMemory
 from app.backend.services.user_memory import UserMemoryService
 
@@ -31,8 +32,13 @@ def repo():
 
 
 @pytest.fixture
-def service(repo):
-    return UserMemoryService(repo)
+def model_client():
+    return MagicMock(spec=IModelClient)
+
+
+@pytest.fixture
+def service(repo, model_client):
+    return UserMemoryService(repo, model_client)
 
 
 async def test_context_includes_only_important_memories(service, repo):
@@ -148,33 +154,24 @@ async def test_apply_decay_updates_decayed_importance(service, repo):
     assert updates["importance"] < 8.0
 
 
-async def test_extract_and_upsert_swallows_llm_failure(service, repo, mocker):
+async def test_extract_and_upsert_swallows_llm_failure(service, repo, model_client):
     repo.get_by_user_and_course.return_value = []
-    mocker.patch(
-        "app.backend.services.user_memory.call_openrouter",
-        side_effect=Exception("LLM down"),
-    )
+    model_client.call.side_effect = Exception("LLM down")
     await service.extract_and_upsert("u1", "Math", "conversation summary")
     repo.create.assert_not_awaited()
 
 
-async def test_extract_and_upsert_noop_on_empty_response(service, repo, mocker):
+async def test_extract_and_upsert_noop_on_empty_response(service, repo, model_client):
     repo.get_by_user_and_course.return_value = []
-    mocker.patch(
-        "app.backend.services.user_memory.call_openrouter",
-        return_value="",
-    )
+    model_client.call.return_value = ""
     await service.extract_and_upsert("u1", "Math", "conversation summary")
     repo.create.assert_not_awaited()
 
 
-async def test_extract_and_upsert_persists_memories_from_llm_output(service, repo, mocker):
+async def test_extract_and_upsert_persists_memories_from_llm_output(service, repo, model_client):
     repo.get_by_user_and_course.return_value = []
     repo.get_by_key.return_value = None
-    mocker.patch(
-        "app.backend.services.user_memory.call_openrouter",
-        return_value='{"memories": [{"type": "goal", "topic": "exam", "content": "pass", "importance": 7}]}',
-    )
+    model_client.call.return_value = '{"memories": [{"type": "goal", "topic": "exam", "content": "pass", "importance": 7}]}'
     await service.extract_and_upsert("u1", "Math", "conversation summary")
 
     repo.create.assert_awaited_once()
@@ -183,15 +180,12 @@ async def test_extract_and_upsert_persists_memories_from_llm_output(service, rep
     assert created.importance == 7.0
 
 
-async def test_extract_and_upsert_continues_when_one_upsert_fails(service, repo, mocker):
+async def test_extract_and_upsert_continues_when_one_upsert_fails(service, repo, mocker, model_client):
     repo.get_by_user_and_course.return_value = []
-    mocker.patch(
-        "app.backend.services.user_memory.call_openrouter",
-        return_value=(
-            '{"memories": ['
-            '{"type": "goal", "topic": "a", "content": "x", "importance": 5},'
-            '{"type": "goal", "topic": "b", "content": "y", "importance": 6}]}'
-        ),
+    model_client.call.return_value = (
+        '{"memories": ['
+        '{"type": "goal", "topic": "a", "content": "x", "importance": 5},'
+        '{"type": "goal", "topic": "b", "content": "y", "importance": 6}]}'
     )
     upsert = mocker.patch.object(service, "_upsert_one", side_effect=[Exception("fail"), None])
 

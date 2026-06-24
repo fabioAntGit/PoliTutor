@@ -13,12 +13,13 @@ import json
 import logging
 import re
 
-from ..shared.config import OPENROUTER_MODEL_GENERATOR, SOCRATIC_REDIRECT, TUTOR_API_ERROR_MESSAGE, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
+from ..shared.config import OPENROUTER_MODEL_GENERATOR, TUTOR_API_ERROR_MESSAGE, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
 
 
-from .guardrails import detect_direct_answer
-from ..shared.call_model import call_openrouter
-from ..shared.models import RetrievalResults, TutorResponse, TutorSource
+from ..shared.call_model import OpenRouterClient
+from ..shared.interfaces.model_client import IModelClient
+from ..shared.models import RetrievalResults
+from contracts.rag.models import TutorResponse, TutorSource
 
 logger = logging.getLogger(__name__)
 
@@ -91,8 +92,10 @@ def generate(
     history: list[dict] | None = None,
     is_retrieval_fallback: bool = False,
     memory: str = "",
+    model_client: IModelClient | None = None,
 ) -> TutorResponse:
     history = history or []
+    model_client = model_client or OpenRouterClient()
 
     if results.is_empty():
         logger.info("[GENERATE] No RAG chunks — continuing dialogue from conversation context.")
@@ -108,7 +111,7 @@ def generate(
     )
     messages = build_messages(system_content, summary, history, query)
 
-    raw_answer = call_openrouter(
+    raw_answer = model_client.call(
         messages=messages,
         max_tokens=2000,
         model=OPENROUTER_MODEL_GENERATOR,
@@ -162,16 +165,6 @@ def generate(
         for s in data.get("sources", [])
         if s.get("filename")
     ]
-
-    if detect_direct_answer(answer):
-        logger.warning("[GENERATE] Output guardrail triggered — replacing with Socratic redirect.")
-        return TutorResponse(
-            answer=SOCRATIC_REDIRECT,
-            sources=llm_sources,
-            is_fallback=False,
-            is_output_guardrail=True,
-            is_retrieval_fallback=is_retrieval_fallback,
-        )
 
     logger.info("Tutor response generated from %d source chunks.", len(llm_sources))
     return TutorResponse(

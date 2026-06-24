@@ -49,11 +49,11 @@ from ..shared.config import (
     TUTOR_BENCHMARK_JUDGE_PROMPT,
     TUTOR_BENCHMARK_MAX_QUESTIONS,
 )
-from ..shared.call_model import call_openrouter
-from ..shared.database import get_collection
+from ..shared.call_model import OpenRouterClient
+from ..shared.chroma_vector_store import get_collection
 from ..shared.embedding import get_embedder
 from ..shared.models import TutorBenchmarkEntry, TutorEvaluationResult
-from ..runtime.retrieval import ask
+from ..runtime.engine import RagEngine
 from ..shared.utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ def create_questions(context: str, page_number: int, filename: str) -> list[dict
         context=context,
     )
 
-    content = call_openrouter([{"role": "user", "content": prompt}], max_tokens=800, temperature=0.7, model=OPENROUTER_MODEL_BENCHMARK)
+    content = OpenRouterClient().call([{"role": "user", "content": prompt}], max_tokens=800, temperature=0.7, model=OPENROUTER_MODEL_BENCHMARK)
 
     if content is None:
         return None
@@ -304,7 +304,7 @@ def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> dict | N
         actual_response=actual_response,
     )
 
-    content = call_openrouter([{"role": "user", "content": prompt}], max_tokens=300, temperature=0.1, model=OPENROUTER_MODEL_BENCHMARK)
+    content = OpenRouterClient().call([{"role": "user", "content": prompt}], max_tokens=300, temperature=0.1, model=OPENROUTER_MODEL_BENCHMARK)
 
     if content is None:
         return None
@@ -355,7 +355,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
             entry.question_type, entry.filename, entry.page,
         )
 
-        tutor_response = ask(course_code, entry.question)
+        tutor_response = RagEngine().ask(course_code, entry.question)
 
         # Input guardrail blocked the query before reaching the LLM — criteria not applicable.
         if tutor_response.is_guardrail:
