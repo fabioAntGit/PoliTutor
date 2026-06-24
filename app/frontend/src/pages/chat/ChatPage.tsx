@@ -50,9 +50,6 @@ export default function ChatPage() {
                         <header className="relative flex shrink-0 items-center justify-center py-4">
                             <div className="absolute left-4 top-0 bottom-0 my-auto flex items-center gap-2">
                                 <SidebarTrigger />
-                                <span className="text-base font-semibold">
-                                    PoliTutor
-                                </span>
                             </div>
 
                             <h1 className="text-xl font-semibold">{chat?.course_name}</h1>

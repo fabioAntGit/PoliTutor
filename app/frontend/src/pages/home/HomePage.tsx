@@ -43,7 +43,6 @@ export default function HomePage() {
         <SidebarInset>
           <div className="absolute left-4 top-4 z-30 flex items-center gap-2">
             <SidebarTrigger />
-            <span className="text-base font-semibold">PoliTutor</span>
           </div>
           <div className="fixed right-4 top-4 z-30">
             <UserMenu compact />
