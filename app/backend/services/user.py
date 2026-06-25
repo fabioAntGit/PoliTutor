@@ -7,7 +7,7 @@ from app.backend.repositories.interfaces.deletion_repository import IDeletionRep
 from app.backend.services.interfaces.user_service import IUserService
 from app.backend.schemas.user.models import User
 from app.backend.core.validators import validate_and_extract_username
-from app.backend.core.exceptions import AppError, UserNotFoundError
+from app.backend.core.exceptions import AppError, UserNotFoundError, UserAlreadyExistsError, ValidationError
 from pwdlib import PasswordHash
 
 logger = logging.getLogger(__name__)
@@ -35,20 +35,20 @@ class UserService(IUserService):
         courses: list[str]
     ) -> User:
         if len(password) < 8:
-            raise AppError(message="A password deve ter pelo menos 8 caracteres")
+            raise ValidationError(message="A password deve ter pelo menos 8 caracteres")
 
         username = validate_and_extract_username(email)
 
         if await self.user_repository.find_by_email(email):
-            raise AppError(message="Ja existe um utilizador com este email")
+            raise UserAlreadyExistsError(message="Ja existe um utilizador com este email")
         if await self.user_repository.find_by_username(username):
-            raise AppError(message="Ja existe um utilizador com este username")
+            raise UserAlreadyExistsError(message="Ja existe um utilizador com este username")
 
         if courses:
             unique_courses = list(set(courses))
             existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
             if len(existing_courses) != len(unique_courses):
-                raise AppError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
+                raise ValidationError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
             courses = unique_courses
 
         password_hash = PasswordHash.recommended()
@@ -86,12 +86,12 @@ class UserService(IUserService):
 
             existing_email = await self.user_repository.find_by_email(new_email)
             if existing_email:
-                raise AppError(message="Este email ja esta em uso por outro utilizador")
+                raise UserAlreadyExistsError(message="Este email ja esta em uso por outro utilizador")
 
             if new_username != username:
                 existing_user = await self.user_repository.find_by_username(new_username)
                 if existing_user:
-                    raise AppError(message="Este username (derivado do email) ja esta em uso")
+                    raise UserAlreadyExistsError(message="Este username (derivado do email) ja esta em uso")
 
         if "courses" in update_data:
             courses = update_data["courses"]
@@ -99,7 +99,7 @@ class UserService(IUserService):
                 unique_courses = list(set(courses))
                 existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
                 if len(existing_courses) != len(unique_courses):
-                    raise AppError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
+                    raise ValidationError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
                 update_data["courses"] = unique_courses
             else:
                 update_data["courses"] = []
@@ -138,10 +138,10 @@ class UserService(IUserService):
 
         password_hash = PasswordHash.recommended()
         if not password_hash.verify(current_password, user.hashed_password):
-            raise AppError(message="Password atual incorreta")
+            raise ValidationError(message="Password atual incorreta")
 
         if len(new_password) < 8:
-            raise AppError(message="A nova password deve ter pelo menos 8 caracteres")
+            raise ValidationError(message="A nova password deve ter pelo menos 8 caracteres")
 
         new_hash = password_hash.hash(new_password)
         await self.user_repository.update(

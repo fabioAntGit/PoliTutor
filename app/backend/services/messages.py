@@ -89,6 +89,3 @@ class MessageService(IMessageService):
         )
 
         return user_msg, assistant_msg, backend_response
-
-    async def get_chat_messages(self, conversation_id: str) -> list[Message]:
-        return await self.message_repository.get_messages(conversation_id)

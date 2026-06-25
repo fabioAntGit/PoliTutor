@@ -17,6 +17,24 @@ class AppError(Exception):
         super().__init__(self.message)
 
 
+class UserAlreadyExistsError(AppError):
+    status_code = 409
+    code = "user_already_exists"
+    message = "Ja existe um utilizador com este email ou username"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
+class ValidationError(AppError):
+    status_code = 400
+    code = "validation_error"
+    message = "Erro de validacao nos dados fornecidos"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
 class CourseNotFoundError(AppError):
     status_code = 404
     code = "course_not_found"
@@ -25,6 +43,24 @@ class CourseNotFoundError(AppError):
     def __init__(self, course_code: str) -> None:
         self.course_code = course_code
         super().__init__(details={"course_code": course_code})
+
+
+class CourseAlreadyExistsError(AppError):
+    status_code = 409
+    code = "course_already_exists"
+    message = "Ja existe uma cadeira com estes dados"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
+
+
+class CourseInUseError(AppError):
+    status_code = 409
+    code = "course_in_use"
+    message = "A cadeira esta em uso e nao pode ser apagada"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message=message)
 
 
 class ChatNotFoundError(AppError):
