@@ -26,6 +26,7 @@ export default function HomePage() {
     submitting,
     submit,
     openChat,
+    deleteChat,
   } = useHome();
 
   const firstName = AuthService.getFullName()?.trim().split(/\s+/)[0];
@@ -38,7 +39,7 @@ export default function HomePage() {
       onRetry={() => window.location.reload()}
     >
       <SidebarProvider defaultOpen>
-        <ChatHistorySidebar chats={chats} onSelectChat={openChat} onHome={() => window.location.reload()} />
+        <ChatHistorySidebar chats={chats} onSelectChat={openChat} onDeleteChat={deleteChat} onHome={() => window.location.reload()} />
 
         <SidebarInset>
           <div className="absolute left-4 top-4 z-30 flex items-center gap-2">

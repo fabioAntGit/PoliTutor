@@ -17,6 +17,7 @@ from app.backend.schemas.course.models import Course
 from app.backend.schemas.message.models import Message
 from app.backend.schemas.user.models import User
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
+from app.backend.repositories.interfaces.report_repository import IReportRepository
 from app.backend.services.chats import ChatService
 
 
@@ -82,12 +83,18 @@ def message_repo():
 
 
 @pytest.fixture
-def service(chat_repo, course_repo, user_repo, message_repo):
+def report_repo():
+    return AsyncMock(spec=IReportRepository)
+
+
+@pytest.fixture
+def service(chat_repo, course_repo, user_repo, message_repo, report_repo):
     return ChatService(
         chat_repository=chat_repo,
         course_repository=course_repo,
         user_repository=user_repo,
         message_repository=message_repo,
+        report_repository=report_repo,
     )
 
 
@@ -190,3 +197,41 @@ async def test_list_user_chats_inactive_courses_returns_filtered(service, chat_r
 
     assert len(result) == 1
     assert str(result[0][0].id) == "60d5ecb8b4259b3a0c4f1a01"
+
+
+async def test_delete_chat_owner_deletes_reports_messages_and_chat(
+    service, chat_repo, message_repo, report_repo
+):
+    chat_repo.get_chat.return_value = _make_chat(user_id="user1")
+
+    await service.delete_chat("60d5ecb8b4259b3a0c4f1a01", requester_user_id="user1")
+
+    report_repo.delete_by_conversation.assert_awaited_once_with("60d5ecb8b4259b3a0c4f1a01")
+    message_repo.delete_by_conversation.assert_awaited_once_with("60d5ecb8b4259b3a0c4f1a01")
+    chat_repo.delete.assert_awaited_once_with("60d5ecb8b4259b3a0c4f1a01")
+
+
+async def test_delete_chat_not_found_throws_and_deletes_nothing(
+    service, chat_repo, message_repo, report_repo
+):
+    chat_repo.get_chat.return_value = None
+
+    with pytest.raises(ChatNotFoundError):
+        await service.delete_chat("60d5ecb8b4259b3a0c4f1a05", requester_user_id="user1")
+
+    report_repo.delete_by_conversation.assert_not_awaited()
+    message_repo.delete_by_conversation.assert_not_awaited()
+    chat_repo.delete.assert_not_awaited()
+
+
+async def test_delete_chat_wrong_user_throws_and_deletes_nothing(
+    service, chat_repo, message_repo, report_repo
+):
+    chat_repo.get_chat.return_value = _make_chat(user_id="user1")
+
+    with pytest.raises(AccessDeniedError):
+        await service.delete_chat("60d5ecb8b4259b3a0c4f1a01", requester_user_id="outro_user")
+
+    report_repo.delete_by_conversation.assert_not_awaited()
+    message_repo.delete_by_conversation.assert_not_awaited()
+    chat_repo.delete.assert_not_awaited()

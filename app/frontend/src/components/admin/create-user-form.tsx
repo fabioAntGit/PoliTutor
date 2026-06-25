@@ -39,7 +39,7 @@ export default function CreateUserForm() {
           id="email"
           label="Email"
           type="email"
-          placeholder="joao.silva@estg.ipp.pt"
+          placeholder="joao.silva@ipp.pt"
           error={errors.email?.message}
           {...register("email")}
         />

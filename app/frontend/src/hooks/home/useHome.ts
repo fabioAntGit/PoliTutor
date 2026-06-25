@@ -7,6 +7,7 @@ import type { ChatListItem } from "@/types/chat";
 import type { CourseResponse } from "@/types/course";
 import { ApiError } from "@/lib/errors";
 import { toast } from "sonner";
+import { useChatDeletion } from "@/hooks/chat/useChatDeletion";
 
 export function useHome() {
   const navigate = useNavigate();
@@ -70,6 +71,8 @@ export function useHome() {
     navigate(`/chat/${conversationId}`);
   };
 
+  const { deleteChat } = useChatDeletion({ setChats });
+
   return {
     courses,
     chats,
@@ -82,5 +85,6 @@ export function useHome() {
     submitting,
     submit,
     openChat,
+    deleteChat,
   };
 }

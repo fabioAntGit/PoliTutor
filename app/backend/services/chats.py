@@ -8,6 +8,7 @@ from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
+from app.backend.repositories.interfaces.report_repository import IReportRepository
 from app.backend.schemas.chat.models import Chat
 from app.backend.schemas.course.models import Course
 from app.backend.schemas.message.models import Message
@@ -21,11 +22,13 @@ class ChatService(IChatService):
         course_repository: ICourseRepository,
         user_repository: IUserRepository,
         message_repository: IMessageRepository,
+        report_repository: IReportRepository,
     ) -> None:
         self.chat_repository = chat_repository
         self.course_repository = course_repository
         self.user_repository = user_repository
         self.message_repository = message_repository
+        self.report_repository = report_repository
 
     async def create_chat(self, course_code: str, user_id: str) -> str:
         course = await self.course_repository.find_by_code(course_code)
@@ -78,6 +81,7 @@ class ChatService(IChatService):
         if chat.user_id != requester_user_id:
             raise AccessDeniedError("Nao tens permissao para eliminar este chat.")
 
+        await self.report_repository.delete_by_conversation(conversation_id)
         await self.message_repository.delete_by_conversation(conversation_id)
         await self.chat_repository.delete(conversation_id)
 

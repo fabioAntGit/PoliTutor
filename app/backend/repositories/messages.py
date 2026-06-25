@@ -17,12 +17,12 @@ class MessageRepository(IMessageRepository):
         document = await self.collection.find_one({"_id": ObjectId(message_id)})
         return Message.model_validate(document) if document else None
 
-    async def get_next_message(self, message_id: str, conversation_id: str) -> Message | None:
+    async def get_previous_message(self, message_id: str, conversation_id: str) -> Message | None:
         query = {
             "conversation_id": conversation_id,
-            "_id": {"$gt": ObjectId(message_id)}
+            "_id": {"$lt": ObjectId(message_id)}
         }
-        document = await self.collection.find_one(query, sort=[("_id", 1)])
+        document = await self.collection.find_one(query, sort=[("_id", -1)])
         return Message.model_validate(document) if document else None
 
     async def get_messages(self, conversation_id: str) -> list[Message]:

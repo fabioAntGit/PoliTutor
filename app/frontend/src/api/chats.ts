@@ -15,3 +15,7 @@ export async function listChats(): Promise<ChatListItem[]> {
   const response = await api.get<ChatListItem[]>("/chats");
   return response.data;
 }
+
+export async function deleteChat(conversationId: string): Promise<void> {
+  await api.delete(`/chat/${encodeURIComponent(conversationId)}`);
+}

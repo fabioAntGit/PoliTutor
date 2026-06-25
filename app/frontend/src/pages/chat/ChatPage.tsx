@@ -23,6 +23,7 @@ export default function ChatPage() {
         chats,
         openChat,
         goHome,
+        deleteChat,
         scrollRef,
         hasScrolled,
         handleScroll,
@@ -43,7 +44,7 @@ export default function ChatPage() {
     return (
         <PageState loading={loading} error={error}>
             <SidebarProvider defaultOpen>
-                <ChatHistorySidebar chats={chats} onSelectChat={openChat} onHome={goHome} />
+                <ChatHistorySidebar chats={chats} onSelectChat={openChat} onDeleteChat={deleteChat} onHome={goHome} />
 
                 <SidebarInset>
                     <main className="flex h-screen flex-col overflow-hidden">

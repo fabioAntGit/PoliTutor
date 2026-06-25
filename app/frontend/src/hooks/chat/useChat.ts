@@ -5,6 +5,7 @@ import type { Message } from "@/types/message";
 import { MessageService } from "@/services/message.service";
 import { ChatService } from "@/services/chat.service";
 import type { ChatRead, ChatListItem } from "@/types/chat";
+import { useChatDeletion } from "@/hooks/chat/useChatDeletion";
 
 export function useChat() {
   const { conversationId } = useParams();
@@ -81,6 +82,13 @@ export function useChat() {
   const goHome = useCallback(() => {
     navigate("/");
   }, [navigate]);
+
+  const { deleteChat } = useChatDeletion({
+    setChats,
+    onCommitted: (id) => {
+      if (id === conversationId) goHome();
+    },
+  });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -206,6 +214,7 @@ export function useChat() {
     chats,
     openChat,
     goHome,
+    deleteChat,
     scrollRef,
     hasScrolled,
     handleScroll,

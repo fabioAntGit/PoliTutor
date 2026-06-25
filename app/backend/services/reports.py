@@ -29,25 +29,25 @@ class ReportService(IReportService):
         if not chat or chat.user_id != requester_user_id:
             raise AccessDeniedError("Nao tens permissao para reportar mensagens deste chat.")
             
-        if reported_msg.role != "user":
-            raise ReportError(message="Apenas mensagens de utilizador podem ser reportadas")
+        if reported_msg.role != "assistant":
+            raise ReportError(message="Apenas mensagens de assistente podem ser reportadas")
 
-        next_msg = await self.message_repository.get_next_message(
+        prev_msg = await self.message_repository.get_previous_message(
             message_id, 
             reported_msg.conversation_id
         )
         
-        if not next_msg or next_msg.role != "assistant":
-            raise ReportError(message="Esta mensagem ainda nao tem uma resposta do assistente")
+        if not prev_msg or prev_msg.role != "user":
+            raise ReportError(message="Esta resposta não tem uma mensagem de utilizador correspondente")
 
-        if await self.report_repository.exists_by_message_id(message_id):
+        if await self.report_repository.exists_by_message_id(prev_msg.id):
             return True 
 
         report = Report(
             conversation_id=reported_msg.conversation_id,
-            message_id=reported_msg.id,
-            user_content=reported_msg.content,
-            assistant_content=next_msg.content
+            message_id=prev_msg.id,
+            user_content=prev_msg.content,
+            assistant_content=reported_msg.content
         )
 
         success = await self.report_repository.create(report)
@@ -69,7 +69,14 @@ class ReportService(IReportService):
         if not chat or chat.user_id != requester_user_id:
             raise AccessDeniedError("Nao tens permissao para remover reports deste chat.")
 
-        deleted = await self.report_repository.delete_by_message_id(message_id)
+        prev_msg = await self.message_repository.get_previous_message(
+            message_id, 
+            msg.conversation_id
+        )
+        
+        target_report_id = prev_msg.id if prev_msg else message_id
+
+        deleted = await self.report_repository.delete_by_message_id(target_report_id)
         
         await self.message_repository.update_report_status(message_id, False)
         

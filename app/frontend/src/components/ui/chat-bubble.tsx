@@ -11,7 +11,7 @@ interface ChatBubbleProps {
 export function ChatBubble({ message }: ChatBubbleProps) {
     const isUser = message.role === "user";
     const hasPersistedId = /^[a-f0-9]{24}$/i.test(message.id);
-    const canReport = isUser && hasPersistedId;
+    const canReport = !isUser && hasPersistedId;
     const [copied, setCopied] = useState(false);
     const [showSources, setShowSources] = useState(false);
     const [speaking, setSpeaking] = useState(false);
