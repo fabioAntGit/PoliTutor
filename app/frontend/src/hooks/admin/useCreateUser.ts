@@ -13,7 +13,7 @@ export function useCreateUser() {
   const [createdUser, setCreatedUser] = useState<CreatedUserCredentials | null>(null);
 
   useEffect(() => {
-    CourseService.listCourses().then(setCourses).catch(() => {});
+    CourseService.listActiveCourses().then(setCourses).catch(() => {});
   }, []);
 
   const form = useForm<CreateUserFormValues>({

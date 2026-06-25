@@ -40,6 +40,16 @@ export function useChat() {
       return;
     }
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    setIsTyping(false);
+    setInput("");
+    setError(null);
+    setLoading(true);
+
     let cancelled = false;
 
     ChatService.getChat(conversationId)

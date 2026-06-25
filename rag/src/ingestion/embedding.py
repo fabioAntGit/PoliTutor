@@ -99,6 +99,11 @@ def embed_chunks(
                 texts.append(result.get("summary", ""))
                 ids.append(f"{file_stem}_img_{i}_{j}")
                 metadatas.append(build_meta(chunk, "image", image_path=image_path))
+            else:
+                try:
+                    os.remove(image_path)
+                except OSError as e:
+                    logger.warning("Failed to delete unused image '%s': %s", image_path, e)
 
     try:
         embeddings = embedder.embed_documents(texts)

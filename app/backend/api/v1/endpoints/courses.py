@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.backend.schemas.course.response import CourseResponse
 from app.backend.schemas.course.request import CourseCreateRequest, CourseUpdateRequest
+from app.backend.schemas.user.enums import UserRole
 from app.backend.services.interfaces.course_service import ICourseService
 from app.backend.api.deps import (
     get_course_service,
@@ -15,9 +16,25 @@ router = APIRouter()
 @router.get(
     "/courses",
     response_model=list[CourseResponse],
-    dependencies=[Depends(require_authenticated)],
 )
 async def list_courses(
+    payload: dict = Depends(require_authenticated),
+    service: ICourseService = Depends(get_course_service),
+):
+    if payload.get("role") == UserRole.ADMIN.value:
+        courses = await service.list_active_courses()
+    else:
+        user_id = payload.get("id", "")
+        courses = await service.list_user_active_courses(user_id)
+    return [CourseResponse.model_validate(c.model_dump()) for c in courses]
+
+
+@router.get(
+    "/courses/active",
+    response_model=list[CourseResponse],
+)
+async def list_active_courses(
+    _: dict = Depends(require_admin),
     service: ICourseService = Depends(get_course_service),
 ):
     courses = await service.list_active_courses()

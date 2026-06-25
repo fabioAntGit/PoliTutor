@@ -9,7 +9,7 @@ export function useUsers() {
   const [courses, setCourses] = useState<CourseResponse[]>([]);
 
   useEffect(() => {
-    CourseService.listCourses().then(setCourses).catch(() => {});
+    CourseService.listActiveCourses().then(setCourses).catch(() => {});
   }, []);
 
   const resource = usePaginatedResource<UserResponse>(

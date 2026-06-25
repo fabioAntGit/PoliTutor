@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { ChatService } from "@/services/chat.service";
 import { CourseService } from "@/services/course.service";
-import { AuthService } from "@/services/auth.service";
 import type { ChatListItem } from "@/types/chat";
 import type { CourseResponse } from "@/types/course";
 import { ApiError } from "@/lib/errors";
@@ -20,7 +19,7 @@ export function useHome() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    Promise.all([CourseService.listMyCourses(AuthService.getCourses()), ChatService.listChats()])
+    Promise.all([CourseService.listCourses(), ChatService.listChats()])
       .then(([mine, chatsData]) => {
         setCourses(mine);
         setChats(chatsData);

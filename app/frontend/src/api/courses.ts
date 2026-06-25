@@ -15,6 +15,11 @@ export async function listAllCourses(): Promise<CourseResponse[]> {
   return res.data;
 }
 
+export async function listActiveCourses(): Promise<CourseResponse[]> {
+  const res = await api.get<CourseResponse[]>("/courses/active");
+  return res.data;
+}
+
 export async function createCourse(body: CourseCreateRequest): Promise<CourseResponse> {
   const res = await api.post<CourseResponse>("/courses", body);
   return res.data;

@@ -49,6 +49,9 @@ class MessageService(IMessageService):
             conversation.user_id, conversation.course
         )
 
+        user_msg = Message(conversation_id=conversation_id, role="user", content=question)
+        user_msg.id = await self.message_repository.create(user_msg)
+
         response = await asyncio.to_thread(
             self.rag_engine.ask,
             conversation.course,
@@ -67,10 +70,6 @@ class MessageService(IMessageService):
             is_retrieval_fallback=response.is_retrieval_fallback
         )
 
-        user_msg = Message(conversation_id=conversation_id, role="user", content=question)
-        user_msg.id = await self.message_repository.create(user_msg)
-        await self.cache_repository.add_message(user_msg)
-
         assistant_msg = Message(
             conversation_id=conversation_id,
             role="assistant",
@@ -79,6 +78,8 @@ class MessageService(IMessageService):
         )
 
         assistant_msg.id = await self.message_repository.create(assistant_msg)
+        
+        await self.cache_repository.add_message(user_msg)
         await self.cache_repository.add_message(assistant_msg)
 
         await self.chat_repository.touch(conversation_id)

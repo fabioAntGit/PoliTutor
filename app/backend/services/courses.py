@@ -17,6 +17,13 @@ class CourseService(ICourseService):
     async def list_active_courses(self) -> list[Course]:
         return await self.course_repository.get_active_courses()
 
+    async def list_user_active_courses(self, user_id: str) -> list[Course]:
+        user = await self.user_repository.find_by_id(user_id)
+        if not user or not user.courses:
+            return []
+        courses = await self.course_repository.get_courses_by_codes(user.courses)
+        return [c for c in courses if c.is_active]
+
     async def list_all_courses(self) -> list[Course]:
         return await self.course_repository.get_all_courses()
 
