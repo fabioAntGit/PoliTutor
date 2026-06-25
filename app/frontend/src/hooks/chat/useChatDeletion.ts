@@ -5,12 +5,13 @@ import type { ChatListItem } from "@/types/chat";
 
 const UNDO_DELAY_MS = 5000;
 
-interface UseChatDeletionParams {
+export function useChatDeletion({
+  setChats,
+  onCommitted,
+}: {
   setChats: React.Dispatch<React.SetStateAction<ChatListItem[]>>;
   onCommitted?: (conversationId: string) => void;
-}
-
-export function useChatDeletion({ setChats, onCommitted }: UseChatDeletionParams) {
+}) {
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const onCommittedRef = useRef(onCommitted);
   onCommittedRef.current = onCommitted;

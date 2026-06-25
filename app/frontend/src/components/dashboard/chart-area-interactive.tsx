@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { useActivityChart, type Range } from "@/hooks/dashboard/useActivityChart"
+import { useActivityChart } from "@/hooks/dashboard/useActivityChart"
+import type { Range } from "@/types/analytics"
 
 const chartConfig = {
   questions: {

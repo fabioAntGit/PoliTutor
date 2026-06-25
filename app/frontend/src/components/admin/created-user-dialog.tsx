@@ -3,7 +3,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { AlertTriangle, Eye, EyeOff, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import type { CreatedUserCredentials } from "@/hooks/admin/useCreateUser";
+import type { CreatedUserCredentials } from "@/types/user";
 
 interface CreatedUserDialogProps {
   user: CreatedUserCredentials | null;

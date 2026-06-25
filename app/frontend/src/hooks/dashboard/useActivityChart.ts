@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/common/useMobile";
 import { AnalyticsService } from "@/services/analytics.service";
-import type { ActivityPoint } from "@/types/analytics";
-
-export type Range = "7d" | "30d" | "90d";
+import type { ActivityPoint, Range } from "@/types/analytics";
 
 export function useActivityChart(course?: string) {
   const isMobile = useIsMobile();

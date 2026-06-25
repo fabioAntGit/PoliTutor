@@ -9,11 +9,11 @@ import { AuthService } from "@/services/auth.service";
 import { landingForRole } from "@/lib/landing";
 import { ApiError } from "@/lib/errors";
 
-interface UseChangePasswordOptions {
+export function useChangePassword({
+  onSuccess,
+}: {
   onSuccess?: () => void;
-}
-
-export function useChangePassword({ onSuccess }: UseChangePasswordOptions = {}) {
+} = {}) {
   const navigate = useNavigate();
 
   const form = useForm<ChangePasswordFormValues>({

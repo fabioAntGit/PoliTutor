@@ -8,3 +8,8 @@ export interface UserResponse {
   courses: string[];
   must_change_password: boolean;
 }
+
+export interface CreatedUserCredentials {
+  username: string;
+  password: string;
+}

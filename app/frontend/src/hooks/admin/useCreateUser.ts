@@ -5,12 +5,8 @@ import { createUserSchema, type CreateUserFormValues } from "@/schemas/createUse
 import { UserService } from "@/services/user.service";
 import { CourseService } from "@/services/course.service";
 import type { CourseResponse } from "@/types/course";
+import type { CreatedUserCredentials } from "@/types/user";
 import { setFormRootError } from "@/lib/formErrors";
-
-export interface CreatedUserCredentials {
-  username: string;
-  password: string;
-}
 
 export function useCreateUser() {
   const [courses, setCourses] = useState<CourseResponse[]>([]);

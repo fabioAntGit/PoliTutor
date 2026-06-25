@@ -5,18 +5,6 @@ import type { ZodType } from "zod";
 import { ApiError } from "@/lib/errors";
 import { setFormRootError } from "@/lib/formErrors";
 
-interface EntityEditFormConfig<TEntity, TForm extends FieldValues> {
-  entity: TEntity | null;
-  onSaved: () => void;
-  schema: ZodType<TForm>;
-  defaultValues: DefaultValues<TForm>;
-  toFormValues: (entity: TEntity) => TForm;
-  update: (entity: TEntity, data: TForm) => Promise<unknown>;
-  remove: (entity: TEntity) => Promise<unknown>;
-  updateErrorMessage: string;
-  deleteErrorMessage: string;
-}
-
 export function useEntityEditForm<TEntity, TForm extends FieldValues>({
   entity,
   onSaved,
@@ -27,7 +15,17 @@ export function useEntityEditForm<TEntity, TForm extends FieldValues>({
   remove,
   updateErrorMessage,
   deleteErrorMessage,
-}: EntityEditFormConfig<TEntity, TForm>) {
+}: {
+  entity: TEntity | null;
+  onSaved: () => void;
+  schema: ZodType<TForm>;
+  defaultValues: DefaultValues<TForm>;
+  toFormValues: (entity: TEntity) => TForm;
+  update: (entity: TEntity, data: TForm) => Promise<unknown>;
+  remove: (entity: TEntity) => Promise<unknown>;
+  updateErrorMessage: string;
+  deleteErrorMessage: string;
+}) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 

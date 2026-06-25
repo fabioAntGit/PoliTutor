@@ -61,7 +61,7 @@ export default function UserList() {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium truncate">{user.full_name}</p>
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium uppercase tracking-wider">
-                      {user.role}
+                      {user.role === "student" ? "Aluno" : user.role === "teacher" ? "Professor" : user.role}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>

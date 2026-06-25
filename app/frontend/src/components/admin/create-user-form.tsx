@@ -67,18 +67,18 @@ export default function CreateUserForm() {
         />
 
         <div className="space-y-2">
-          <Label>Role</Label>
+          <Label>Cargo</Label>
           <Controller
             name="role"
             control={control}
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger aria-invalid={!!errors.role} className="w-full">
-                  <SelectValue placeholder="Seleciona um role" />
+                  <SelectValue placeholder="Seleciona um cargo" />
                 </SelectTrigger>
                 <SelectContent position="popper" align="start">
-                  <SelectItem value="student">student</SelectItem>
-                  <SelectItem value="teacher">teacher</SelectItem>
+                  <SelectItem value="student">Aluno</SelectItem>
+                  <SelectItem value="teacher">Professor</SelectItem>
                 </SelectContent>
               </Select>
             )}

@@ -9,3 +9,4 @@ export type {
   SourcePoint,
   CourseSourcesRead,
 } from "./response";
+export type { Range } from "./request";
