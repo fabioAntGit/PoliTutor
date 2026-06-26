@@ -4,12 +4,19 @@ from app.backend.api.deps import get_user_memory_service, require_authenticated
 from app.backend.core.exceptions import MemoryNotFoundError
 from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.memory.response import UserMemoryListRead, UserMemoryRead
+from app.backend.schemas.shared.responses import not_found, unauthorized
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
 
 router = APIRouter()
 
 
-@router.get("/memory", response_model=UserMemoryListRead)
+@router.get(
+    "/memory",
+    response_model=UserMemoryListRead,
+    summary="List the caller's memories for a course",
+    response_description="The caller's stored memories for the given course.",
+    responses={**unauthorized()},
+)
 @limiter.limit("20/minute", key_func=user_key)
 async def list_memories(
     request: Request,
@@ -25,7 +32,13 @@ async def list_memories(
     )
 
 
-@router.delete("/memory/{mem_id}", status_code=204)
+@router.delete(
+    "/memory/{mem_id}",
+    status_code=204,
+    summary="Delete one of the caller's memories",
+    response_description="The memory was removed.",
+    responses={**unauthorized(), **not_found("Memory does not exist.")},
+)
 @limiter.limit("10/minute", key_func=user_key)
 async def delete_memory(
     request: Request,

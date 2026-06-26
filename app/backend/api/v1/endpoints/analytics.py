@@ -19,24 +19,10 @@ from app.backend.schemas.analytics.response import (
     SourcePoint,
     TopicPoint,
 )
-from app.backend.schemas.shared.api_error import ApiError
+from app.backend.schemas.shared.responses import forbidden, not_found, unauthorized
 from app.backend.services.interfaces.analytics_service import IAnalyticsService
 
 router = APIRouter(dependencies=[Depends(require_teacher_or_admin)])
-
-AUTH_RESPONSES: dict = {
-    401: {"model": ApiError, "description": "Missing or invalid authentication token."},
-    403: {"model": ApiError, "description": "Caller is not a teacher or admin."},
-}
-
-COURSE_RESPONSES: dict = {
-    401: {"model": ApiError, "description": "Missing or invalid authentication token."},
-    403: {
-        "model": ApiError,
-        "description": "Caller is not a teacher/admin, or lacks access to this course.",
-    },
-    404: {"model": ApiError, "description": "Course does not exist or is inactive."},
-}
 
 RANGE_QUERY = Query(
     default="30d",
@@ -49,7 +35,10 @@ RANGE_QUERY = Query(
     response_model=OverviewRead,
     summary="Aggregate overview metrics",
     response_description="Totals across the caller's courses.",
-    responses=AUTH_RESPONSES,
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not a teacher or admin."),
+    },
 )
 @limiter.limit("20/minute", key_func=user_key)
 async def get_overview(
@@ -71,7 +60,10 @@ async def get_overview(
     response_model=ActivityRead,
     summary="Question activity over time",
     response_description="Daily count of student questions within the selected range.",
-    responses=AUTH_RESPONSES,
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not a teacher or admin."),
+    },
 )
 @limiter.limit("20/minute", key_func=user_key)
 async def get_activity(
@@ -94,7 +86,10 @@ async def get_activity(
     response_model=CoursesRead,
     summary="List accessible courses",
     response_description="Course codes the caller is allowed to inspect.",
-    responses=AUTH_RESPONSES,
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not a teacher or admin."),
+    },
 )
 @limiter.limit("20/minute", key_func=user_key)
 async def list_courses(
@@ -117,7 +112,11 @@ async def list_courses(
     response_model=CourseOverviewRead,
     summary="Overview metrics for a single course",
     response_description="Usage totals scoped to one course.",
-    responses=COURSE_RESPONSES,
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not a teacher/admin, or lacks access to this course."),
+        **not_found("Course does not exist or is inactive."),
+    },
 )
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_overview(
@@ -138,7 +137,11 @@ async def get_course_overview(
     response_model=ActivityRead,
     summary="Question activity over time for a single course",
     response_description="Daily count of student questions for one course.",
-    responses=COURSE_RESPONSES,
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not a teacher/admin, or lacks access to this course."),
+        **not_found("Course does not exist or is inactive."),
+    },
 )
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_activity(
@@ -160,7 +163,11 @@ async def get_course_activity(
     response_model=CourseTopicsRead,
     summary="Most frequent topics for a course",
     response_description="Top topics ranked by how often students asked about them.",
-    responses=COURSE_RESPONSES,
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not a teacher/admin, or lacks access to this course."),
+        **not_found("Course does not exist or is inactive."),
+    },
 )
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_topics(
@@ -182,7 +189,11 @@ async def get_course_topics(
     response_model=CourseSourcesRead,
     summary="Most referenced sources for a course",
     response_description="Source documents ranked by how often they were cited.",
-    responses=COURSE_RESPONSES,
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not a teacher/admin, or lacks access to this course."),
+        **not_found("Course does not exist or is inactive."),
+    },
 )
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_sources(

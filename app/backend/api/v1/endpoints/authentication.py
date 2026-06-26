@@ -9,6 +9,7 @@ from app.backend.services.interfaces.authentication_service import IAuthenticati
 from app.backend.services.interfaces.user_service import IUserService
 from app.backend.services.interfaces.security_service import ISecurityService
 from app.backend.core.exceptions import AuthError
+from app.backend.schemas.shared.responses import bad_request, unauthorized
 from app.backend.api.deps import (
     get_authentication_service,
     get_user_service,
@@ -19,7 +20,13 @@ from app.backend.api.deps import (
 
 router = APIRouter()
 
-@router.post("/auth/login", response_model=LoginResponse)
+@router.post(
+    "/auth/login",
+    response_model=LoginResponse,
+    summary="Authenticate and obtain an access token",
+    response_description="A signed JWT access token for the authenticated user.",
+    responses={**unauthorized("Invalid username or password.")},
+)
 @limiter.limit("5/minute")
 async def login(
     request: Request,
@@ -33,7 +40,11 @@ async def login(
     return LoginResponse(access_token=access_token)
 
 
-@router.post("/auth/logout")
+@router.post(
+    "/auth/logout",
+    summary="Invalidate the current access token",
+    response_description="Confirmation that the session was terminated.",
+)
 @limiter.limit("10/minute")
 async def logout(
     request: Request,
@@ -44,7 +55,16 @@ async def logout(
     return {"message": "Logout efetuado com sucesso"}
 
 
-@router.post("/auth/change-password", response_model=LoginResponse)
+@router.post(
+    "/auth/change-password",
+    response_model=LoginResponse,
+    summary="Change the authenticated user's password",
+    response_description="A fresh access token reflecting the new credentials.",
+    responses={
+        **bad_request("Current password is incorrect or the new password is too weak."),
+        **unauthorized(),
+    },
+)
 @limiter.limit("5/minute")
 async def change_password(
     request: Request,

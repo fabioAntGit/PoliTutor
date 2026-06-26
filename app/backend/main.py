@@ -39,6 +39,49 @@ RAG_PRELOAD = os.getenv("RAG_PRELOAD", "1") != "0"
 
 OPENAPI_TAGS = [
     {
+        "name": "auth",
+        "description": (
+            "Authentication and session management. Log in to obtain a JWT access "
+            "token, log out to revoke it, and change the current user's password. "
+        ),
+    },
+    {
+        "name": "users",
+        "description": (
+            "Create, list, fetch, update and delete user "
+            "accounts. All routes are admin-only, except self-service account "
+            "deletion (DELETE /users/me)."
+        ),
+    },
+    {
+        "name": "courses",
+        "description": (
+            "Course catalog. List the courses available to the caller, and create, "
+            "update or delete courses."
+        ),
+    },
+    {
+        "name": "chats",
+        "description": (
+            "Conversations between a student and the tutor. Create a conversation "
+            "for a course, list the caller's conversations, and fetch or delete a "
+            "single one."
+        ),
+    },
+    {
+        "name": "messages",
+        "description": (
+            "Tutoring messages. Send a question to a conversation and receive the "
+            "RAG-powered tutor answer with its cited sources."
+        ),
+    },
+    {
+        "name": "reports",
+        "description": (
+            "Message reports. Flag or unflag an assistant answer as problematic. "
+        ),
+    },
+    {
         "name": "dashboard",
         "description": (
             "Teacher dashboard analytics. Read-only aggregated usage metrics "
@@ -47,9 +90,16 @@ OPENAPI_TAGS = [
             "admin roles, results are scoped to the courses the caller can access."
         ),
     },
+    {
+        "name": "memory",
+        "description": (
+            "Long-term student memory. List and delete the per-course memories the "
+            "tutor keeps about the caller to personalise future answers."
+        ),
+    },
 ]
 
-app = FastAPI(title="Poli Tutor API", version="1.0.0", openapi_tags=OPENAPI_TAGS)
+app = FastAPI(title="PoliTutor API", version="1.0.0", openapi_tags=OPENAPI_TAGS)
 
 # Rate limiting (slowapi). The limiter is referenced by the per-route
 # @limiter.limit decorators; the middleware enforces the global fallback on

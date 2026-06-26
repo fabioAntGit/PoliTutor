@@ -2,12 +2,24 @@ from fastapi import APIRouter, Depends, Request
 from app.backend.api.deps import get_report_service, require_authenticated
 from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.report.response import ReportResponse
+from app.backend.schemas.shared.responses import bad_request, forbidden, unauthorized
 from app.backend.services.interfaces.report_service import IReportService
 from app.backend.schemas.shared.mongo import PyObjectId
 
 router = APIRouter()
 
-@router.post("/report/{message_id}", response_model=ReportResponse, status_code=201)
+@router.post(
+    "/report/{message_id}",
+    response_model=ReportResponse,
+    status_code=201,
+    summary="Report an assistant message",
+    response_description="Whether the report was created.",
+    responses={
+        **unauthorized(),
+        **forbidden("Caller does not own the conversation."),
+        **bad_request("Message not found, not an assistant message, or has no matching user question."),
+    },
+)
 @limiter.limit("10/minute", key_func=user_key)
 async def create_report(
     request: Request,
@@ -21,7 +33,17 @@ async def create_report(
     )
     return ReportResponse(success=success)
 
-@router.delete("/report/{message_id}", response_model=ReportResponse)
+@router.delete(
+    "/report/{message_id}",
+    response_model=ReportResponse,
+    summary="Remove a report from a message",
+    response_description="Whether the report was removed.",
+    responses={
+        **unauthorized(),
+        **forbidden("Caller does not own the conversation."),
+        **bad_request("Message not found."),
+    },
+)
 @limiter.limit("10/minute", key_func=user_key)
 async def delete_report(
     request: Request,

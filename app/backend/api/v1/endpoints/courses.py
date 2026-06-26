@@ -5,6 +5,13 @@ from app.backend.schemas.course.response import CourseResponse
 from app.backend.schemas.course.request import CourseCreateRequest, CourseUpdateRequest
 from app.backend.schemas.user.enums import UserRole
 from app.backend.services.interfaces.course_service import ICourseService
+from app.backend.schemas.shared.responses import (
+    bad_request,
+    conflict,
+    forbidden,
+    not_found,
+    unauthorized,
+)
 from app.backend.api.deps import (
     get_course_service,
     require_admin,
@@ -17,6 +24,9 @@ router = APIRouter()
 @router.get(
     "/courses",
     response_model=list[CourseResponse],
+    summary="List the caller's courses",
+    response_description="Active courses the caller can access.",
+    responses={**unauthorized()},
 )
 @limiter.limit("30/minute", key_func=user_key)
 async def list_courses(
@@ -35,6 +45,12 @@ async def list_courses(
 @router.get(
     "/courses/active",
     response_model=list[CourseResponse],
+    summary="List all active courses",
+    response_description="Every active course.",
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not an admin."),
+    },
 )
 @limiter.limit("30/minute", key_func=user_key)
 async def list_active_courses(
@@ -50,6 +66,12 @@ async def list_active_courses(
     "/courses/all",
     response_model=list[CourseResponse],
     dependencies=[Depends(require_admin)],
+    summary="List all courses, active or not",
+    response_description="Every course in the system.",
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not an admin."),
+    },
 )
 @limiter.limit("30/minute", key_func=user_key)
 async def list_all_courses(
@@ -65,6 +87,13 @@ async def list_all_courses(
     response_model=CourseResponse,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_admin)],
+    summary="Create a course",
+    response_description="The newly created course.",
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not an admin."),
+        **conflict("A course with this code or name already exists."),
+    },
 )
 @limiter.limit("10/minute", key_func=user_key)
 async def create_course(
@@ -80,6 +109,15 @@ async def create_course(
     "/courses/{code}",
     response_model=CourseResponse,
     dependencies=[Depends(require_admin)],
+    summary="Update a course",
+    response_description="The updated course.",
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not an admin."),
+        **not_found("Course does not exist."),
+        **bad_request("No fields to update."),
+        **conflict("Another course already uses this name."),
+    },
 )
 @limiter.limit("10/minute", key_func=user_key)
 async def update_course(
@@ -97,6 +135,14 @@ async def update_course(
     "/courses/{code}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_admin)],
+    summary="Delete a course",
+    response_description="The course was removed.",
+    responses={
+        **unauthorized(),
+        **forbidden("Caller is not an admin."),
+        **not_found("Course does not exist."),
+        **conflict("The course still has users associated and cannot be deleted."),
+    },
 )
 @limiter.limit("5/minute", key_func=user_key)
 async def delete_course(
