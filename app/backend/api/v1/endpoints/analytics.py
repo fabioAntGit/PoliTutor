@@ -1,24 +1,13 @@
-"""Teacher dashboard analytics endpoints.
-
-These routes power the teacher/admin dashboard. They expose read-only
-aggregated usage metrics (conversations, active students, message volume,
-activity over time, top topics and most-referenced sources).
-
-Access is restricted to ``teacher`` and ``admin`` roles. Results are always
-scoped to the courses the caller is allowed to see: an ``admin`` sees every
-active course, while a ``teacher`` only sees the active courses assigned to
-their account.
-"""
-
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.backend.api.deps import (
     analytics_scope,
     get_analytics_service,
     require_teacher_or_admin,
 )
+from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.analytics.response import (
     ActivityPoint,
     ActivityRead,
@@ -62,7 +51,9 @@ RANGE_QUERY = Query(
     response_description="Totals across the caller's courses.",
     responses=AUTH_RESPONSES,
 )
+@limiter.limit("20/minute", key_func=user_key)
 async def get_overview(
+    request: Request,
     course_filter: list[str] = Depends(analytics_scope()),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
@@ -82,7 +73,9 @@ async def get_overview(
     response_description="Daily count of student questions within the selected range.",
     responses=AUTH_RESPONSES,
 )
+@limiter.limit("20/minute", key_func=user_key)
 async def get_activity(
+    request: Request,
     range: Literal["7d", "30d", "90d"] = RANGE_QUERY,
     course_filter: list[str] = Depends(analytics_scope()),
     service: IAnalyticsService = Depends(get_analytics_service),
@@ -103,7 +96,9 @@ async def get_activity(
     response_description="Course codes the caller is allowed to inspect.",
     responses=AUTH_RESPONSES,
 )
+@limiter.limit("20/minute", key_func=user_key)
 async def list_courses(
+    request: Request,
     course_filter: list[str] = Depends(analytics_scope()),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
@@ -124,7 +119,9 @@ async def list_courses(
     response_description="Usage totals scoped to one course.",
     responses=COURSE_RESPONSES,
 )
+@limiter.limit("20/minute", key_func=user_key)
 async def get_course_overview(
+    request: Request,
     course: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
@@ -143,7 +140,9 @@ async def get_course_overview(
     response_description="Daily count of student questions for one course.",
     responses=COURSE_RESPONSES,
 )
+@limiter.limit("20/minute", key_func=user_key)
 async def get_course_activity(
+    request: Request,
     course: str = Depends(analytics_scope(per_course=True)),
     range: Literal["7d", "30d", "90d"] = RANGE_QUERY,
     service: IAnalyticsService = Depends(get_analytics_service),
@@ -163,7 +162,9 @@ async def get_course_activity(
     response_description="Top topics ranked by how often students asked about them.",
     responses=COURSE_RESPONSES,
 )
+@limiter.limit("20/minute", key_func=user_key)
 async def get_course_topics(
+    request: Request,
     course: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
@@ -183,7 +184,9 @@ async def get_course_topics(
     response_description="Source documents ranked by how often they were cited.",
     responses=COURSE_RESPONSES,
 )
+@limiter.limit("20/minute", key_func=user_key)
 async def get_course_sources(
+    request: Request,
     course: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):

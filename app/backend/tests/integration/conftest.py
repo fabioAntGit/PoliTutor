@@ -68,7 +68,11 @@ class _FakeRedisRepo:
 @pytest_asyncio.fixture
 async def api_client(db):
     """In-process httpx client against the app, with DB/Redis pointed at the test DB.
+
+    Rate limiting is turned off so tests can hammer endpoints freely without
+    tripping the per-minute limits.
     """
+    app.state.limiter.enabled = False
     redis_repo = _FakeRedisRepo()
     app.dependency_overrides[get_db] = lambda: db
     app.dependency_overrides[get_deprecated_db] = lambda: db.client[f"{_TEST_DB_NAME}_deprecated"]

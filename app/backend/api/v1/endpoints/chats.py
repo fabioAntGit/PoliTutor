@@ -1,5 +1,6 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Request
 
+from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.chat.request import ChatCreate
 from app.backend.schemas.chat.response import ChatCreated, ChatRead, ChatListItem
 from app.backend.services.interfaces.chat_service import IChatService
@@ -10,7 +11,9 @@ router = APIRouter()
 
 
 @router.post("/chat", response_model=ChatCreated, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute", key_func=user_key)
 async def create_chat(
+    request: Request,
     body: ChatCreate,
     payload: dict = Depends(require_role(UserRole.STUDENT)),
     service: IChatService = Depends(get_chat_service)
@@ -23,7 +26,9 @@ async def create_chat(
 
 
 @router.get("/chats", response_model=list[ChatListItem])
+@limiter.limit("30/minute", key_func=user_key)
 async def list_chats(
+    request: Request,
     payload: dict = Depends(require_authenticated),
     service: IChatService = Depends(get_chat_service)
 ):
@@ -39,7 +44,9 @@ async def list_chats(
 
 
 @router.get("/chat/{conversation_id}", response_model=ChatRead, response_model_by_alias=False)
+@limiter.limit("30/minute", key_func=user_key)
 async def get_chat(
+    request: Request,
     conversation_id: str,
     payload: dict = Depends(require_authenticated),
     service: IChatService = Depends(get_chat_service)
@@ -58,7 +65,9 @@ async def get_chat(
 
 
 @router.delete("/chat/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("10/minute", key_func=user_key)
 async def delete_chat(
+    request: Request,
     conversation_id: str,
     payload: dict = Depends(require_authenticated),
     service: IChatService = Depends(get_chat_service)

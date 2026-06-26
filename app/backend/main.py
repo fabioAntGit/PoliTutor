@@ -13,7 +13,10 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
+from app.backend.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.backend.api.v1.endpoints.analytics import router as analytics_router
 from app.backend.api.v1.endpoints.authentication import router as authentication_router
 from app.backend.api.v1.endpoints.chats import router as chats_router
@@ -47,6 +50,13 @@ OPENAPI_TAGS = [
 ]
 
 app = FastAPI(title="Poli Tutor API", version="1.0.0", openapi_tags=OPENAPI_TAGS)
+
+# Rate limiting (slowapi). The limiter is referenced by the per-route
+# @limiter.limit decorators; the middleware enforces the global fallback on
+# routes without an explicit limit.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 DEV_ALLOWED_ORIGINS = [
     "http://localhost:3000",

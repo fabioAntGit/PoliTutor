@@ -32,3 +32,4 @@ pymongo
 PyJWT
 pwdlib[argon2]
 python-multipart
+slowapi

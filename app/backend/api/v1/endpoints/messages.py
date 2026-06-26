@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
+from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.message.request import MessageSend
 from app.backend.schemas.message.response import MessageResponse
 from app.backend.services.interfaces.message_service import IMessageService
@@ -10,7 +11,9 @@ router = APIRouter()
 
 
 @router.post("/chat/{conversation_id}/messages", response_model=MessageResponse)
+@limiter.limit("10/minute", key_func=user_key)
 async def send_message(
+    request: Request,
     conversation_id: str,
     body: MessageSend,
     payload: dict = Depends(require_role(UserRole.STUDENT)),

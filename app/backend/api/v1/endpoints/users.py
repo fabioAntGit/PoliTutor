@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
+from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.user.request import UserCreateRequest, UserUpdateRequest
 from app.backend.schemas.user.response import UserResponse
 from app.backend.services.interfaces.authentication_service import IAuthenticationService
@@ -17,7 +18,9 @@ router = APIRouter()
 
 
 @router.delete("/users/me", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("3/minute", key_func=user_key)
 async def delete_my_account(
+    request: Request,
     payload: dict = Depends(require_authenticated),
     access_token: str = Depends(oauth2_scheme),
     user_service: IUserService = Depends(get_user_service),
@@ -28,7 +31,9 @@ async def delete_my_account(
 
 
 @router.get("/users", response_model=list[UserResponse], dependencies=[Depends(require_admin)])
+@limiter.limit("20/minute", key_func=user_key)
 async def list_users(
+    request: Request,
     service: IUserService = Depends(get_user_service),
 ):
     users = await service.get_users()
@@ -41,7 +46,9 @@ async def list_users(
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_admin)],
 )
+@limiter.limit("5/minute", key_func=user_key)
 async def create_user(
+    request: Request,
     body: UserCreateRequest,
     service: IUserService = Depends(get_user_service),
 ):
@@ -56,7 +63,9 @@ async def create_user(
 
 
 @router.get("/users/{username}", response_model=UserResponse, dependencies=[Depends(require_admin)])
+@limiter.limit("20/minute", key_func=user_key)
 async def get_user(
+    request: Request,
     username: str,
     service: IUserService = Depends(get_user_service),
 ):
@@ -67,7 +76,9 @@ async def get_user(
 
 
 @router.put("/users/{username}", response_model=UserResponse, dependencies=[Depends(require_admin)])
+@limiter.limit("10/minute", key_func=user_key)
 async def update_user(
+    request: Request,
     username: str,
     body: UserUpdateRequest,
     service: IUserService = Depends(get_user_service),
@@ -84,7 +95,9 @@ async def update_user(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_admin)],
 )
+@limiter.limit("5/minute", key_func=user_key)
 async def delete_user(
+    request: Request,
     username: str,
     service: IUserService = Depends(get_user_service),
 ):

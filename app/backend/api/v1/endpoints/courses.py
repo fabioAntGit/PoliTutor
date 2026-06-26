@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
+from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.course.response import CourseResponse
 from app.backend.schemas.course.request import CourseCreateRequest, CourseUpdateRequest
 from app.backend.schemas.user.enums import UserRole
@@ -17,7 +18,9 @@ router = APIRouter()
     "/courses",
     response_model=list[CourseResponse],
 )
+@limiter.limit("30/minute", key_func=user_key)
 async def list_courses(
+    request: Request,
     payload: dict = Depends(require_authenticated),
     service: ICourseService = Depends(get_course_service),
 ):
@@ -33,7 +36,9 @@ async def list_courses(
     "/courses/active",
     response_model=list[CourseResponse],
 )
+@limiter.limit("30/minute", key_func=user_key)
 async def list_active_courses(
+    request: Request,
     _: dict = Depends(require_admin),
     service: ICourseService = Depends(get_course_service),
 ):
@@ -46,7 +51,9 @@ async def list_active_courses(
     response_model=list[CourseResponse],
     dependencies=[Depends(require_admin)],
 )
+@limiter.limit("30/minute", key_func=user_key)
 async def list_all_courses(
+    request: Request,
     service: ICourseService = Depends(get_course_service),
 ):
     courses = await service.list_all_courses()
@@ -59,7 +66,9 @@ async def list_all_courses(
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_admin)],
 )
+@limiter.limit("10/minute", key_func=user_key)
 async def create_course(
+    request: Request,
     body: CourseCreateRequest,
     service: ICourseService = Depends(get_course_service),
 ):
@@ -72,7 +81,9 @@ async def create_course(
     response_model=CourseResponse,
     dependencies=[Depends(require_admin)],
 )
+@limiter.limit("10/minute", key_func=user_key)
 async def update_course(
+    request: Request,
     code: str,
     body: CourseUpdateRequest,
     service: ICourseService = Depends(get_course_service),
@@ -87,7 +98,9 @@ async def update_course(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_admin)],
 )
+@limiter.limit("5/minute", key_func=user_key)
 async def delete_course(
+    request: Request,
     code: str,
     service: ICourseService = Depends(get_course_service),
 ):

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
+from app.backend.core.rate_limit import limiter
 from app.backend.schemas.auth.response import LoginResponse
 from app.backend.schemas.auth.request import LogoutRequest
 from app.backend.schemas.user.request import ChangePasswordRequest
@@ -19,7 +20,9 @@ from app.backend.api.deps import (
 router = APIRouter()
 
 @router.post("/auth/login", response_model=LoginResponse)
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     form: OAuth2PasswordRequestForm = Depends(),
     service: IAuthenticationService = Depends(get_authentication_service),
 ):
@@ -31,7 +34,9 @@ async def login(
 
 
 @router.post("/auth/logout")
+@limiter.limit("10/minute")
 async def logout(
+    request: Request,
     body: LogoutRequest,
     service: IAuthenticationService = Depends(get_authentication_service),
 ):
@@ -40,7 +45,9 @@ async def logout(
 
 
 @router.post("/auth/change-password", response_model=LoginResponse)
+@limiter.limit("5/minute")
 async def change_password(
+    request: Request,
     body: ChangePasswordRequest,
     payload: dict = Depends(require_authenticated),
     old_token: str = Depends(oauth2_scheme),
