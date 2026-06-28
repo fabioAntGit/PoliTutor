@@ -25,7 +25,7 @@ async def test_create_course_admin_creates_course(api_client, auth_header):
     assert body["is_active"] is True
 
 
-async def test_create_course_duplicate_code_returns_400(api_client, db, auth_header):
+async def test_create_course_duplicate_code_returns_409(api_client, db, auth_header):
     await insert_course(db, code="ed", name="Estruturas de Dados")
 
     resp = await api_client.post(
@@ -34,14 +34,15 @@ async def test_create_course_duplicate_code_returns_400(api_client, db, auth_hea
         headers=auth_header(role="admin"),
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == 409
 
 
 async def test_list_courses_lists_only_active(api_client, db, auth_header):
+    uid = await insert_user(db, username="aluno", role="student", courses=["ed"])
     await insert_course(db, code="ed", is_active=True)
     await insert_course(db, code="old", is_active=False)
 
-    resp = await api_client.get(COURSES, headers=auth_header(role="student"))
+    resp = await api_client.get(COURSES, headers=auth_header(role="student", id=uid))
 
     assert resp.status_code == 200
     assert {c["code"] for c in resp.json()} == {"ed"}
@@ -56,11 +57,11 @@ async def test_delete_course_admin_deletes(api_client, db, auth_header):
     assert await db["courses"].find_one({"code": "ed"}) is None
 
 
-async def test_delete_course_cannot_delete_with_associated_users(api_client, db, auth_header):
+async def test_delete_course_cannot_delete_with_associated_users_returns_409(api_client, db, auth_header):
     await insert_course(db, code="ed")
     await insert_user(db, username="aluno", role="student", courses=["ed"])
 
     resp = await api_client.delete(f"{COURSES}/ed", headers=auth_header(role="admin"))
 
-    assert resp.status_code == 400
+    assert resp.status_code == 409
     assert await db["courses"].find_one({"code": "ed"}) is not None
