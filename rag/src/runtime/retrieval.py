@@ -1,14 +1,4 @@
-"""
-Retrieval Module.
-
-This is the primary search execution component of the RAG system. It exposes
-functions to fetch and rerank information chunks corresponding
-to the user's queries against the ChromaDB document store.
-
-Functions:
-    retrieve: Flexible retrieval for benchmarking with custom parameters.
-    retrieve:             Default retrieval using config values. Called by the RAG engine.
-"""
+"""Course-scoped retrieval and reranking."""
 
 import logging
 
@@ -40,25 +30,7 @@ def retrieve(
     distance_threshold: float | None = RETRIEVAL_DISTANCE_THRESHOLD,
     store: IVectorStore | None = None,
 ) -> RetrievalResults:
-    """
-    Flexible retrieval for benchmarking. Supports custom embedding models,
-    vector store collections, rerankers, and distance thresholds.
-
-    Args:
-        course:             Course unit identifier (e.g. 'ed').
-        query:              The user's question.
-        embedding_model:    HuggingFace model name to embed the query.
-        collection_name:    Vector store collection to query.
-        top_k:              Number of initial candidates to retrieve.
-        reranker_model:     Cross-encoder model name, or None to skip reranking.
-        reranker_top_k:     Number of results to keep after reranking.
-        distance_threshold: Maximum cosine distance allowed. Chunks above this
-                            value are dropped before reranking. None disables filtering.
-        store:              Vector store to query. Defaults to ChromaVectorStore.
-
-    Returns:
-        Structured RetrievalResults with aligned arrays of ids, documents, metadatas, distances, scores.
-    """
+    """Retrieve course chunks, then apply distance filtering and reranking."""
     embedder = get_embedder(embedding_model)
 
     query_vector = embedder.embed_query(query)

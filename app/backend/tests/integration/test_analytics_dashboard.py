@@ -1,12 +1,4 @@
-"""
-Teacher dashboard integration tests (AnalyticsService over a real DB).
-
-They exercise the `AnalyticsService` wired to the **real** `AnalyticsRepository`
-over an ephemeral MongoDB. The value is running the aggregation pipelines for
-real (`$group`, `$unwind`, `$dateToString`, `distinct`, ...) — something the unit
-tests cannot validate, since they mock the repository.
-
-"""
+"""Integration tests for dashboard analytics over a real DB."""
 
 import pytest
 
@@ -190,7 +182,6 @@ class TestCourseOverview:
         assert overview["avg_questions_per_conversation"] == 1.5
 
     async def test_course_without_data_returns_zeros(self, service, db):
-        # No chats/messages at all, must not divide by zero on the average.
         overview = await service.get_course_overview("ed")
 
         assert overview["total_conversations"] == 0
@@ -220,7 +211,6 @@ class TestCourseTopics:
         assert result == []
 
     async def test_ignores_non_string_summary(self, service, db):
-        # A non-string summary slips past the existence filter but must be skipped.
         await db["chats"].insert_one({"course": "ed", "user_id": "u1", "summary": 123})
         await insert_chat(db, course="ed", user_id="u2", summary='{"concept_tags": ["loops"]}')
 
@@ -229,7 +219,6 @@ class TestCourseTopics:
         assert {t["topic"] for t in result} == {"loops"}
 
     async def test_caps_at_top_15_ordered_by_count(self, service, db):
-        # 16 distinct concepts with strictly decreasing frequency (t0 x16 ... t15 x1).
         import json
 
         tags = [f"t{i}" for i in range(16) for _ in range(16 - i)]
@@ -256,7 +245,6 @@ class TestCourseSources:
             db, conversation_id=chat, role="assistant",
             sources=[{"filename": "a.pdf", "pages": [3]}],
         )
-        # user message with sources must not count
         await insert_message(
             db, conversation_id=chat, role="user",
             sources=[{"filename": "a.pdf", "pages": [9]}],

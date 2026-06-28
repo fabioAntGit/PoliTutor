@@ -101,9 +101,7 @@ OPENAPI_TAGS = [
 
 app = FastAPI(title="PoliTutor API", version="1.0.0", openapi_tags=OPENAPI_TAGS)
 
-# Rate limiting (slowapi). The limiter is referenced by the per-route
-# @limiter.limit decorators; the middleware enforces the global fallback on
-# routes without an explicit limit.
+# Fallback for routes without a tighter @limiter.limit.
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)

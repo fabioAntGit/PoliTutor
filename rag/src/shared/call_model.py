@@ -1,3 +1,5 @@
+"""OpenRouter LLM client."""
+
 import json
 import logging
 import os
@@ -15,8 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class OpenRouterClient(IModelClient):
-    """IModelClient adapter for the OpenRouter chat-completions API."""
-
     def call(
         self,
         messages: list[dict],
@@ -73,5 +73,3 @@ class OpenRouterClient(IModelClient):
 
         logger.error("Max retries reached due to rate limiting.")
         return None
-
-

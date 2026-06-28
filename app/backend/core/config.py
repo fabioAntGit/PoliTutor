@@ -16,16 +16,14 @@ JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
-# QUERY VALIDATION (backend-owned API input limits)
+# Backend-owned API input limits.
 QUERY_MIN_LENGTH = 2
 QUERY_MAX_LENGTH = 1500
 
-# LLM MODELS
 OPENROUTER_MODEL_SUMMARIZATION = "google/gemini-2.5-flash-lite"
 OPENROUTER_MODEL_MEMORY_EXTRACTION = "google/gemini-2.5-flash-lite"
 
-# CONVERSATION SUMMARIZATION
-# Number of messages to wait before triggering a background summarization
+# Summary is triggered after this many new messages.
 SUMMARIZATION_THRESHOLD = 16
 
 SUMMARIZATION_PROMPT = """
@@ -90,22 +88,17 @@ If there is little or no useful information, still return the same JSON schema w
 <history>{history}</history>
 """
 
-# LONG-TERM USER MEMORY
-# Exponential decay rate per week - applied only after TTL expires (active tier has no decay)
+# Long-term memory decay starts after the active TTL expires.
 MEMORY_DECAY_RATE_PER_WEEK = 0.15
-# Memories with importance below this threshold are permanently deleted
 MEMORY_DELETE_IMPORTANCE_THRESHOLD = 0.5
-# Minimum importance for a memory to be injected into the prompt
 MEMORY_MIN_IMPORTANCE_FOR_INJECTION = 2.0
-# Default TTL (seconds) in active memory tier, per memory type
 MEMORY_TTL_BY_TYPE: dict[str, int] = {
     "difficulty": 1_209_600,  # 14 days
     "preference": 2_419_200,  # 28 days
     "goal":         604_800,  #  7 days
     "progress":     604_800,  #  7 days
 }
-# Maximum memories stored per (user, course). When reached, the lowest-importance
-# memory is evicted before a new one is created.
+# Per (user, course) cap; lowest importance is evicted first.
 MAX_MEMORIES_PER_COURSE = 20
 
 MEMORY_EXTRACTION_PROMPT = """

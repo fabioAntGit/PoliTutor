@@ -1,3 +1,5 @@
+"""ChromaDB Cloud vector store and client."""
+
 import logging
 
 import os

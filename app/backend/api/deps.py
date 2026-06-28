@@ -57,31 +57,37 @@ from app.backend.services.interfaces.authentication_service import IAuthenticati
 from app.backend.services.interfaces.user_service import IUserService
 from app.backend.services.interfaces.course_service import ICourseService
 
-# Repositories
-
 def get_chat_repository(db: AsyncDatabase = Depends(get_db)) -> IChatRepository:
     return ChatRepository(db)
+
 
 def get_message_repository(db: AsyncDatabase = Depends(get_db)) -> IMessageRepository:
     return MessageRepository(db)
 
+
 def get_cache_repository(client: redis.Redis = Depends(get_redis)) -> ICacheRepository:
     return RedisRepository(client)
+
 
 def get_report_repository(db: AsyncDatabase = Depends(get_db)) -> IReportRepository:
     return ReportRepository(db)
 
+
 def get_analytics_repository(db: AsyncDatabase = Depends(get_db)) -> IAnalyticsRepository:
     return AnalyticsRepository(db)
+
 
 def get_user_memory_repository(db: AsyncDatabase = Depends(get_db)) -> IUserMemoryRepository:
     return UserMemoryRepository(db)
 
+
 def get_user_repository(db: AsyncDatabase = Depends(get_db)) -> IUserRepository:
     return UserRepository(db)
 
+
 def get_course_repository(db: AsyncDatabase = Depends(get_db)) -> ICourseRepository:
     return CourseRepository(db)
+
 
 def get_deletion_repository(
     db_main: AsyncDatabase = Depends(get_db),
@@ -89,14 +95,15 @@ def get_deletion_repository(
 ) -> IDeletionRepository:
     return DeletionRepository(db_main=db_main, db_deprecated=db_deprecated)
 
-# Services
 
 @lru_cache
 def get_model_client() -> IModelClient:
     return OpenRouterModelClient()
-    
+
+
 def get_security_service() -> ISecurityService:
     return SecurityService(password_hash=PasswordHash.recommended())
+
 
 def get_user_memory_service(
     repo: IUserMemoryRepository = Depends(get_user_memory_repository),
@@ -104,10 +111,12 @@ def get_user_memory_service(
 ) -> IUserMemoryService:
     return UserMemoryService(repo=repo, model_client=model_client)
 
+
 def get_analytics_service(
     analytics_repository: IAnalyticsRepository = Depends(get_analytics_repository),
 ) -> IAnalyticsService:
     return AnalyticsService(analytics_repository=analytics_repository)
+
 
 def get_context_service(
     message_repository: IMessageRepository = Depends(get_message_repository),
@@ -124,9 +133,11 @@ def get_context_service(
         model_client=model_client,
     )
 
+
 @lru_cache
 def get_rag_engine() -> IRagEngine:
     return get_engine()
+
 
 def get_message_service(
     message_repository: IMessageRepository = Depends(get_message_repository),
@@ -145,6 +156,7 @@ def get_message_service(
         rag_engine=rag_engine,
     )
 
+
 def get_chat_service(
     chat_repository: IChatRepository = Depends(get_chat_repository),
     course_repository: ICourseRepository = Depends(get_course_repository),
@@ -160,6 +172,7 @@ def get_chat_service(
         report_repository=report_repository,
     )
 
+
 def get_course_service(
     course_repository: ICourseRepository = Depends(get_course_repository),
     user_repository: IUserRepository = Depends(get_user_repository),
@@ -168,6 +181,7 @@ def get_course_service(
         course_repository=course_repository,
         user_repository=user_repository,
     )
+
 
 def get_report_service(
     report_repository: IReportRepository = Depends(get_report_repository),
@@ -179,6 +193,7 @@ def get_report_service(
         message_repository=message_repository,
         chat_repository=chat_repository,
     )
+
 
 def get_authentication_service(
     user_repository: IUserRepository = Depends(get_user_repository),
@@ -192,6 +207,7 @@ def get_authentication_service(
         course_repository=course_repository,
         cache_repository=cache_repository,
     )
+
 
 def get_user_service(
     user_repository: IUserRepository = Depends(get_user_repository),

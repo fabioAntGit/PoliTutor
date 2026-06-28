@@ -1,13 +1,4 @@
-"""
-Tutor Generation Module.
-
-Takes the retrieved chunks from ChromaDB and a student query, builds a
-grounded context prompt, and calls OpenRouter (OPENROUTER_MODEL_GENERATOR) to
-generate a Socratic tutoring response in Portuguese.
-
-The tutor never gives direct answers or ready-made code — it guides the
-student via questions and scaffolding.
-"""
+"""Socratic tutor response generation."""
 
 import json
 import logging
@@ -24,18 +15,7 @@ from contracts.rag.models import TutorResponse, TutorSource
 logger = logging.getLogger(__name__)
 
 def build_context(results: RetrievalResults) -> str:
-    """
-    Formats retrieved chunks into a numbered context string for the LLM prompt.
-
-    Each entry includes the source filename, page numbers, and chunk text,
-    giving the model full attribution information alongside the content.
-
-    Args:
-        results: The ranked retrieval results to format.
-
-    Returns:
-        A multi-line string with all chunks numbered and labelled by source.
-    """
+    """Format retrieved chunks as numbered prompt context."""
     parts = []
     for i, (doc, meta) in enumerate(zip(results.documents, results.metadatas), start=1):
         filename = meta.get("filename", "Desconhecido")
@@ -44,6 +24,7 @@ def build_context(results: RetrievalResults) -> str:
         pages_str = ", ".join(str(p) for p in pages) if pages else "?"
         parts.append(f"[{i}] {filename} — p.{pages_str}\n{doc.strip()}")
     return "\n\n".join(parts)
+
 
 def build_messages(
     system_content: str,
@@ -68,15 +49,7 @@ def build_messages(
 
 
 def build_sources(results: RetrievalResults) -> list[TutorSource]:
-    """
-    Converts retrieval metadata into a list of TutorSource objects.
-
-    Args:
-        results: The ranked retrieval results.
-
-    Returns:
-        A list of TutorSource instances, one per chunk.
-    """
+    """Convert retrieval metadata into tutor sources."""
     sources = []
     for meta, score in zip(results.metadatas, results.scores):
         filename = meta.get("filename", "Desconhecido")
@@ -84,6 +57,7 @@ def build_sources(results: RetrievalResults) -> list[TutorSource]:
         pages = json.loads(pages_raw) if isinstance(pages_raw, str) else pages_raw
         sources.append(TutorSource(filename=filename, pages=pages))
     return sources
+
 
 def generate(
     query: str,
@@ -94,6 +68,7 @@ def generate(
     memory: str = "",
     model_client: IModelClient | None = None,
 ) -> TutorResponse:
+    """Generate the final tutor answer and fallback flags."""
     history = history or []
     model_client = model_client or OpenRouterClient()
 

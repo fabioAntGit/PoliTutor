@@ -1,3 +1,5 @@
+"""RAG engine orchestration entry point."""
+
 import logging
 
 from contracts.rag.models import TutorResponse
@@ -31,6 +33,7 @@ class RagEngine(IRagEngine):
         history: list[dict] | None = None,
         memory: str = "",
     ) -> TutorResponse:
+        """Run guardrails, retrieval, generation, and output guardrails."""
         query, blocked = apply_input_guardrails(query)
         if blocked is not None:
             return blocked
@@ -57,4 +60,3 @@ class RagEngine(IRagEngine):
 
 def get_engine() -> IRagEngine:
     return RagEngine()
-

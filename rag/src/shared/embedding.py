@@ -1,3 +1,5 @@
+"""Cached HuggingFace embedding model loader."""
+
 import logging
 
 from langchain_huggingface import HuggingFaceEmbeddings

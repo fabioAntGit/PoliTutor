@@ -74,7 +74,6 @@ async def test_create_user_valid_data_returns_user(service, user_repo, course_re
 
     assert result.username == "novo"
     assert result.email == "novo@estg.ipp.pt"
-    # A password nao pode estar em plaintext
     assert result.hashed_password != "password123"
     user_repo.create.assert_awaited_once()
 
@@ -158,7 +157,6 @@ async def test_delete_user_cascades_returns_true(service, user_repo, chat_repo, 
     result = await service.delete_user("fabio")
 
     assert result is True
-    # Deve mover os docs de chats, user_memory e users
     assert deletion_repo.move_docs.await_count >= 3
 
 

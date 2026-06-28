@@ -36,7 +36,6 @@ def test_no_decay_within_ttl():
 def test_decay_one_week_past_expiry():
     now = datetime(2026, 1, 1, tzinfo=timezone.utc)
     last_seen = now - timedelta(days=14)  # 7 days past a 7-day TTL = 1 week
-    # 10.0 * (1 - 0.15) ** 1 == 8.5
     assert _decayed_importance(10.0, last_seen, _TTL_7D, now) == 8.5
 
 

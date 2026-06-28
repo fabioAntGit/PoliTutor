@@ -1,11 +1,4 @@
-"""
-Main Pipeline Orchestrator.
-
-Acts as the entry point for the RAG data ingestion process. Discovers documents,
-extracts text and images, creates vector embeddings using HuggingFace models,
-and stores the chunks into the ChromaDB cloud instance.
-Supports custom models and collections via CLI for benchmarking purposes.
-"""
+"""Ingestion pipeline for course documents."""
 
 import argparse
 import logging
@@ -30,14 +23,7 @@ _REQUIRED_ENV_VARS = [
 ]
 
 def validate_environment() -> None:
-    """
-    Checks that all required environment variables are set and that COURSE_PATH exists.
-    Raises early so the pipeline never starts in a broken state.
-
-    Raises:
-        EnvironmentError: If any required environment variable is missing.
-        FileNotFoundError: If COURSE_PATH does not exist on disk.
-    """
+    """Validate ingestion environment before processing."""
     missing = [var for var in _REQUIRED_ENV_VARS if not os.getenv(var)]
     if missing:
         raise EnvironmentError(f"Missing required environment variables: {missing}")
@@ -46,46 +32,25 @@ def validate_environment() -> None:
     if not search_path.exists():
         raise FileNotFoundError(f"COURSE_PATH does not exist: {search_path}")
 
+
 def process_single_file(
     file_path: Path,
     model_name: str | None = None,
     collection_name: str | None = None,
 ) -> bool:
-    """
-    Orchestrates the full RAG ingestion pipeline for a single file.
-
-    Process:
-        1. Skips the file if it is empty.
-        2. Validates the filename convention to extract source type and course code.
-        3. Extracts structured elements (text, tables, images) via the Unstructured API.
-        4. Filters out excluded element types and noise keywords.
-        5. Groups filtered elements into pages, saving images to disk.
-        6. Splits pages into semantically-bounded chunks with page tracking.
-        7. Embeds text chunks and AI-summarized images into ChromaDB.
-
-    Args:
-        file_path:       Path to the document file to process.
-        model_name:      HuggingFace embedding model. Uses config default if None.
-        collection_name: ChromaDB collection name. Uses config default if None.
-
-    Returns:
-        True if the file was processed and embedded successfully.
-        False if the file was skipped (empty or invalid filename) or processing failed.
-    """
+    """Process and embed one course document."""
     file_name = file_path.name
 
     if file_path.stat().st_size == 0:
         logger.warning("Skipping empty file: %s", file_name)
         return False
 
-    # Metadata Extraction & Validation
     try:
         source_type, course_code, _ = extract_metadata_from_filename(file_name)
     except ValueError as e:
         logger.error("Validation failed for '%s': %s", file_name, e)
         return False
     
-    # Document Processing
     try:
         logger.info("--- Processing: %s ---", file_name)
 
@@ -117,21 +82,12 @@ def process_single_file(
         logger.error("Critical error processing '%s': %s", file_name, e, exc_info=True)
         return False
 
+
 def run_pipeline(
     model_name: str | None = None,
     collection_name: str | None = None,
 ) -> None:
-    """
-    Main entry point for the ingestion pipeline.
-
-    Validates the environment, discovers all supported documents under COURSE_PATH,
-    and processes each one. Files that fail are skipped without stopping the pipeline.
-    Logs a success/total summary on completion.
-
-    Args:
-        model_name:      HuggingFace embedding model. Uses config default if None.
-        collection_name: ChromaDB collection name. Uses config default if None.
-    """
+    """Process all supported documents under COURSE_PATH."""
     validate_environment()
 
     search_path = Path(COURSE_PATH)

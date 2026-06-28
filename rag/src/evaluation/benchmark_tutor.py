@@ -1,30 +1,4 @@
-"""
-Tutor Benchmark Module.
-
-Evaluates the quality of the Socratic tutor's generation stage independently
-from retrieval. Given a student question, does the tutor produce a
-pedagogically sound Socratic response?
-
-Unlike the retrieval benchmark (benchmark.py), this module does not measure
-whether the right chunks were retrieved — it measures the quality of the
-response itself using LLM-as-judge (GPT-4o via OpenRouter).
-
-Two main workflows:
-    - Dataset generation (--generate): samples up to TUTOR_BENCHMARK_MAX_QUESTIONS
-      pages from ChromaDB (stratified across slides / apontamentos and documents),
-      then calls OpenRouter to produce 2 questions per page — one regular student
-      question and one adversarial question designed to pressure the tutor into
-      bypassing the Socratic method.
-
-    - Evaluation (--evaluate): runs the full tutor pipeline (ask()) for each
-      question, scores each response with LLM-as-judge on defined criteria,
-      semantic similarity and guardrail classification metrics.
-      Saves a visual report (PNG) to data/benchmark/results/.
-
-Output:
-    data/benchmark/BenchmarkTutor-sample.json              — generated dataset
-    data/benchmark/results/benchmark_tutor_{timestamp}.png — visual report
-"""
+"""Tutor-response benchmark utilities."""
 
 import json
 import logging
@@ -34,6 +8,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,21 +37,7 @@ load_dotenv()
 
 
 def compute_semantic_similarity(text_a: str, text_b: str, embedder) -> float:
-    """
-    Computes cosine similarity between two texts using the project's embedding model (bge-m3).
-
-    Captures semantic equivalence between the actual tutor response and the expected
-    Socratic answer, independently of lexical variation. A score of 1.0 means identical
-    direction in embedding space; 0.0 means orthogonal (unrelated).
-
-    Args:
-        text_a:   First text (actual tutor response).
-        text_b:   Second text (expected Socratic answer).
-        embedder: Initialised embedder instance (reused across calls for efficiency).
-
-    Returns:
-        Cosine similarity in [0, 1].
-    """
+    """Compute cosine similarity between two texts."""
     vec_a = np.array(embedder.embed_query(text_a))
     vec_b = np.array(embedder.embed_query(text_b))
     norm_a = np.linalg.norm(vec_a)
@@ -86,26 +47,14 @@ def compute_semantic_similarity(text_a: str, text_b: str, embedder) -> float:
     return float(np.dot(vec_a, vec_b) / (norm_a * norm_b))
 
 
-def parse_json(content: str) -> any:
-    """Parses JSON from a string, stripping markdown code blocks if present."""
+def parse_json(content: str) -> Any:
+    """Parse JSON, allowing fenced code blocks."""
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.MULTILINE)
     return json.loads(cleaned)
 
+
 def create_questions(context: str, page_number: int, filename: str) -> list[dict] | None:
-    """
-    Calls OpenRouter to generate 2 questions from the given page context:
-    one regular student question and one adversarial question designed to
-    pressure the tutor into bypassing the Socratic method.
-
-    Args:
-        context:     Page text to use as generation context.
-        page_number: Page number within the source document.
-        filename:    Source document filename.
-
-    Returns:
-        A list of 2 dicts, each with keys 'filename', 'page', 'question',
-        'question_type', 'expected_answer', and 'context'. Returns None on failure.
-    """
+    """Generate regular and adversarial questions for a page."""
     prompt = TUTOR_BENCHMARK_GENERATION_PROMPT.format(
         page_number=page_number,
         filename=filename,
@@ -128,19 +77,10 @@ def create_questions(context: str, page_number: int, filename: str) -> list[dict
 
 def sample_chunks_from_db(max_questions: int = TUTOR_BENCHMARK_MAX_QUESTIONS) -> list[dict]:
     """
-    Fetches text chunks from ChromaDB and returns a stratified sample of
-    page-level context units ready for question generation.
-
-    Runs one query per source type (slides / apontamentos) with limit=300
-    (ChromaDB Cloud per-request cap), groups chunks by (filename, primary_page)
-    to reconstruct page context, then samples equally from each type with a
-    per-document cap so no single document dominates.
-
-    Args:
-        max_questions: Total target number of questions (2 per sampled page).
+    Sample ChromaDB page contexts for tutor benchmark questions.
 
     Returns:
-        List of dicts with keys: filename, page, context, source_type.
+        Page dicts with filename, page, context, and source_type.
     """
     collection = get_collection()
 
@@ -151,7 +91,7 @@ def sample_chunks_from_db(max_questions: int = TUTOR_BENCHMARK_MAX_QUESTIONS) ->
     random.seed(42)
 
     for source_type in source_types:
-        # Paginate within the 300-per-request quota until all chunks are fetched
+        # ChromaDB Cloud caps each request at 300.
         documents: list[str] = []
         metadatas: list[dict] = []
         offset = 0
@@ -174,7 +114,7 @@ def sample_chunks_from_db(max_questions: int = TUTOR_BENCHMARK_MAX_QUESTIONS) ->
             if len(batch_docs) < batch_size:
                 break
 
-        # Group chunks by (filename, primary_page) to reconstruct page context
+        # Rebuild page context from chunks.
         page_groups: dict[tuple[str, int], dict] = {}
         for doc, meta in zip(documents, metadatas):
             filename = meta.get("filename", "")
@@ -194,7 +134,6 @@ def sample_chunks_from_db(max_questions: int = TUTOR_BENCHMARK_MAX_QUESTIONS) ->
                 }
             page_groups[key]["texts"].append(doc)
 
-        # Build valid page units (concatenated context above min-length)
         valid_pages: list[dict] = []
         dropped = 0
         for group in page_groups.values():
@@ -209,7 +148,7 @@ def sample_chunks_from_db(max_questions: int = TUTOR_BENCHMARK_MAX_QUESTIONS) ->
                 "source_type": source_type,
             })
 
-        # Cap per document to avoid one doc dominating
+        # Keep one document from dominating the sample.
         by_doc: dict[str, list[dict]] = {}
         for page in valid_pages:
             by_doc.setdefault(page["filename"], []).append(page)
@@ -247,13 +186,7 @@ def sample_chunks_from_db(max_questions: int = TUTOR_BENCHMARK_MAX_QUESTIONS) ->
 
 
 def generate_tutor_benchmark_dataset() -> None:
-    """
-    Generates a single BenchmarkTutor-sample.json from a stratified sample of
-    ChromaDB text chunks.
-
-    ChromaDB query, ensuring questions are generated from the same text units
-    the retriever uses. Skips generation if the output file already exists.
-    """
+    """Generate the tutor benchmark dataset."""
     output_file = BENCHMARK_OUTPUT_DIR / "BenchmarkTutor-sample.json"
 
     if output_file.exists():
@@ -287,17 +220,7 @@ def generate_tutor_benchmark_dataset() -> None:
 
 
 def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> dict | None:
-    """
-    Calls OpenRouter to score an actual tutor response against
-    the five Socratic quality criteria.
-
-    Args:
-        entry:           The benchmark entry with context and question.
-        actual_response: The response actually generated by the tutor pipeline.
-
-    Returns:
-        A dict with integer scores for each criterion, or None on failure.
-    """
+    """Score a tutor response with the LLM judge."""
     prompt = TUTOR_BENCHMARK_JUDGE_PROMPT.format(
         context=entry.context,
         question=entry.question,
@@ -317,19 +240,15 @@ def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> dict | N
 
 def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult]:
     """
-    Reads a BenchmarkTutor JSON file, runs the full tutor pipeline for each
-    question, then scores each response with the LLM-as-judge and semantic similarity.
-
-    Args:
-        benchmark_file: Path to a BenchmarkTutor-*.json file.
+    Evaluate tutor responses from a BenchmarkTutor JSON file.
 
     Returns:
-        A list of TutorEvaluationResult, one per evaluated entry.
+        Results for entries that could be scored or classified.
     """
     with open(benchmark_file, encoding="utf-8") as f:
         raw_entries = json.load(f)
 
-    # Initialise embedder once — reused across all entries for efficiency.
+    # Reuse the embedder across all entries.
     embedder = get_embedder(EMBEDDING_MODEL)
 
     results: list[TutorEvaluationResult] = []
@@ -357,7 +276,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
 
         tutor_response = RagEngine().ask(course_code, entry.question)
 
-        # Input guardrail blocked the query before reaching the LLM — criteria not applicable.
+        # Input guardrail: judge criteria do not apply.
         if tutor_response.is_guardrail:
             results.append(TutorEvaluationResult(
                 filename=entry.filename,
@@ -377,7 +296,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
             ))
             continue
 
-        # No relevant chunks and LLM set is_fallback=true.
+        # Retrieval fallback.
         if tutor_response.is_fallback:
             results.append(TutorEvaluationResult(
                 filename=entry.filename,
@@ -397,7 +316,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
             ))
             continue
 
-        # Output guardrail triggered — LLM produced a direct answer, replaced with Socratic redirect.
+        # Output guardrail fallback.
         if tutor_response.is_output_guardrail:
             results.append(TutorEvaluationResult(
                 filename=entry.filename,
@@ -450,22 +369,7 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
 
 
 def save_results_json(results: list[TutorEvaluationResult], results_dir: Path, timestamp: str) -> Path:
-    """
-    Saves the normal results (Case 4 only) to a JSON file sorted by semantic
-    similarity, from highest to lowest.
-
-    Each entry contains the question, actual tutor response, expected Socratic
-    answer and the similarity score, providing ready-to-use high/low similarity
-    pairs for the written report.
-
-    Args:
-        results:     Full list of evaluated tutor responses.
-        results_dir: Directory where the JSON file will be written.
-        timestamp:   Timestamp string shared with the PNG report for easy pairing.
-
-    Returns:
-        Path to the written JSON file.
-    """
+    """Save normal tutor results sorted by semantic similarity."""
     normal = [
         r for r in results
         if not r.is_fallback and not r.is_guardrail and not r.is_output_guardrail
@@ -505,26 +409,7 @@ def save_results_json(results: list[TutorEvaluationResult], results_dir: Path, t
 def compute_guardrail_classification_metrics(
     results: list[TutorEvaluationResult],
 ) -> dict[str, float | int]:
-    """
-    Computes classic binary classification metrics for the input guardrail.
-
-    The input guardrail (regex-based) is treated as a binary classifier where:
-        - Positive class = adversarial question (should be blocked)
-        - Negative class = regular question (should NOT be blocked)
-
-    Confusion matrix:
-        TP = adversarial questions correctly blocked by input guardrail
-        FN = adversarial questions that passed the input guardrail
-        FP = regular questions incorrectly blocked by input guardrail
-        TN = regular questions that correctly passed the input guardrail
-
-    Args:
-        results: List of all evaluated tutor responses.
-
-    Returns:
-        Dict with keys: tp, fn, fp, tn, tpr, fpr, precision, recall, f1.
-        Rates are in [0, 1]. Returns 0.0 for undefined metrics (e.g. division by zero).
-    """
+    """Compute binary metrics for the input guardrail."""
     tp = fn = fp = tn = 0
 
     for r in results:
@@ -537,12 +422,11 @@ def compute_guardrail_classification_metrics(
             fn += 1
         elif not is_adversarial and is_blocked:
             fp += 1
-        else:  # regular and not blocked
+        else:
             tn += 1
 
-    # Standard classification metrics
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0  # = TPR
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
     f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
     fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
 
@@ -552,7 +436,7 @@ def compute_guardrail_classification_metrics(
         "fp": fp,
         "tn": tn,
         "precision": precision,
-        "recall": recall,  # = TPR (True Positive Rate)
+        "recall": recall,
         "f1": f1,
         "fpr": fpr,
     }
@@ -567,26 +451,10 @@ def compute_guardrail_classification_metrics(
 
 
 def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
-    """
-    Generates a 3×2 matplotlib figure and saves it as a timestamped PNG.
-    Also exports a companion JSON sorted by semantic similarity for report examples.
-
-    Subplots:
-        1. Bar chart — mean ± std per LLM-judge criterion (normal responses only).
-        2. Histogram — distribution of overall mean LLM-judge score.
-        3. Bar chart — mean ± std semantic similarity by question type.
-        4. Bar chart — system defence layers (fallback, input guardrail, output guardrail rates).
-        5. Table — input guardrail classification metrics (Precision, Recall/TPR, F1, FPR).
-
-    Args:
-        results: List of evaluated tutor responses.
-
-    Returns:
-        Path to the written PNG file, or None if no plottable results.
-    """
+    """Save the tutor benchmark visual report."""
     results_dir = BENCHMARK_OUTPUT_DIR / "results"
 
-    # Separate results into four categories
+    # Result buckets.
     normal           = [r for r in results if not r.is_fallback and not r.is_guardrail and not r.is_output_guardrail]
     fallback         = [r for r in results if r.is_fallback]
     guardrail_blocked = [r for r in results if r.is_guardrail]
@@ -612,7 +480,7 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
     fig, axes = plt.subplots(3, 2, figsize=(14, 15))
     fig.suptitle("Tutor Benchmark — Avaliação da Qualidade da Resposta Socrática", fontsize=13)
 
-    # 1 — Bar chart: mean ± std per LLM-judge criterion (normal responses only)
+    # Judge scores.
     ax = axes[0, 0]
     bars = ax.bar(labels, means, yerr=stds, capsize=5, color="#4C72B0", alpha=0.85)
     ax.set_ylim(0, 5.5)
@@ -626,7 +494,7 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
         )
     ax.legend(fontsize=8)
 
-    # 2 — Histogram: distribution of overall mean LLM-judge score (normal responses only)
+    # Overall score.
     ax = axes[0, 1]
     ax.hist(overall_scores, bins=10, range=(0, 5), color="#55A868", alpha=0.85, edgecolor="white")
     ax.set_xlabel("Score médio global")
@@ -638,7 +506,7 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
     )
     ax.legend(fontsize=8)
 
-    # 3 — Bar chart: mean ± std semantic similarity by question type (normal responses only)
+    # Semantic similarity.
     ax = axes[1, 0]
     qtypes = ["regular", "adversarial"]
     sim_means = []
@@ -661,7 +529,7 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
             f"{mean:.3f}", ha="center", fontsize=9,
         )
 
-    # 4 — Defesa em camadas: fallback + input guardrail + output guardrail
+    # Guardrails.
     ax = axes[1, 1]
     total = len(results)
     n_adv = len(adversarial_total)
@@ -694,11 +562,10 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
         xy=(0.5, -0.16), xycoords="axes fraction", ha="center", fontsize=8, color="gray",
     )
 
-    # 5 — Input guardrail classification metrics (Precision, Recall, F1, FPR)
+    # Input guardrail metrics.
     ax = axes[2, 0]
     guardrail_metrics = compute_guardrail_classification_metrics(results)
 
-    # Build the confusion matrix and metrics table
     table_data = [
         ["Métrica", "Valor"],
         ["True Positives (TP)", str(guardrail_metrics["tp"])],
@@ -726,23 +593,19 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
     table.set_fontsize(10)
     table.scale(1, 1.4)
 
-    # Style header row
     for col_idx in range(2):
         table[0, col_idx].set_facecolor("#4C72B0")
         table[0, col_idx].set_text_props(color="white", fontweight="bold")
 
-    # Style confusion matrix rows (TP, FN, FP, TN) with subtle background
     for row_idx in range(1, 5):
         table[row_idx, 0].set_facecolor("#E8EDF3")
         table[row_idx, 1].set_facecolor("#E8EDF3")
 
-    # Style the separator row
     table[5, 0].set_facecolor("white")
     table[5, 1].set_facecolor("white")
     table[5, 0].set_edgecolor("white")
     table[5, 1].set_edgecolor("white")
 
-    # Highlight F1-Score row
     table[8, 0].set_text_props(fontweight="bold")
     table[8, 1].set_text_props(fontweight="bold")
 
@@ -751,7 +614,6 @@ def save_visual_report(results: list[TutorEvaluationResult]) -> Path | None:
         xy=(0.5, 0.02), xycoords="axes fraction", ha="center", fontsize=8, color="gray",
     )
 
-    # 6 — Empty subplot (reserved for future use, e.g. threshold analysis)
     axes[2, 1].axis("off")
 
     plt.tight_layout()

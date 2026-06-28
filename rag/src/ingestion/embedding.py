@@ -1,10 +1,4 @@
-"""
-Embedding Service.
-
-Handles the loading of the HuggingFace embedding model and the generation
-and upsert of embeddings into ChromaDB via the database module.
-Supports multiple embedding models and collections for benchmarking.
-"""
+"""Embedding and image-ingestion helpers."""
 
 import base64
 import json
@@ -30,21 +24,7 @@ _image_api_calls: int = 0
 
 
 def build_meta(chunk: dict, doc_type: str, **extra) -> dict:
-    """
-    Builds a ChromaDB-compatible metadata dict from a chunk.
-
-    Converts the 'pages' list to a string, since ChromaDB metadata values
-    must be scalar types. The 'type' field distinguishes text from image chunks.
-
-    Args:
-        chunk:    Chunk dict with a 'metadata' key.
-        doc_type: Either 'text' or 'image'.
-        **extra:  Additional key-value pairs merged into the metadata
-                  (e.g. image_path for image chunks).
-
-    Returns:
-        Flat metadata dict safe for ChromaDB upsert.
-    """
+    """Build ChromaDB-safe metadata for a text or image chunk."""
     meta = chunk["metadata"].copy()
     if "pages" in meta:
         meta["pages"] = str(meta["pages"])
@@ -60,21 +40,7 @@ def embed_chunks(
     collection_name: str | None = None,
     store: IVectorStore | None = None,
 ) -> None:
-    """
-    Generates embeddings for text chunks and relevant images, then upserts
-    everything into ChromaDB in a single batch call.
-
-    For each chunk's images, calls image_resume() to classify and summarize
-    them via OpenRouter. Only relevant images (relevant=True) are embedded.
-    Text chunk IDs follow the pattern '{file_stem}_{i}'; image IDs use
-    '{file_stem}_img_{i}_{j}'.
-
-    Args:
-        chunks:          List of chunk dicts with 'text', 'image_paths', and 'metadata'.
-        file_stem:       Source file identifier used as the ID prefix.
-        model_name:      HuggingFace embedding model. Uses config default if None.
-        collection_name: ChromaDB collection name. Uses config default if None.
-    """
+    """Embed text chunks and relevant image summaries into the vector store."""
     valid_chunks = [c for c in chunks if c["text"].strip()]
 
     if not valid_chunks:
@@ -123,24 +89,7 @@ def embed_chunks(
 
 
 def image_resume(image_path: str, context: str) -> dict | None:
-    """
-    Classifies and summarizes an image via the OpenRouter API.
-
-    Sends the image as base64 alongside surrounding chunk text as context.
-    The model is expected to return JSON with 'relevant' (bool) and 'summary' (str).
-    Irrelevant images (logos, decorative elements) return relevant=False.
-
-    Retries up to 3 times with exponential backoff on HTTP 429 (rate limit).
-    Respects MAX_IMAGE_API_CALLS to cap total API usage per pipeline run.
-
-    Args:
-        image_path: Absolute path to the PNG image on disk.
-        context:    Surrounding chunk text sent as context to the model.
-
-    Returns:
-        Dict with 'relevant' (bool) and 'summary' (str), or None on failure
-        or if the API call limit has been reached.
-    """
+    """Summarize an image for embedding, or return None when skipped/failed."""
     global _image_api_calls
 
     if MAX_IMAGE_API_CALLS is not None and _image_api_calls >= MAX_IMAGE_API_CALLS:

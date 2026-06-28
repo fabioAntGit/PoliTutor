@@ -1,11 +1,4 @@
-"""
-Service + repository integration tests for user memory.
-
-The `UserMemoryService` is wired to the **real**
-`UserMemoryRepository` over an ephemeral MongoDB, and only the external boundary
-— the LLM (`call_openrouter`) — is mocked. This exercises the real persistence,
-decay, blending and cap-eviction logic.
-"""
+"""Integration tests for user memory persistence and service logic."""
 
 import json
 from datetime import datetime, timezone
@@ -243,7 +236,6 @@ class TestExtractAndUpsert:
                 db, mem_id=f"m{i:02d}", user_id="u1", course="ed",
                 mem_type="preference", topic=f"t{i:02d}", importance=(i + 1) * 0.5,
             )
-        # t00 has the lowest importance (0.5) and should be evicted.
         model_client.call.side_effect = _llm_returning([
             {"type": "preference", "topic": "fresh", "content": "new", "importance": 9.0},
         ])

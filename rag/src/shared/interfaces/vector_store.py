@@ -1,3 +1,5 @@
+"""Vector store contract for retrieval and ingestion."""
+
 from typing import Protocol, runtime_checkable
 
 from ..models import RetrievalResults
@@ -5,10 +7,8 @@ from ..models import RetrievalResults
 
 @runtime_checkable
 class IVectorStore(Protocol):
-    """Port consumed by the RAG to talk to a vector database."""
-
     def search(self, course: str, query_vector: list[float], top_k: int) -> RetrievalResults:
-        """Similarity search for a course, returning domain results."""
+        """Return the top_k nearest chunks for query_vector, scoped to course."""
         ...
 
     def upsert(
@@ -18,9 +18,9 @@ class IVectorStore(Protocol):
         embeddings: list[list[float]],
         metadatas: list[dict],
     ) -> None:
-        """Insert or update embedded documents."""
+        """Insert or update document embeddings and metadata, keyed by id."""
         ...
 
     def exists(self, filename: str) -> bool:
-        """Whether any chunk for the given filename is already stored."""
+        """Return True if any chunk from this filename is already stored."""
         ...

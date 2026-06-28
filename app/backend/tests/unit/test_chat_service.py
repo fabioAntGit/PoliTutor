@@ -131,7 +131,6 @@ async def test_create_chat_user_not_found_throws_not_found(service, course_repo,
 
 async def test_create_chat_user_not_enrolled_throws_access_denied_error(service, course_repo, user_repo):
     course_repo.find_by_code.return_value = _make_course()
-    # User nao tem a cadeira "ed" na lista de courses
     user_repo.find_by_id.return_value = _make_user(courses=["paw"])
 
     with pytest.raises(AccessDeniedError):
@@ -188,7 +187,6 @@ async def test_list_user_chats_inactive_courses_returns_filtered(service, chat_r
         _make_chat(_id="60d5ecb8b4259b3a0c4f1a01", course="ed"),
         _make_chat(_id="60d5ecb8b4259b3a0c4f1a04", course="paw"),
     ]
-    # Se so a cadeira "ed" estiver ativa, "paw" nao deve aparecer
     course_repo.get_courses_by_codes.return_value = [_make_course(code="ed")]
 
     result = await service.list_user_chats("user1")

@@ -116,18 +116,15 @@ async def test_get_course_topics_ordered_by_count_desc(service, repo):
 
 
 async def test_get_course_topics_caps_picks_top_by_count(service, repo):
-    # 20 conceitos com contagens distintas; só os 15 mais frequentes devem aparecer
     concepts = []
     for i in range(20):
         concepts.extend([f"c{i}"] * (i + 1))  # c0=1, c1=2, ..., c19=20
     repo.get_course_concepts.return_value = concepts
     result = await service.get_course_topics("Prog")
     assert len(result) == 15
-    # o mais frequente é c19, o menos frequente incluído deve ser c5 (contagem 6)
     assert result[0]["topic"] == "c19"
     assert result[0]["count"] == 20
     assert result[-1]["count"] == 6
-    # os 5 menos frequentes (c0..c4) não devem aparecer
     topic_names = {t["topic"] for t in result}
     for excluded in ("c0", "c1", "c2", "c3", "c4"):
         assert excluded not in topic_names

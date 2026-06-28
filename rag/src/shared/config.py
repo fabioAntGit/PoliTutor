@@ -1,17 +1,4 @@
-"""
-Configuration settings for the Poli-Tutor RAG pipeline.
-
-Organised into sections:
-    1. Core & environment initialization
-    2. Path management
-    3. Document extraction (Unstructured API)
-    4. Chunking strategies
-    5. Embedding & image analysis
-    6. Vector database (ChromaDB)
-    7. Retrieval & reranking
-    8. Benchmarking & evaluation
-    9. Tutor generation
-"""
+"""Configuration for the Poli-Tutor RAG pipeline."""
 
 import os
 import torch
@@ -19,22 +6,17 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# 1. CORE & ENVIRONMENT INITIALIZATION
 BASE_DIR = Path(__file__).resolve().parent
 RAG_DIR = BASE_DIR.parent.parent  # rag/
-# Load environment variables from the root .env file
 load_dotenv(RAG_DIR / ".env")
 
-# 2. PATH MANAGEMENT
 DEFAULT_RAW_PATH = RAG_DIR / "data" / "raw"
 RAW_DATA_PATH = Path(os.getenv("RAW_DATA_PATH", DEFAULT_RAW_PATH))
 COURSE_PATH = Path(os.getenv("COURSE_PATH", RAW_DATA_PATH / "ED"))
 IMAGES_OUTPUT_DIR = RAG_DIR / "data" / "processed" / "images"
 
-# 3. DOCUMENT EXTRACTION (Unstructured API)
 SUPPORTED_EXTENSIONS = ["*.pdf", "*.pptx", "*.md"]
 
-# Text elements and phrases to ignore during ingestion
 ELEMENT_TYPES_TO_EXCLUDE = ["Footer", "Header", "FigureCaption", "UncategorizedText"]
 KEYWORDS_TO_EXCLUDE = [
     "Ricardo Santos",
@@ -43,7 +25,6 @@ KEYWORDS_TO_EXCLUDE = [
     "ESTRUTURAS DE DADOS 2024/2025",
 ]
 
-# Unstructured API parameters
 FILE_PROCESSING_CONFIG = {
     "strategy": "hi_res",
     "languages": ["por", "eng"],
@@ -54,7 +35,6 @@ FILE_PROCESSING_CONFIG = {
     "skip_infer_table_types": ["md"],
 }
 
-# 4. CHUNKING STRATEGIES
 CHUNKING_STRATEGIES = {
     "apontamentos": {
         "chunk_size": 300,
@@ -73,20 +53,13 @@ CHUNK_SEPARATORS = ["```\n", "\n\n", "\n", ". ", "? ", "! ", " ", ""]
 CHUNK_MIN_LENGTH = 100
 VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
-# 5. EMBEDDING & IMAGE ANALYSIS
-# bge-m3 produced the best benchmark results and is used for both ingestion and retrieval
-# to ensure query embeddings match the indexed document embeddings.
+# Benchmark-selected embedding model; ingestion and retrieval must match.
 EMBEDDING_MODEL = "BAAI/bge-m3"
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 EMBEDDING_NORMALIZE = True
 
-# Image summarization model (pipeline de extração)
 OPENROUTER_MODEL_IMAGE_SUMMARIZATION = "google/gemini-2.5-flash-lite"
-
-# Benchmark: geração de perguntas + LLM-as-judge
 OPENROUTER_MODEL_BENCHMARK = "openai/gpt-4o"
-
-# Geração socrática final
 OPENROUTER_MODEL_GENERATOR = "openai/gpt-4o"
 
 MAX_IMAGE_API_CALLS = None  # No limit
@@ -105,21 +78,15 @@ IMAGE_EMBEDDING_PROMPT = (
     "\n\nContext:\n{context}"
 )
 
-# 6. VECTOR DATABASE (ChromaDB)
 CHROMA_COLLECTION_NAME = "PoliTutor-Docs"
 CHROMA_METADATA = {"hnsw:space": "cosine"}
 
-
-# 7. RETRIEVAL & RERANKING
 TOP_K_RESULTS = 20
 RERANKER_MODEL = "jinaai/jina-reranker-v2-base-multilingual"
 RERANKER_TOP_K = 5
-# Chunks with ChromaDB cosine distance above this threshold are discarded before
-# reranking. Set to None to disable (retrieves all TOP_K_RESULTS regardless of
-# distance). Calibrated via benchmark_threshold.py using the elbow method.
+# Calibrated via benchmark_threshold.py; None disables distance filtering.
 RETRIEVAL_DISTANCE_THRESHOLD: float | None = 0.9301
 
-# 8. BENCHMARKING & EVALUATION
 BENCHMARK_OUTPUT_DIR = RAG_DIR / "data" / "benchmark"
 BENCHMARK_MIN_CONTEXT_LENGTH = 200
 TUTOR_BENCHMARK_MAX_QUESTIONS = 200  # Max questions to generate (2 per sampled page: 1 regular + 1 adversarial)
@@ -145,8 +112,7 @@ BENCHMARK_PROMPT = (
     "\n\nContext:\n{context}"
 )
 
-# Each entry maps to BenchmarkConfig fields. Omitted fields use BenchmarkConfig defaults
-# (top_k=TOP_K_RESULTS, reranker_top_k=RERANKER_TOP_K).
+# Omitted fields use BenchmarkConfig defaults.
 BENCHMARK_COMPARISON_CONFIGS = [
     {
         "name": "bge-m3 + jinaai jina-reranker-v2-base-multilingual",
@@ -168,10 +134,7 @@ BENCHMARK_COMPARISON_CONFIGS = [
     }
 ]
 
-# 9. TUTOR GENERATION
-# System prompt instructing the LLM to act as a Socratic tutor for programming course units.
-# The tutor never gives direct solutions or ready-made code - it guides the student
-# through questions and hints, grounded exclusively in the retrieved course material.
+# Strict Socratic tutor prompt.
 TUTOR_SYSTEM_PROMPT = (
     "You are a strictly Socratic academic tutor. Your only knowledge source is the Context provided below. "
     "Answer in the language of the question. If Portuguese, answer in Portugal Portuguese. "
@@ -245,25 +208,22 @@ TUTOR_SYSTEM_PROMPT = (
     "</context>"
 )
 
-# Fallback message returned to the student when retrieval finds no relevant content
-# in the course materials for the given question.
+# Returned when retrieval finds no relevant course content.
 TUTOR_FALLBACK_MESSAGE = (
     "Não encontrei conteúdo relevante nos materiais desta unidade curricular "
     "para responder à sua pergunta. "
     "Tente reformular a questão ou consulte diretamente os slides da UC."
 )
 
-# Error message returned when the LLM backend fails (API error, rate limit, timeout).
+# Returned when the LLM backend fails.
 TUTOR_API_ERROR_MESSAGE = (
     "Ocorreu um problema temporário ao processar a tua pergunta. "
     "Por favor, tenta novamente dentro de momentos."
 )
 
-# 12. Guardrails
 QUERY_MIN_LENGTH = 2
 QUERY_MAX_LENGTH = 1500
-# Above this length (characters), a response containing no guiding question ('?')
-# is treated by the output guardrail as a non-Socratic direct answer.
+# Long answers without a guiding question are treated as direct answers.
 DIRECT_ANSWER_MIN_LENGTH = 100
 
 INJECTION_PATTERNS: list[str] = [
@@ -348,7 +308,6 @@ SOCRATIC_REDIRECT = (
     "Tenta decompor o problema em partes mais pequenas e diz-me onde tens dúvidas."
 )
 
-# 11. TUTOR BENCHMARK
 TUTOR_BENCHMARK_GENERATION_PROMPT = """\
 You are an expert educational dataset creator for a Socratic tutoring system evaluation benchmark.
 
@@ -396,7 +355,7 @@ Output:
 </context>\
 """
 
-# Configurable LLM-as-judge prompt for evaluating actual tutor responses.
+# LLM-as-judge prompt for tutor benchmark.
 TUTOR_BENCHMARK_JUDGE_PROMPT = """\
 You are an expert educational evaluator specializing in Socratic tutoring quality assessment for university-level programming courses.
 
@@ -436,5 +395,4 @@ Reply ONLY with raw JSON. No markdown, no extra text.
 </actual_tutor_response>\
 """
 
-# Names of the evaluation criteria used in the tutor benchmark.
 TUTOR_BENCHMARK_CRITERIA = ["faithfulness", "non_directiveness", "scaffolding", "clarity"]

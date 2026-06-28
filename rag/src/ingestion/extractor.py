@@ -1,11 +1,4 @@
-"""
-Document Element Extraction and Transformation.
-
-Converts raw document files into structured, cleaned, page-based data using
-the Unstructured API. Handles text, tables, code snippets, and images, and
-groups the resulting elements into a consistent page-centric format ready
-for the chunking stage.
-"""
+"""Document extraction helpers for ingestion."""
 
 import hashlib
 import logging
@@ -27,22 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def extract_elements_from_file(file_path: str) -> list[dict]:
-    """
-    Partitions a document into structured elements via the Unstructured API.
-
-    Uses the configuration defined in FILE_PROCESSING_CONFIG (hi-res strategy,
-    table inference, image extraction). The result is converted to a list of
-    plain dicts for downstream processing.
-
-    Args:
-        file_path: Absolute path to the document file (.pdf, .pptx, .md).
-
-    Returns:
-        List of element dicts, each with 'type', 'text', and 'metadata' keys.
-
-    Raises:
-        Exception: Re-raises any API or partitioning error after logging it.
-    """
+    """Partition a document into Unstructured element dicts."""
     logger.info("Sending file to Unstructured API: %s", file_path)
     try:
         elements = partition_via_api(
@@ -61,22 +39,7 @@ def filter_elements(
     elements: list[dict],
     keywords_to_exclude: list[str],
 ) -> list[dict]:
-    """
-    Removes unwanted elements and sanitizes text content.
-
-    Two-pass filter:
-        1. Drops elements whose type is in ELEMENT_TYPES_TO_EXCLUDE
-           (e.g. Footer, Header, FigureCaption, UncategorizedText).
-        2. For remaining elements, removes any noise keywords (e.g. author names,
-           institutional headers) and collapses the resulting extra whitespace.
-
-    Args:
-        elements:           List of element dicts from extract_elements_from_file.
-        keywords_to_exclude: Substrings to strip from element text.
-
-    Returns:
-        Filtered and sanitized list of element dicts.
-    """
+    """Drop ignored element types and strip noisy keywords."""
     elements = [el for el in elements if el.get("type") not in ELEMENT_TYPES_TO_EXCLUDE]
 
     if not keywords_to_exclude:
@@ -93,23 +56,7 @@ def filter_elements(
 
 
 def build_page_content(page_elements: list[dict]) -> tuple[str, list[str]]:
-    """
-    Consolidates a page's elements into a single text block and a list of images.
-
-    Element types are handled as follows:
-        - Image:       Base64 data is collected separately; no text is added.
-        - Table:       Preserved as HTML if available, otherwise wrapped in
-                       [TABLE DATA]...[END TABLE] markers.
-        - CodeSnippet: Wrapped in markdown code fences (``` ... ```).
-        - Other text:  Unicode quotes normalized, extra whitespace removed.
-
-    Args:
-        page_elements: List of element dicts belonging to a single page.
-
-    Returns:
-        A tuple of (page_text, images_b64) where page_text is the consolidated
-        text and images_b64 is a list of base64-encoded image strings.
-    """
+    """Merge one page's text and collect its base64 images."""
     lines = []
     images_b64 = []
 
@@ -149,24 +96,10 @@ def group_elements_by_page(
     save_images: bool = False,
 ) -> list[dict]:
     """
-    Groups extracted elements into a page-centric structure with consistent metadata.
-
-    Pages are processed in ascending order. Cover or title pages can be skipped via
-    skip_pages. Empty pages (no text and no images) are discarded.
-
-    Args:
-        elements:        List of element dicts from filter_elements.
-        source_filename: Original document filename (e.g. 'Apontamentos.ED.CAP1.pdf').
-        source_type:     Document source type (e.g. 'apontamentos', 'slides').
-        course_code:     Course identifier (e.g. 'ed', 'pp').
-        skip_pages:      Number of leading pages to skip (default 0).
-        save_images:     If True, saves extracted images to disk and returns their paths.
+    Group extracted elements by page.
 
     Returns:
-        List of page dicts, each with:
-            - 'metadata': filename, course, source, page_number, filetype.
-            - 'text':     Consolidated page text.
-            - 'image_paths': Paths to saved images (empty list if save_images=False).
+        Page dicts with metadata, text, and saved image paths.
     """
     pages_map: dict[int, list] = defaultdict(list)
     for el in elements:

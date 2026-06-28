@@ -1,11 +1,3 @@
-"""
-Route-level integration tests for the user memory endpoints (/api/v1/memory).
-
-Both endpoints are protected by `require_authenticated` (any logged-in user) and
-scope everything to the caller's `user_id` (taken from the JWT). These tests
-drive the real FastAPI app over HTTP against the ephemeral test database;
-"""
-
 import pytest
 
 from .factories import insert_memory
@@ -63,7 +55,6 @@ class TestDeleteMemory:
         resp = await api_client.delete(f"{LIST}/m1", headers=auth_header())
 
         assert resp.status_code == 404
-        # the other user memory is untouched
         assert await db["user_memory"].find_one({"_id": "m1"}) is not None
 
     async def test_unknown_memory_returns_404(self, api_client, auth_header):

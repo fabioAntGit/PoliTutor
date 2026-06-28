@@ -1,9 +1,4 @@
-"""
-ChromaDB Embeddings Visualization Tool using Renumics Spotlight to visually
-inspect, filter, and analyze the document chunks and their high-dimensional
-embeddings stored in the ChromaDB cloud instance. It helps identifying clusters
-of similar documents and debugging embedding quality.
-"""
+"""Renumics Spotlight visualization for ChromaDB embeddings."""
 
 import argparse
 import logging
@@ -18,13 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def visualize(collection_name: str | None = None) -> None:
-    """
-    Fetches embedding data from ChromaDB and launches the Spotlight UI.
-
-    Args:
-        collection_name: The specific ChromaDB collection to load.
-            If None, the default collection defined in config is used.
-    """
+    """Load a ChromaDB collection and open it in Spotlight."""
     collection = get_collection(collection_name)
 
     results = collection.get(include=["documents", "embeddings", "metadatas"])

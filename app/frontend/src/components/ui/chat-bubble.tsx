@@ -54,7 +54,6 @@ export function ChatBubble({ message }: ChatBubbleProps) {
 
     return (
         <div className={`group flex w-full flex-col gap-1.5 ${isUser ? "items-end" : "items-start"}`}>
-            {/* Bubble */}
             <div
                 className={`max-w-[85%] min-w-0 rounded-2xl border px-5 py-3 shadow-sm transition-all duration-300 ${
                     reported
@@ -106,7 +105,6 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 )}
             </div>
 
-            {/* Actions */}
             <div className={`flex gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
                 <button
                     onClick={handleCopy}

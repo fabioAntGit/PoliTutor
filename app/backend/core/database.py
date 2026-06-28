@@ -22,6 +22,7 @@ async def connect_to_mongo() -> None:
     await _ensure_indexes(_db)
     await _ensure_deprecated_indexes(_db_deprecated)
 
+
 async def _ensure_indexes(db: AsyncDatabase) -> None:
     await db["chats"].create_index("user_id")
     await db["chats"].create_index("course")
