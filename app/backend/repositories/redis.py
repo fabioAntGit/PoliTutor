@@ -1,5 +1,5 @@
 import redis.asyncio as redis
-from app.backend.core.config import REDIS_TTL
+from app.backend.core.config import REDIS_TTL, SUMMARY_LOCK_TTL
 from app.backend.schemas.message.models import Message
 
 from app.backend.repositories.interfaces.cache_repository import ICacheRepository
@@ -8,12 +8,12 @@ class RedisRepository(ICacheRepository):
     def __init__(self, client: redis.Redis) -> None:
         self.client = client
         self.ttl = REDIS_TTL
+        self.summary_lock_ttl = SUMMARY_LOCK_TTL
 
     async def add_message(self, message: Message):
         key = f"chat:{message.conversation_id}:messages"
 
         await self.client.rpush(key, message.model_dump_json())
-        await self.client.ltrim(key, -16, -1)
         await self.increment_message_count(message.conversation_id)
         await self.refresh_session(message.conversation_id)
 
@@ -43,6 +43,14 @@ class RedisRepository(ICacheRepository):
         await self.client.expire(f"chat:{session_id}:summary", self.ttl)
         await self.client.expire(f"chat:{session_id}:message_count", self.ttl)
 
+    async def acquire_summary_lock(self, session_id: str) -> bool:
+        key = f"chat:{session_id}:lock_summary"
+        return bool(await self.client.set(key, "1", ex=self.summary_lock_ttl, nx=True))
+
+    async def release_summary_lock(self, session_id: str) -> None:
+        key = f"chat:{session_id}:lock_summary"
+        await self.client.delete(key)
+
     async def set_message_count(self, session_id: str, count: int):
         key = f"chat:{session_id}:message_count"
         await self.client.set(key, count)
@@ -61,6 +69,11 @@ class RedisRepository(ICacheRepository):
     async def reset_message_count(self, session_id: str):
         key = f"chat:{session_id}:message_count"
         await self.client.delete(key)
+
+    async def trim_messages(self, session_id: str, limit: int = 16) -> None:
+        key = f"chat:{session_id}:messages"
+        await self.client.ltrim(key, -limit, -1)
+        await self.refresh_session(session_id)
 
     async def get_context(self, session_id: str) -> tuple[str | None, list[Message]]:
         summary = await self.get_summary(session_id)

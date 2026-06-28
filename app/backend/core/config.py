@@ -10,6 +10,7 @@ MONGO_DB = os.getenv("MONGODB_DB", "poli_tutor")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_TTL = int(os.getenv("REDIS_TTL", 86400))
+SUMMARY_LOCK_TTL = 60
 
 JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")

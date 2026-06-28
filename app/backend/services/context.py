@@ -51,11 +51,15 @@ class ContextService(IContextService):
         if count < SUMMARIZATION_THRESHOLD:
             return
 
-        summary_old, messages = await self.cache_repository.get_context(conversation_id)
-        if not messages:
+        has_lock = await self.cache_repository.acquire_summary_lock(conversation_id)
+        if not has_lock:
+            logger.info("Summary already running for conversation %s", conversation_id)
             return
 
-        await self.cache_repository.reset_message_count(conversation_id)
+        summary_old, messages = await self.cache_repository.get_context(conversation_id)
+        if not messages:
+            await self.cache_repository.release_summary_lock(conversation_id)
+            return
 
         logger.info("Triggering background summary for conversation %s (count=%d)", conversation_id, count)
         run_in_background(self._summarize(conversation_id, user_id, course, summary_old, messages))
@@ -82,14 +86,19 @@ class ContextService(IContextService):
             if not new_summary:
                 logger.warning("OpenRouter returned empty summary for conversation %s", conversation_id)
                 return
+                
 
             await self.chat_repository.set_summary(conversation_id, new_summary, messages[-1].id)
             await self.cache_repository.set_summary(conversation_id, new_summary)
+            await self.cache_repository.trim_messages(conversation_id, limit=16)
+            await self.cache_repository.reset_message_count(conversation_id)
             logger.info("Summary updated for conversation %s", conversation_id)
 
             run_in_background(self.user_memory_service.extract_and_upsert(user_id, course, new_summary))
         except Exception as e:
             logger.error("Failed to generate summary for conversation %s: %s", conversation_id, e)
+        finally:
+            await self.cache_repository.release_summary_lock(conversation_id)
 
     def _format_history(self, messages: list[Message]) -> str:
         history_lines = []
