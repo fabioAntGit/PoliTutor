@@ -3,14 +3,14 @@ from unittest.mock import AsyncMock
 import pytest
 from pwdlib import PasswordHash
 
-from app.backend.core.exceptions import AppError, UserNotFoundError, UserAlreadyExistsError, ValidationError
+from app.backend.core.exceptions import BadRequestError, ConflictError, NotFoundError
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.repositories.interfaces.deletion_repository import IDeletionRepository
 from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.schemas.course.models import Course
 from app.backend.schemas.user.models import User
-from app.backend.services.user import UserService
+from app.backend.services.users import UserService
 
 def _make_user(**kwargs) -> User:
     defaults = dict(
@@ -79,8 +79,8 @@ async def test_create_user_valid_data_returns_user(service, user_repo, course_re
     user_repo.create.assert_awaited_once()
 
 
-async def test_create_user_short_password_throws_app_error(service):
-    with pytest.raises(ValidationError, match="pelo menos 8 caracteres"):
+async def test_create_user_short_password_throws_bad_request(service):
+    with pytest.raises(BadRequestError, match="pelo menos 8 caracteres"):
         await service.create_user(
             email="novo@estg.ipp.pt",
             password="123",
@@ -90,10 +90,10 @@ async def test_create_user_short_password_throws_app_error(service):
         )
 
 
-async def test_create_user_duplicate_email_throws_app_error(service, user_repo):
+async def test_create_user_duplicate_email_throws_conflict(service, user_repo):
     user_repo.find_by_email.return_value = _make_user()
 
-    with pytest.raises(UserAlreadyExistsError, match="email"):
+    with pytest.raises(ConflictError, match="email"):
         await service.create_user(
             email="fabio@estg.ipp.pt",
             password="password123",
@@ -102,11 +102,11 @@ async def test_create_user_duplicate_email_throws_app_error(service, user_repo):
             courses=[],
         )
 
-async def test_create_user_duplicate_username_throws_app_error(service, user_repo):
+async def test_create_user_duplicate_username_throws_conflict(service, user_repo):
     user_repo.find_by_email.return_value = None
     user_repo.find_by_username.return_value = _make_user(email="fabio@ipp.pt")
 
-    with pytest.raises(UserAlreadyExistsError, match="username"):
+    with pytest.raises(ConflictError, match="username"):
         await service.create_user(
             email="fabio@estg.ipp.pt",
             password="password123",
@@ -116,12 +116,12 @@ async def test_create_user_duplicate_username_throws_app_error(service, user_rep
         )
 
 
-async def test_create_user_invalid_courses_throws_app_error(service, user_repo, course_repo):
+async def test_create_user_invalid_courses_throws_bad_request(service, user_repo, course_repo):
     user_repo.find_by_email.return_value = None
     user_repo.find_by_username.return_value = None
     course_repo.get_courses_by_codes.return_value = []
 
-    with pytest.raises(ValidationError, match="cadeiras"):
+    with pytest.raises(BadRequestError, match="cadeiras"):
         await service.create_user(
             email="novo@estg.ipp.pt",
             password="password123",
@@ -144,10 +144,10 @@ async def test_update_user_new_email_returns_recalculated_username(service, user
     user_repo.update.assert_awaited_once()
 
 
-async def test_update_user_not_found_throws_user_not_found_error(service, user_repo):
+async def test_update_user_not_found_throws_not_found(service, user_repo):
     user_repo.find_by_username.return_value = None
 
-    with pytest.raises(UserNotFoundError):
+    with pytest.raises(NotFoundError):
         await service.update_user("nao_existe", {"full_name": "Outro"})
 
 
@@ -178,12 +178,12 @@ async def test_change_password_valid_data_returns_user(service, user_repo):
     user_repo.update.assert_awaited_once()
 
 
-async def test_change_password_wrong_current_throws_app_error(service, user_repo):
+async def test_change_password_wrong_current_throws_bad_request(service, user_repo):
     ph = PasswordHash.recommended()
     real_hash = ph.hash("current_pw")
     user_repo.find_by_username.return_value = _make_user(hashed_password=real_hash)
 
-    with pytest.raises(AppError, match="Password atual incorreta"):
+    with pytest.raises(BadRequestError, match="Password atual incorreta"):
         await service.change_password(
             username="fabio",
             current_password="senha_errada_completamente_diferente",
@@ -191,12 +191,12 @@ async def test_change_password_wrong_current_throws_app_error(service, user_repo
         )
 
 
-async def test_change_password_new_too_short_throws_app_error(service, user_repo):
+async def test_change_password_new_too_short_throws_bad_request(service, user_repo):
     ph = PasswordHash.recommended()
     real_hash = ph.hash("current_pw")
     user_repo.find_by_username.return_value = _make_user(hashed_password=real_hash)
 
-    with pytest.raises(ValidationError, match="pelo menos 8 caracteres"):
+    with pytest.raises(BadRequestError, match="pelo menos 8 caracteres"):
         await service.change_password(
             username="fabio",
             current_password="current_pw",

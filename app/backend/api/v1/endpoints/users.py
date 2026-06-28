@@ -5,7 +5,7 @@ from app.backend.schemas.user.request import UserCreateRequest, UserUpdateReques
 from app.backend.schemas.user.response import UserResponse
 from app.backend.services.interfaces.authentication_service import IAuthenticationService
 from app.backend.services.interfaces.user_service import IUserService
-from app.backend.core.exceptions import AppError, UserNotFoundError
+from app.backend.core.exceptions import BadRequestError, NotFoundError
 from app.backend.schemas.shared.responses import (
     bad_request,
     conflict,
@@ -113,7 +113,7 @@ async def get_user(
 ):
     user = await service.get_user(username)
     if not user:
-        raise UserNotFoundError()
+        raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
     return UserResponse.model_validate(user.model_dump())
 
 
@@ -140,7 +140,7 @@ async def update_user(
 ):
     update_data = body.model_dump(exclude_unset=True)
     if not update_data:
-        raise AppError(message="Nenhum campo para atualizar")
+        raise BadRequestError(message="Nenhum campo para atualizar", code="validation_error")
     user = await service.update_user(username, update_data)
     return UserResponse.model_validate(user.model_dump())
 

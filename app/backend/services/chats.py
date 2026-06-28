@@ -1,8 +1,6 @@
 from app.backend.core.exceptions import (
-    ChatNotFoundError,
-    CourseNotFoundError,
     AccessDeniedError,
-    UserNotFoundError,
+    NotFoundError,
 )
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
@@ -34,11 +32,15 @@ class ChatService(IChatService):
         course = await self.course_repository.find_by_code(course_code)
 
         if course is None or not course.is_active:
-            raise CourseNotFoundError(course_code)
+            raise NotFoundError(
+                message="Cadeira nao encontrada",
+                code="course_not_found",
+                details={"course_code": course_code},
+            )
 
         user = await self.user_repository.find_by_id(user_id)
         if user is None:
-            raise UserNotFoundError()
+            raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
         if course.code not in user.courses:
             raise AccessDeniedError(
@@ -58,15 +60,23 @@ class ChatService(IChatService):
         chat = await self.chat_repository.get_chat(conversation_id)
 
         if chat is None:
-            raise ChatNotFoundError(conversation_id)
+            raise NotFoundError(
+                message="Chat nao encontrado",
+                code="chat_not_found",
+                details={"conversation_id": conversation_id},
+            )
 
         if chat.user_id != requester_user_id:
-            raise AccessDeniedError("Nao tens permissao para aceder a este chat.")
+            raise AccessDeniedError(message="Nao tens permissao para aceder a este chat.")
 
         course = await self.course_repository.find_by_code(chat.course)
 
         if course is None or not course.is_active:
-            raise CourseNotFoundError(chat.course)
+            raise NotFoundError(
+                message="Cadeira nao encontrada",
+                code="course_not_found",
+                details={"course_code": chat.course},
+            )
 
         messages = await self.message_repository.get_messages(conversation_id)
 
@@ -76,10 +86,14 @@ class ChatService(IChatService):
         chat = await self.chat_repository.get_chat(conversation_id)
 
         if chat is None:
-            raise ChatNotFoundError(conversation_id)
+            raise NotFoundError(
+                message="Chat nao encontrado",
+                code="chat_not_found",
+                details={"conversation_id": conversation_id},
+            )
 
         if chat.user_id != requester_user_id:
-            raise AccessDeniedError("Nao tens permissao para eliminar este chat.")
+            raise AccessDeniedError(message="Nao tens permissao para eliminar este chat.")
 
         await self.report_repository.delete_by_conversation(conversation_id)
         await self.message_repository.delete_by_conversation(conversation_id)

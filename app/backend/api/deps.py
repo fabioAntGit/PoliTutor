@@ -11,7 +11,7 @@ from contracts.rag.interfaces import IRagEngine
 from app.backend.gateways.interfaces.model_client import IModelClient
 
 from app.backend.core.database import get_db, get_deprecated_db, get_redis
-from app.backend.core.exceptions import AuthError, AccessDeniedError, CourseNotFoundError
+from app.backend.core.exceptions import AuthError, AccessDeniedError, NotFoundError
 from app.backend.schemas.user.enums import UserRole
 
 from app.backend.repositories.analytics import AnalyticsRepository
@@ -43,7 +43,7 @@ from app.backend.services.reports import ReportService
 from app.backend.services.user_memory import UserMemoryService
 from app.backend.services.security import SecurityService
 from app.backend.services.authentication import AuthenticationService
-from app.backend.services.user import UserService
+from app.backend.services.users import UserService
 from app.backend.services.courses import CourseService
 
 from app.backend.services.interfaces.analytics_service import IAnalyticsService
@@ -264,7 +264,11 @@ async def _analytics_course_scope(
 ) -> str:
     found = await repo.find_by_code(course)
     if found is None or not found.is_active:
-        raise CourseNotFoundError(course)
+        raise NotFoundError(
+            message="Cadeira nao encontrada",
+            code="course_not_found",
+            details={"course_code": course},
+        )
     if payload.get("role") != UserRole.ADMIN.value:
         if course not in (payload.get("courses") or []):
             raise AccessDeniedError(message="Não tens acesso a esta cadeira.")

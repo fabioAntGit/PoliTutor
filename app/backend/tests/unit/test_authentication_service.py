@@ -88,9 +88,6 @@ async def test_login_wrong_password_throws_auth_error(service, user_repo, securi
         await service.login("fabio", "wrong_password")
 
 
-
-
-
 async def test_logout_valid_token_adds_to_blacklist(service, security, redis_repo):
     security.decode_token.return_value = {"exp": 9999999999}
 

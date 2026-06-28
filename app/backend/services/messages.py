@@ -3,7 +3,7 @@ import asyncio
 from contracts.rag.interfaces import IRagEngine
 from contracts.rag.models import TutorResponse, TutorSource
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
-from app.backend.core.exceptions import ChatNotFoundError, AccessDeniedError
+from app.backend.core.exceptions import AccessDeniedError, NotFoundError
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.schemas.message.models import Message, Source
@@ -38,10 +38,14 @@ class MessageService(IMessageService):
         conversation = await self.chat_repository.get_chat(conversation_id)
 
         if conversation is None:
-            raise ChatNotFoundError(conversation_id)
+            raise NotFoundError(
+                message="Chat nao encontrado",
+                code="chat_not_found",
+                details={"conversation_id": conversation_id},
+            )
 
         if conversation.user_id != user_id:
-            raise AccessDeniedError("Nao tens permissao para enviar mensagens para este chat.")
+            raise AccessDeniedError(message="Nao tens permissao para enviar mensagens para este chat.")
 
         summary, history = await self.context_service.get_or_load_context(conversation_id)
 

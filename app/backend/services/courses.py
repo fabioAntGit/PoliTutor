@@ -1,4 +1,4 @@
-from app.backend.core.exceptions import AppError, CourseNotFoundError, CourseAlreadyExistsError, CourseInUseError, ValidationError
+from app.backend.core.exceptions import BadRequestError, ConflictError, NotFoundError
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.schemas.course.models import Course
@@ -29,9 +29,15 @@ class CourseService(ICourseService):
 
     async def create_course(self, code: str, name: str, description: str) -> Course:
         if await self.course_repository.find_by_code(code):
-            raise CourseAlreadyExistsError(message="Ja existe uma cadeira com esta sigla")
+            raise ConflictError(
+                message="Ja existe uma cadeira com esta sigla",
+                code="course_already_exists",
+            )
         if await self.course_repository.find_by_name(name):
-            raise CourseAlreadyExistsError(message="Ja existe uma cadeira com este nome")
+            raise ConflictError(
+                message="Ja existe uma cadeira com este nome",
+                code="course_already_exists",
+            )
 
         course = Course(code=code, name=name, description=description)
         await self.course_repository.create(course)
@@ -40,15 +46,22 @@ class CourseService(ICourseService):
     async def update_course(self, code: str, update_data: dict) -> Course:
         course = await self.course_repository.find_by_code(code)
         if course is None:
-            raise CourseNotFoundError(code)
+            raise NotFoundError(
+                message="Cadeira nao encontrada",
+                code="course_not_found",
+                details={"course_code": code},
+            )
 
         if not update_data:
-            raise ValidationError(message="Nenhum campo para atualizar")
+            raise BadRequestError(message="Nenhum campo para atualizar", code="validation_error")
 
         if "name" in update_data and update_data["name"] != course.name:
             existing = await self.course_repository.find_by_name(update_data["name"])
             if existing is not None and existing.code != code:
-                raise CourseAlreadyExistsError(message="Ja existe uma cadeira com este nome")
+                raise ConflictError(
+                    message="Ja existe uma cadeira com este nome",
+                    code="course_already_exists",
+                )
 
         await self.course_repository.update(code, update_data)
         updated = await self.course_repository.find_by_code(code)
@@ -57,15 +70,20 @@ class CourseService(ICourseService):
     async def delete_course(self, code: str) -> None:
         course = await self.course_repository.find_by_code(code)
         if course is None:
-            raise CourseNotFoundError(code)
+            raise NotFoundError(
+                message="Cadeira nao encontrada",
+                code="course_not_found",
+                details={"course_code": code},
+            )
 
         associated = await self.user_repository.count_with_course(code)
         if associated > 0:
-            raise CourseInUseError(
+            raise ConflictError(
                 message=(
                     f"Esta cadeira tem {associated} utilizador(es) associado(s). "
                     "Desassocia-os ou desativa a cadeira antes de eliminar."
-                )
+                ),
+                code="course_in_use",
             )
 
         await self.course_repository.delete(code)

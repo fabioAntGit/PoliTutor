@@ -7,7 +7,7 @@ from app.backend.repositories.interfaces.deletion_repository import IDeletionRep
 from app.backend.services.interfaces.user_service import IUserService
 from app.backend.schemas.user.models import User
 from app.backend.core.validators import validate_and_extract_username
-from app.backend.core.exceptions import AppError, UserNotFoundError, UserAlreadyExistsError, ValidationError
+from app.backend.core.exceptions import BadRequestError, ConflictError, NotFoundError
 from pwdlib import PasswordHash
 
 logger = logging.getLogger(__name__)
@@ -35,20 +35,32 @@ class UserService(IUserService):
         courses: list[str]
     ) -> User:
         if len(password) < 8:
-            raise ValidationError(message="A password deve ter pelo menos 8 caracteres")
+            raise BadRequestError(
+                message="A password deve ter pelo menos 8 caracteres",
+                code="validation_error",
+            )
 
         username = validate_and_extract_username(email)
 
         if await self.user_repository.find_by_email(email):
-            raise UserAlreadyExistsError(message="Ja existe um utilizador com este email")
+            raise ConflictError(
+                message="Ja existe um utilizador com este email",
+                code="user_already_exists",
+            )
         if await self.user_repository.find_by_username(username):
-            raise UserAlreadyExistsError(message="Ja existe um utilizador com este username")
+            raise ConflictError(
+                message="Ja existe um utilizador com este username",
+                code="user_already_exists",
+            )
 
         if courses:
             unique_courses = list(set(courses))
             existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
             if len(existing_courses) != len(unique_courses):
-                raise ValidationError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
+                raise BadRequestError(
+                    message="Uma ou mais cadeiras fornecidas nao existem no sistema",
+                    code="validation_error",
+                )
             courses = unique_courses
 
         password_hash = PasswordHash.recommended()
@@ -74,9 +86,7 @@ class UserService(IUserService):
     async def update_user(self, username: str, update_data: dict) -> User:
         user = await self.get_user(username)
         if not user:
-            raise UserNotFoundError()
-
-        new_username = username
+            raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
         if "email" in update_data and update_data["email"] != user.email:
             new_email = update_data["email"]
@@ -86,12 +96,18 @@ class UserService(IUserService):
 
             existing_email = await self.user_repository.find_by_email(new_email)
             if existing_email:
-                raise UserAlreadyExistsError(message="Este email ja esta em uso por outro utilizador")
+                raise ConflictError(
+                    message="Este email ja esta em uso por outro utilizador",
+                    code="user_already_exists",
+                )
 
             if new_username != username:
                 existing_user = await self.user_repository.find_by_username(new_username)
                 if existing_user:
-                    raise UserAlreadyExistsError(message="Este username (derivado do email) ja esta em uso")
+                    raise ConflictError(
+                        message="Este username (derivado do email) ja esta em uso",
+                        code="user_already_exists",
+                    )
 
         if "courses" in update_data:
             courses = update_data["courses"]
@@ -99,7 +115,10 @@ class UserService(IUserService):
                 unique_courses = list(set(courses))
                 existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
                 if len(existing_courses) != len(unique_courses):
-                    raise ValidationError(message="Uma ou mais cadeiras fornecidas nao existem no sistema")
+                    raise BadRequestError(
+                        message="Uma ou mais cadeiras fornecidas nao existem no sistema",
+                        code="validation_error",
+                    )
                 update_data["courses"] = unique_courses
             else:
                 update_data["courses"] = []
@@ -111,7 +130,7 @@ class UserService(IUserService):
     async def delete_user(self, username: str) -> bool:
         user = await self.get_user(username)
         if not user:
-            raise UserNotFoundError()
+            raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
         chats = await self.chat_repository.get_chats(user.id)
         conversation_ids = [str(chat.id) for chat in chats if chat.id is not None]
@@ -134,14 +153,17 @@ class UserService(IUserService):
     async def change_password(self, username: str, current_password: str, new_password: str) -> User:
         user = await self.get_user(username)
         if not user:
-            raise UserNotFoundError()
+            raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
         password_hash = PasswordHash.recommended()
         if not password_hash.verify(current_password, user.hashed_password):
-            raise ValidationError(message="Password atual incorreta")
+            raise BadRequestError(message="Password atual incorreta", code="validation_error")
 
         if len(new_password) < 8:
-            raise ValidationError(message="A nova password deve ter pelo menos 8 caracteres")
+            raise BadRequestError(
+                message="A nova password deve ter pelo menos 8 caracteres",
+                code="validation_error",
+            )
 
         new_hash = password_hash.hash(new_password)
         await self.user_repository.update(

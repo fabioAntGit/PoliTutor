@@ -5,9 +5,7 @@ import pytest
 
 from app.backend.core.exceptions import (
     AccessDeniedError,
-    ChatNotFoundError,
-    CourseNotFoundError,
-    UserNotFoundError,
+    NotFoundError,
 )
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
@@ -109,25 +107,25 @@ async def test_create_chat_valid_data_returns_conversation_id(service, course_re
     chat_repo.create.assert_awaited_once()
 
 
-async def test_create_chat_course_not_found_throws_course_not_found_error(service, course_repo):
+async def test_create_chat_course_not_found_throws_not_found(service, course_repo):
     course_repo.find_by_code.return_value = None
 
-    with pytest.raises(CourseNotFoundError):
+    with pytest.raises(NotFoundError):
         await service.create_chat("cadeira_falsa", "user1")
 
 
-async def test_create_chat_course_inactive_throws_course_not_found_error(service, course_repo):
+async def test_create_chat_course_inactive_throws_not_found(service, course_repo):
     course_repo.find_by_code.return_value = _make_course(is_active=False)
 
-    with pytest.raises(CourseNotFoundError):
+    with pytest.raises(NotFoundError):
         await service.create_chat("ed", "user1")
 
 
-async def test_create_chat_user_not_found_throws_user_not_found_error(service, course_repo, user_repo):
+async def test_create_chat_user_not_found_throws_not_found(service, course_repo, user_repo):
     course_repo.find_by_code.return_value = _make_course()
     user_repo.find_by_id.return_value = None
 
-    with pytest.raises(UserNotFoundError):
+    with pytest.raises(NotFoundError):
         await service.create_chat("ed", "user_invalido")
 
 
@@ -154,10 +152,10 @@ async def test_get_chat_owner_returns_chat_data(service, chat_repo, course_repo,
     assert messages[0].content == "Olá tutor!"
 
 
-async def test_get_chat_not_found_throws_chat_not_found_error(service, chat_repo):
+async def test_get_chat_not_found_throws_not_found(service, chat_repo):
     chat_repo.get_chat.return_value = None
 
-    with pytest.raises(ChatNotFoundError):
+    with pytest.raises(NotFoundError):
         await service.get_chat("60d5ecb8b4259b3a0c4f1a05", "user1")
 
 
@@ -216,7 +214,7 @@ async def test_delete_chat_not_found_throws_and_deletes_nothing(
 ):
     chat_repo.get_chat.return_value = None
 
-    with pytest.raises(ChatNotFoundError):
+    with pytest.raises(NotFoundError):
         await service.delete_chat("60d5ecb8b4259b3a0c4f1a05", requester_user_id="user1")
 
     report_repo.delete_by_conversation.assert_not_awaited()

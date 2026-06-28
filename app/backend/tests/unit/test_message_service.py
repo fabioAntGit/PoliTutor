@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from app.backend.core.exceptions import AccessDeniedError, ChatNotFoundError
+from app.backend.core.exceptions import AccessDeniedError, NotFoundError
 from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
@@ -129,10 +129,10 @@ async def test_send_message_persists_user_and_assistant_messages_and_returns_rag
     context_service.check_and_trigger_summary.assert_awaited_once_with(CONVERSATION_ID, USER_ID, "ed")
 
 
-async def test_send_message_unknown_chat_raises_chat_not_found(service, chat_repo):
+async def test_send_message_unknown_chat_raises_not_found(service, chat_repo):
     chat_repo.get_chat.return_value = None
 
-    with pytest.raises(ChatNotFoundError):
+    with pytest.raises(NotFoundError):
         await service.send_message(CONVERSATION_ID, "Pergunta?", USER_ID)
 
 

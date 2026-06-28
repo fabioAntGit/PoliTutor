@@ -1,4 +1,4 @@
-from app.backend.core.exceptions import AppError
+from app.backend.core.exceptions import BadRequestError
 
 
 def validate_and_extract_username(email: str) -> str:
@@ -6,6 +6,9 @@ def validate_and_extract_username(email: str) -> str:
     username, separator, domain = email.partition("@")
     is_ipp = domain == base_domain or domain.endswith(f".{base_domain}")
     if not separator or not username or not is_ipp:
-        raise AppError(message=f"O email deve pertencer ao dominio {base_domain}")
+        raise BadRequestError(
+            message=f"O email deve pertencer ao dominio {base_domain}",
+            code="validation_error",
+        )
 
     return username
