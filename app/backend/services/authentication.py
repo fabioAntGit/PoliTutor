@@ -1,5 +1,4 @@
 from app.backend.repositories.interfaces.user_repository import IUserRepository
-from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.services.interfaces.security_service import ISecurityService
 from app.backend.services.interfaces.authentication_service import IAuthenticationService
@@ -13,27 +12,24 @@ class AuthenticationService(IAuthenticationService):
         self,
         user_repository: IUserRepository,
         security_service: ISecurityService,
-        course_repository: ICourseRepository,
         cache_repository: ICacheRepository,
     ) -> None:
         self.user_repository = user_repository
         self.security_service = security_service
-        self.course_repository = course_repository
         self.cache_repository = cache_repository
 
     async def login(self, username: str, password: str) -> str:
         user = await self.user_repository.find_by_username(username)
         if not user:
-            raise AuthError(message="Username ou senha invalidos")
+            raise AuthError(message="Nome de utilizador ou palavra-passe invalidos")
         if not await self.security_service.verify_password(password, user.hashed_password):
-            raise AuthError(message="Username ou senha invalidos")
+            raise AuthError(message="Nome de utilizador ou palavra-passe invalidos")
 
         payload = {
             "id": user.id,
             "username": user.username,
             "full_name": user.full_name,
             "role": user.role.value,
-            "courses": user.courses,
             "must_change_password": user.must_change_password,
         }
 

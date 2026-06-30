@@ -1,17 +1,4 @@
-"""
-Shared fixtures for the backend integration tests.
-
-Strategy: a **real**, ephemeral MongoDB (Testcontainers) starts once per test
-session and is torn down at the end. Each test gets a clean database, so test
-ordering never influences the result.
-
-Two layers build on this:
-- Repository/service tests only need `pymongo` + `testcontainers`.
-- Route tests additionally import the FastAPI app and drive it in-process with
-  an httpx client, overriding the DB/Redis dependencies to point at the test
-  database (never production).
-"""
-
+"""Ephemeral MongoDB and Redis via Testcontainers; one clean DB per test."""
 import os
 
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
@@ -104,7 +91,6 @@ def make_token():
             "username": "prof",
             "full_name": "Prof Example",
             "role": role,
-            "courses": courses or [],
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             **extra,
         }

@@ -26,13 +26,13 @@ export async function createCourse(body: CourseCreateRequest): Promise<CourseRes
 }
 
 export async function updateCourse(
-  code: string,
+  courseId: string,
   body: CourseUpdateRequest,
 ): Promise<CourseResponse> {
-  const res = await api.put<CourseResponse>(`/courses/${code}`, body);
+  const res = await api.put<CourseResponse>(`/courses/${courseId}`, body);
   return res.data;
 }
 
-export async function deleteCourse(code: string): Promise<void> {
-  await api.delete(`/courses/${code}`);
+export async function deleteCourse(courseId: string): Promise<void> {
+  await api.delete(`/courses/${courseId}`);
 }

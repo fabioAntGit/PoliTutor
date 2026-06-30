@@ -2,7 +2,6 @@ import { api } from "@/api/client";
 import type {
   OverviewRead,
   ActivityRead,
-  CoursesRead,
   CourseOverviewRead,
   CourseTopicsRead,
   CourseSourcesRead,
@@ -18,27 +17,22 @@ export async function getActivity(range: "7d" | "30d" | "90d"): Promise<Activity
   return data;
 }
 
-export async function getCourses(): Promise<CoursesRead> {
-  const { data } = await api.get<CoursesRead>("/analytics/courses");
+export async function getCourseOverview(courseId: string): Promise<CourseOverviewRead> {
+  const { data } = await api.get<CourseOverviewRead>(`/analytics/courses/${encodeURIComponent(courseId)}/overview`);
   return data;
 }
 
-export async function getCourseOverview(course: string): Promise<CourseOverviewRead> {
-  const { data } = await api.get<CourseOverviewRead>(`/analytics/courses/${encodeURIComponent(course)}/overview`);
+export async function getCourseActivity(courseId: string, range: "7d" | "30d" | "90d"): Promise<ActivityRead> {
+  const { data } = await api.get<ActivityRead>(`/analytics/courses/${encodeURIComponent(courseId)}/activity`, { params: { range } });
   return data;
 }
 
-export async function getCourseActivity(course: string, range: "7d" | "30d" | "90d"): Promise<ActivityRead> {
-  const { data } = await api.get<ActivityRead>(`/analytics/courses/${encodeURIComponent(course)}/activity`, { params: { range } });
+export async function getCourseTopics(courseId: string): Promise<CourseTopicsRead> {
+  const { data } = await api.get<CourseTopicsRead>(`/analytics/courses/${encodeURIComponent(courseId)}/topics`);
   return data;
 }
 
-export async function getCourseTopics(course: string): Promise<CourseTopicsRead> {
-  const { data } = await api.get<CourseTopicsRead>(`/analytics/courses/${encodeURIComponent(course)}/topics`);
-  return data;
-}
-
-export async function getCourseSources(course: string): Promise<CourseSourcesRead> {
-  const { data } = await api.get<CourseSourcesRead>(`/analytics/courses/${encodeURIComponent(course)}/sources`);
+export async function getCourseSources(courseId: string): Promise<CourseSourcesRead> {
+  const { data } = await api.get<CourseSourcesRead>(`/analytics/courses/${encodeURIComponent(courseId)}/sources`);
   return data;
 }

@@ -1,6 +1,8 @@
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+from bson import ObjectId
 from pwdlib import PasswordHash
 
 from app.backend.core.exceptions import BadRequestError, ConflictError, NotFoundError
@@ -12,22 +14,27 @@ from app.backend.schemas.course.models import Course
 from app.backend.schemas.user.models import User
 from app.backend.services.users import UserService
 
+USER_ID = str(ObjectId())
+ED_ID = str(ObjectId())
+CHAT_ID = str(ObjectId())
+
+
 def _make_user(**kwargs) -> User:
     defaults = dict(
-        id="user1",
+        id=USER_ID,
         email="fabio@estg.ipp.pt",
         username="fabio",
         full_name="Fabio Silva",
         role="student",
         hashed_password="hashed_pw",
-        courses=["ed"],
+        courses=[],
     )
     defaults.update(kwargs)
     return User(**defaults)
 
 
 def _make_course() -> Course:
-    defaults = dict(code="ed", name="Estruturas de Dados", is_active=True)
+    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", is_active=True)
     return Course(**defaults)
 
 @pytest.fixture
@@ -62,15 +69,17 @@ def service(user_repo, course_repo, chat_repo, deletion_repo):
 async def test_create_user_valid_data_returns_user(service, user_repo, course_repo):
     user_repo.find_by_email.return_value = None
     user_repo.find_by_username.return_value = None
-    course_repo.get_courses_by_codes.return_value = [_make_course()]
+    course_repo.get_courses_by_ids.return_value = [_make_course()]
 
     result = await service.create_user(
         email="novo@estg.ipp.pt",
         password="password123",
         full_name="Novo User",
         role="student",
-        courses=["ed"],
+        courses=[ED_ID],
     )
+
+    assert result.courses == [ED_ID]
 
     assert result.username == "novo"
     assert result.email == "novo@estg.ipp.pt"
@@ -118,7 +127,7 @@ async def test_create_user_duplicate_username_throws_conflict(service, user_repo
 async def test_create_user_invalid_courses_throws_bad_request(service, user_repo, course_repo):
     user_repo.find_by_email.return_value = None
     user_repo.find_by_username.return_value = None
-    course_repo.get_courses_by_codes.return_value = []
+    course_repo.get_courses_by_ids.return_value = []
 
     with pytest.raises(BadRequestError, match="cadeiras"):
         await service.create_user(
@@ -126,7 +135,7 @@ async def test_create_user_invalid_courses_throws_bad_request(service, user_repo
             password="password123",
             full_name="Novo",
             role="student",
-            courses=["cadeira_falsa"],
+            courses=[str(ObjectId())],
         )
 
 
@@ -152,12 +161,16 @@ async def test_update_user_not_found_throws_not_found(service, user_repo):
 
 async def test_delete_user_cascades_returns_true(service, user_repo, chat_repo, deletion_repo):
     user_repo.find_by_username.return_value = _make_user()
-    chat_repo.get_chats.return_value = []
+    chat_repo.get_chats.return_value = [SimpleNamespace(id=CHAT_ID)]
 
     result = await service.delete_user("fabio")
 
     assert result is True
-    assert deletion_repo.move_docs.await_count >= 3
+    deletion_repo.move_user_related_docs.assert_awaited_once_with(
+        user_id=USER_ID,
+        username="fabio",
+        conversation_ids=[CHAT_ID],
+    )
 
 
 async def test_change_password_valid_data_returns_user(service, user_repo):

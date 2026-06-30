@@ -7,7 +7,6 @@ from app.backend.schemas.memory.models import MemoryType
 
 class UserMemoryRead(BaseModel):
     id: str
-    course: str
     type: MemoryType
     topic: str
     content: str

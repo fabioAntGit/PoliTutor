@@ -2,7 +2,6 @@ export type MemoryType = "difficulty" | "preference" | "goal" | "progress";
 
 export interface UserMemory {
   id: string;
-  course: string;
   type: MemoryType;
   topic: string;
   content: string;

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Request, status
 from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.course.response import CourseResponse
 from app.backend.schemas.course.request import CourseCreateRequest, CourseUpdateRequest
+from app.backend.schemas.shared.mongo import PyObjectId
 from app.backend.schemas.user.enums import UserRole
 from app.backend.services.interfaces.course_service import ICourseService
 from app.backend.schemas.shared.responses import (
@@ -39,7 +40,7 @@ async def list_courses(
     else:
         user_id = payload.get("id", "")
         courses = await service.list_user_active_courses(user_id)
-    return [CourseResponse.model_validate(c.model_dump()) for c in courses]
+    return [CourseResponse.model_validate(c.model_dump(mode="json")) for c in courses]
 
 
 @router.get(
@@ -59,7 +60,7 @@ async def list_active_courses(
     service: ICourseService = Depends(get_course_service),
 ):
     courses = await service.list_active_courses()
-    return [CourseResponse.model_validate(c.model_dump()) for c in courses]
+    return [CourseResponse.model_validate(c.model_dump(mode="json")) for c in courses]
 
 
 @router.get(
@@ -79,7 +80,7 @@ async def list_all_courses(
     service: ICourseService = Depends(get_course_service),
 ):
     courses = await service.list_all_courses()
-    return [CourseResponse.model_validate(c.model_dump()) for c in courses]
+    return [CourseResponse.model_validate(c.model_dump(mode="json")) for c in courses]
 
 
 @router.post(
@@ -102,11 +103,11 @@ async def create_course(
     service: ICourseService = Depends(get_course_service),
 ):
     course = await service.create_course(body.code, body.name, body.description)
-    return CourseResponse.model_validate(course.model_dump())
+    return CourseResponse.model_validate(course.model_dump(mode="json"))
 
 
 @router.put(
-    "/courses/{code}",
+    "/courses/{course_id}",
     response_model=CourseResponse,
     dependencies=[Depends(require_admin)],
     summary="Update a course",
@@ -122,17 +123,17 @@ async def create_course(
 @limiter.limit("10/minute", key_func=user_key)
 async def update_course(
     request: Request,
-    code: str,
+    course_id: PyObjectId,
     body: CourseUpdateRequest,
     service: ICourseService = Depends(get_course_service),
 ):
     update_data = body.model_dump(exclude_unset=True)
-    course = await service.update_course(code, update_data)
-    return CourseResponse.model_validate(course.model_dump())
+    course = await service.update_course(course_id, update_data)
+    return CourseResponse.model_validate(course.model_dump(mode="json"))
 
 
 @router.delete(
-    "/courses/{code}",
+    "/courses/{course_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_admin)],
     summary="Delete a course",
@@ -147,7 +148,7 @@ async def update_course(
 @limiter.limit("5/minute", key_func=user_key)
 async def delete_course(
     request: Request,
-    code: str,
+    course_id: PyObjectId,
     service: ICourseService = Depends(get_course_service),
 ):
-    await service.delete_course(code)
+    await service.delete_course(course_id)

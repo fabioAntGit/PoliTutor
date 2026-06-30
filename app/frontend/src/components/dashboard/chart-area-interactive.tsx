@@ -32,8 +32,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function ChartAreaInteractive({ course, description }: { course?: string; description?: string } = {}) {
-  const { timeRange, setTimeRange, chartData } = useActivityChart(course)
+export function ChartAreaInteractive({ courseId, description }: { courseId?: string; description?: string } = {}) {
+  const { timeRange, setTimeRange, chartData } = useActivityChart(courseId)
 
   return (
     <Card className="@container/card">

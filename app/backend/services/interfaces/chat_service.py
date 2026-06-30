@@ -7,7 +7,7 @@ from app.backend.schemas.message.models import Message
 
 @runtime_checkable
 class IChatService(Protocol):
-    async def create_chat(self, course_code: str, user_id: str) -> str:
+    async def create_chat(self, course_id: str, user_id: str) -> str:
         ...
 
     async def get_chat(

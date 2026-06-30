@@ -74,11 +74,6 @@ export const AuthService = {
     return (this.getPayload()?.username as string) ?? null;
   },
 
-  getCourses(): string[] {
-    const raw = this.getPayload()?.courses;
-    return Array.isArray(raw) ? (raw as string[]) : [];
-  },
-
   mustChangePassword(): boolean {
     return Boolean(this.getPayload()?.must_change_password);
   },

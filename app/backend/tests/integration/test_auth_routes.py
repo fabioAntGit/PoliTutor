@@ -35,8 +35,10 @@ async def test_login_missing_password_field_returns_422(api_client):
 
 
 async def test_logout_succeeds_and_blacklists_the_token(api_client, db, make_token):
+    from bson import ObjectId
+
     await insert_user(db, username="aluno", role="student")
-    token = make_token(role="student", username="aluno", id="stud-1")
+    token = make_token(role="student", username="aluno", id=str(ObjectId()))
 
     resp = await api_client.post(LOGOUT, json={"access_token": token})
     assert resp.status_code == 200

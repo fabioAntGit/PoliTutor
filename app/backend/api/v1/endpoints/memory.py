@@ -4,6 +4,7 @@ from app.backend.api.deps import get_user_memory_service, require_authenticated
 from app.backend.core.exceptions import NotFoundError
 from app.backend.core.rate_limit import limiter, user_key
 from app.backend.schemas.memory.response import UserMemoryListRead, UserMemoryRead
+from app.backend.schemas.shared.mongo import PyObjectId
 from app.backend.schemas.shared.responses import not_found, unauthorized
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
 
@@ -20,14 +21,25 @@ router = APIRouter()
 @limiter.limit("20/minute", key_func=user_key)
 async def list_memories(
     request: Request,
-    course: str,
+    course_id: PyObjectId,
     payload: dict = Depends(require_authenticated),
     service: IUserMemoryService = Depends(get_user_memory_service),
 ):
     user_id = payload["id"]
-    memories = await service.list_memories(user_id, course)
+    memories = await service.list_memories(user_id, course_id)
     return UserMemoryListRead(
-        memories=[UserMemoryRead.model_validate(m.model_dump()) for m in memories],
+        memories=[
+            UserMemoryRead(
+                id=m.id,
+                type=m.type,
+                topic=m.topic,
+                content=m.content,
+                importance=m.importance,
+                last_seen_at=m.last_seen_at,
+                created_at=m.created_at,
+            )
+            for m in memories
+        ],
         total=len(memories),
     )
 

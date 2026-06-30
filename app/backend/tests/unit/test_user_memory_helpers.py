@@ -13,9 +13,9 @@ _TTL_7D = 7 * 24 * 3600
 def _memory(**kwargs) -> UserMemory:
     now = datetime.now(timezone.utc)
     defaults = dict(
-        id="mem_1",
-        user_id="u1",
-        course="Math",
+        id="60d5ecb8b4259b3a0c4f0001",
+        user_id="60d5ecb8b4259b3a0c4f0002",
+        course_id="60d5ecb8b4259b3a0c4f0003",
         type="goal",
         topic="exam",
         content="wants to pass the exam",

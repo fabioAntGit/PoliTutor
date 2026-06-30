@@ -37,14 +37,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof AppShellSid
               </>
             ) : courses.length === 0 ? null : (
               courses.map((course) => {
-                const url = `/dashboard/courses/${encodeURIComponent(course)}`
+                const url = `/dashboard/courses/${course.id}`
                 const isActive = pathname === url
                 return (
-                  <SidebarMenuItem key={course}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={course}>
+                  <SidebarMenuItem key={course.id}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={course.name}>
                       <NavLink to={url}>
                         <BookOpenIcon />
-                        <span>{course}</span>
+                        <span className="uppercase">{course.code}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

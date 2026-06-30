@@ -9,6 +9,7 @@ import { useCourseDashboard } from "@/hooks/dashboard/useCourseDashboard"
 export default function CourseDashboardPage() {
   const {
     courseId,
+    courseCode,
     status,
     isLoading,
     overview,
@@ -26,7 +27,7 @@ export default function CourseDashboardPage() {
           <div className="text-center">
             <h1 className="text-lg font-semibold">Cadeira não encontrada</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              A cadeira <span className="font-mono font-medium">"{courseId}"</span> não existe ou ainda não tem dados.
+              Esta cadeira não existe ou ainda não tem dados.
             </p>
           </div>
           <Button variant="outline" onClick={goToOverview}>
@@ -43,15 +44,15 @@ export default function CourseDashboardPage() {
 
       <div className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight truncate">
-            {courseId?.toUpperCase()}
+          <h1 className="text-xl font-semibold tracking-tight truncate uppercase">
+            {courseCode}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">Análise individual da cadeira</p>
         </div>
 
         <SectionCards data={overview} variant="course" />
 
-        <ChartAreaInteractive course={courseId} description="Evolução das perguntas dos alunos nesta cadeira" />
+        <ChartAreaInteractive courseId={courseId} description="Evolução das perguntas dos alunos nesta cadeira" />
 
         <div className="grid grid-cols-1 gap-6 @3xl/main:grid-cols-2">
           <RankedListCard

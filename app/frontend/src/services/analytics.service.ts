@@ -2,7 +2,6 @@ import * as analyticsApi from "@/api/analytics";
 import type {
   OverviewRead,
   ActivityRead,
-  CoursesRead,
   CourseOverviewRead,
   CourseTopicsRead,
   CourseSourcesRead,
@@ -17,23 +16,19 @@ export const AnalyticsService = {
     return analyticsApi.getActivity(range);
   },
 
-  async getCourses(): Promise<CoursesRead> {
-    return analyticsApi.getCourses();
+  async getCourseOverview(courseId: string): Promise<CourseOverviewRead> {
+    return analyticsApi.getCourseOverview(courseId);
   },
 
-  async getCourseOverview(course: string): Promise<CourseOverviewRead> {
-    return analyticsApi.getCourseOverview(course);
+  async getCourseActivity(courseId: string, range: "7d" | "30d" | "90d"): Promise<ActivityRead> {
+    return analyticsApi.getCourseActivity(courseId, range);
   },
 
-  async getCourseActivity(course: string, range: "7d" | "30d" | "90d"): Promise<ActivityRead> {
-    return analyticsApi.getCourseActivity(course, range);
+  async getCourseTopics(courseId: string): Promise<CourseTopicsRead> {
+    return analyticsApi.getCourseTopics(courseId);
   },
 
-  async getCourseTopics(course: string): Promise<CourseTopicsRead> {
-    return analyticsApi.getCourseTopics(course);
-  },
-
-  async getCourseSources(course: string): Promise<CourseSourcesRead> {
-    return analyticsApi.getCourseSources(course);
+  async getCourseSources(courseId: string): Promise<CourseSourcesRead> {
+    return analyticsApi.getCourseSources(courseId);
   },
 };

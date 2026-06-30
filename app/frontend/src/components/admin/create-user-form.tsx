@@ -95,15 +95,15 @@ export default function CreateUserForm() {
               name="courses"
               control={control}
               render={({ field }) => {
-                const available = courses.filter((c) => !field.value.includes(c.code));
-                const selected = courses.filter((c) => field.value.includes(c.code));
+                const available = courses.filter((c) => !field.value.includes(c.id));
+                const selected = courses.filter((c) => field.value.includes(c.id));
                 return (
                   <div className="space-y-2">
                     <Select
                       key={field.value.length}
-                      onValueChange={(code) => {
-                        if (code && !field.value.includes(code)) {
-                          field.onChange([...field.value, code]);
+                      onValueChange={(id) => {
+                        if (id && !field.value.includes(id)) {
+                          field.onChange([...field.value, id]);
                         }
                       }}
                     >
@@ -117,7 +117,7 @@ export default function CreateUserForm() {
                           </div>
                         ) : (
                           available.map((course) => (
-                            <SelectItem key={course.code} value={course.code}>
+                            <SelectItem key={course.id} value={course.id}>
                               <span className="font-mono text-xs uppercase mr-1">
                                 {course.code}
                               </span>
@@ -132,7 +132,7 @@ export default function CreateUserForm() {
                       <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 border rounded-md">
                         {selected.map((course) => (
                           <span
-                            key={course.code}
+                            key={course.id}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full"
                           >
                             <span className="font-mono uppercase">{course.code}</span>
@@ -141,7 +141,7 @@ export default function CreateUserForm() {
                             <button
                               type="button"
                               onClick={() =>
-                                field.onChange(field.value.filter((c) => c !== course.code))
+                                field.onChange(field.value.filter((c) => c !== course.id))
                               }
                               className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
                               aria-label={`Remover ${course.name}`}

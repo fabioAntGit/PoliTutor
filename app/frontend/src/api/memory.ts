@@ -1,9 +1,9 @@
 import { api } from "@/api/client";
 import type { UserMemoryListRead } from "@/types/memory";
 
-export async function listMemories(course: string): Promise<UserMemoryListRead> {
+export async function listMemories(courseId: string): Promise<UserMemoryListRead> {
   const { data } = await api.get<UserMemoryListRead>("/memory", {
-    params: { course },
+    params: { course_id: courseId },
   });
   return data;
 }

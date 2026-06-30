@@ -1,4 +1,3 @@
-from enum import Enum
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
@@ -11,7 +10,7 @@ class Source(BaseModel):
 
 class Message(BaseModel):
     id: PyObjectId | None = Field(alias="_id", default=None)
-    conversation_id: str = Field(pattern=r"^[0-9a-fA-F]{24}$", max_length=24)
+    conversation_id: PyObjectId
     role: Role
     content: str = Field(min_length=1)
     sources: list[Source] = Field(default_factory=list)

@@ -15,7 +15,7 @@ const MAX_CHARS = 1500;
 interface NewChatComposerProps {
   courses: CourseResponse[];
   selectedCourse: string;
-  onCourseChange: (code: string) => void;
+  onCourseChange: (courseId: string) => void;
   input: string;
   onInputChange: (value: string) => void;
   onSubmit: () => void;
@@ -85,7 +85,7 @@ export function NewChatComposer({
             </SelectTrigger>
             <SelectContent position="popper" side="top" align="end">
               {courses.map((course) => (
-                <SelectItem key={course.code} value={course.code}>
+                <SelectItem key={course.id} value={course.id}>
                   {course.name}
                 </SelectItem>
               ))}

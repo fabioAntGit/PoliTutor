@@ -1,35 +1,31 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from bson import ObjectId
 
 from app.backend.core.exceptions import AuthError
-from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.repositories.interfaces.user_repository import IUserRepository
-from app.backend.schemas.course.models import Course
 from app.backend.schemas.user.models import User
 from app.backend.services.authentication import AuthenticationService
 from app.backend.services.interfaces.security_service import ISecurityService
 
+USER_ID = str(ObjectId())
+
+
 def _make_user(**kwargs) -> User:
     defaults = dict(
-        id="user123",
+        id=USER_ID,
         email="fabio@estg.ipp.pt",
         username="fabio",
         full_name="Fabio Silva",
         role="student",
         hashed_password="hashed_pw",
-        courses=["ed"],
+        courses=[],
         must_change_password=False,
     )
     defaults.update(kwargs)
     return User(**defaults)
-
-
-def _make_course(**kwargs) -> Course:
-    defaults = dict(code="ed", name="Estruturas de Dados", is_active=True)
-    defaults.update(kwargs)
-    return Course(**defaults)
 
 
 @pytest.fixture
@@ -43,21 +39,15 @@ def security():
 
 
 @pytest.fixture
-def course_repo():
-    return AsyncMock(spec=ICourseRepository)
-
-
-@pytest.fixture
 def redis_repo():
     return AsyncMock(spec=ICacheRepository)
 
 
 @pytest.fixture
-def service(user_repo, security, course_repo, redis_repo):
+def service(user_repo, security, redis_repo):
     return AuthenticationService(
         user_repository=user_repo,
         security_service=security,
-        course_repository=course_repo,
         cache_repository=redis_repo,
     )
 

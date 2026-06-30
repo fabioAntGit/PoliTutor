@@ -37,18 +37,7 @@ class ActivityRead(BaseModel):
     )
 
 
-class CoursesRead(BaseModel):
-    data: list[str] = Field(
-        description="Course codes the caller is allowed to inspect.",
-        examples=[["ed", "poo", "paw"]],
-    )
-
-
 class CourseOverviewRead(BaseModel):
-    course: str = Field(
-        description="Course code these metrics refer to.",
-        examples=["ed"],
-    )
     total_conversations: int = Field(
         description="Total number of conversations started in this course.",
         examples=[64],
@@ -79,10 +68,6 @@ class TopicPoint(BaseModel):
 
 
 class CourseTopicsRead(BaseModel):
-    course: str = Field(
-        description="Course code these topics refer to.",
-        examples=["ed"],
-    )
     topics: list[TopicPoint] = Field(
         description="Topics ordered from most to least frequent.",
     )
@@ -100,10 +85,6 @@ class SourcePoint(BaseModel):
 
 
 class CourseSourcesRead(BaseModel):
-    course: str = Field(
-        description="Course code these sources refer to.",
-        examples=["ed"],
-    )
     sources: list[SourcePoint] = Field(
         description="Sources ordered from most to least referenced.",
     )

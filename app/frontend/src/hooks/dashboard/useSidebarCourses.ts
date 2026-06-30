@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { AnalyticsService } from "@/services/analytics.service";
+import { CourseService } from "@/services/course.service";
+import type { CourseResponse } from "@/types/course";
 
 export function useSidebarCourses() {
-  const [courses, setCourses] = useState<string[] | null>(null);
+  const [courses, setCourses] = useState<CourseResponse[] | null>(null);
 
   useEffect(() => {
-    AnalyticsService.getCourses()
-      .then((data) => setCourses(data.data))
+    CourseService.listCourses()
+      .then(setCourses)
       .catch(() => setCourses([]));
   }, []);
 

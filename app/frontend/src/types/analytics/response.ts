@@ -14,12 +14,7 @@ export interface ActivityRead {
   data: ActivityPoint[];
 }
 
-export interface CoursesRead {
-  data: string[];
-}
-
 export interface CourseOverviewRead {
-  course: string;
   total_conversations: number;
   active_students: number;
   total_messages: number;
@@ -32,7 +27,6 @@ export interface TopicPoint {
 }
 
 export interface CourseTopicsRead {
-  course: string;
   topics: TopicPoint[];
 }
 
@@ -42,6 +36,5 @@ export interface SourcePoint {
 }
 
 export interface CourseSourcesRead {
-  course: string;
   sources: SourcePoint[];
 }

@@ -26,13 +26,23 @@ class UserService(IUserService):
         self.chat_repository = chat_repository
         self.deletion_repository = deletion_repository
 
+    async def _validate_courses_exist(self, course_ids: list[str]) -> list[str]:
+        unique = list(set(course_ids))
+        existing = await self.course_repository.get_courses_by_ids(unique)
+        if len(existing) != len(unique):
+            raise BadRequestError(
+                message="Uma ou mais cadeiras fornecidas nao existem no sistema",
+                code="validation_error",
+            )
+        return unique
+
     async def create_user(
         self,
         email: str,
         password: str,
         full_name: str,
         role: str,
-        courses: list[str]
+        courses: list[str],
     ) -> User:
         if len(password) < 8:
             raise BadRequestError(
@@ -53,15 +63,7 @@ class UserService(IUserService):
                 code="user_already_exists",
             )
 
-        if courses:
-            unique_courses = list(set(courses))
-            existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
-            if len(existing_courses) != len(unique_courses):
-                raise BadRequestError(
-                    message="Uma ou mais cadeiras fornecidas nao existem no sistema",
-                    code="validation_error",
-                )
-            courses = unique_courses
+        course_ids = await self._validate_courses_exist(courses) if courses else []
 
         password_hash = PasswordHash.recommended()
         hashed_password = password_hash.hash(password)
@@ -70,7 +72,7 @@ class UserService(IUserService):
             email=email,
             full_name=full_name,
             role=role,
-            courses=courses,
+            courses=course_ids,
             hashed_password=hashed_password,
             username=username,
         )
@@ -84,7 +86,7 @@ class UserService(IUserService):
         return await self.user_repository.find_all()
 
     async def update_user(self, username: str, update_data: dict) -> User:
-        user = await self.get_user(username)
+        user = await self.user_repository.find_by_username(username)
         if not user:
             raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
@@ -111,47 +113,30 @@ class UserService(IUserService):
 
         if "courses" in update_data:
             courses = update_data["courses"]
-            if courses:
-                unique_courses = list(set(courses))
-                existing_courses = await self.course_repository.get_courses_by_codes(unique_courses)
-                if len(existing_courses) != len(unique_courses):
-                    raise BadRequestError(
-                        message="Uma ou mais cadeiras fornecidas nao existem no sistema",
-                        code="validation_error",
-                    )
-                update_data["courses"] = unique_courses
-            else:
-                update_data["courses"] = []
+            update_data["courses"] = await self._validate_courses_exist(courses) if courses else []
 
         await self.user_repository.update(username, update_data)
 
         return user.model_copy(update=update_data)
 
     async def delete_user(self, username: str) -> bool:
-        user = await self.get_user(username)
+        user = await self.user_repository.find_by_username(username)
         if not user:
             raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
         chats = await self.chat_repository.get_chats(user.id)
-        conversation_ids = [str(chat.id) for chat in chats if chat.id is not None]
-
-        if conversation_ids:
-            await self.deletion_repository.move_docs(
-                "messages", {"conversation_id": {"$in": conversation_ids}}
-            )
-            await self.deletion_repository.move_docs(
-                "reports", {"conversation_id": {"$in": conversation_ids}}
-            )
-
-        await self.deletion_repository.move_docs("chats", {"user_id": user.id})
-        await self.deletion_repository.move_docs("user_memory", {"user_id": user.id})
-        await self.deletion_repository.move_docs("users", {"username": user.username})
+        conversation_ids = [chat.id for chat in chats if chat.id is not None]
+        await self.deletion_repository.move_user_related_docs(
+            user_id=user.id,
+            username=user.username,
+            conversation_ids=conversation_ids,
+        )
 
         logger.info("Account deleted: username=%s id=%s", user.username, user.id)
         return True
 
     async def change_password(self, username: str, current_password: str, new_password: str) -> User:
-        user = await self.get_user(username)
+        user = await self.user_repository.find_by_username(username)
         if not user:
             raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 

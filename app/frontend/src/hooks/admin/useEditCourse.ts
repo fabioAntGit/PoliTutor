@@ -14,8 +14,8 @@ export function useEditCourse(course: CourseResponse | null, onSaved: () => void
       description: c.description,
       is_active: c.is_active,
     }),
-    update: (c, data) => CourseService.updateCourse(c.code, data),
-    remove: (c) => CourseService.deleteCourse(c.code),
+    update: (c, data) => CourseService.updateCourse(c.id, data),
+    remove: (c) => CourseService.deleteCourse(c.id),
     updateErrorMessage: "Erro ao atualizar cadeira.",
     deleteErrorMessage: "Erro ao eliminar cadeira.",
   });

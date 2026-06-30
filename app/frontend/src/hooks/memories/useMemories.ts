@@ -21,7 +21,7 @@ export function useMemories() {
       .then((mine) => {
         setCourses(mine);
         if (mine.length > 0) {
-          setSelectedCourse(mine[0].code);
+          setSelectedCourse(mine[0].id);
         }
       })
       .catch(() => {

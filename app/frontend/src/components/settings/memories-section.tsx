@@ -52,7 +52,7 @@ export function MemoriesSection() {
                 </SelectTrigger>
                 <SelectContent position="popper" side="bottom" align="start">
                   {courses.map((course) => (
-                    <SelectItem key={course.code} value={course.code}>
+                    <SelectItem key={course.id} value={course.id}>
                       {course.name}
                     </SelectItem>
                   ))}

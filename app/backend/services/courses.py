@@ -21,7 +21,7 @@ class CourseService(ICourseService):
         user = await self.user_repository.find_by_id(user_id)
         if not user or not user.courses:
             return []
-        courses = await self.course_repository.get_courses_by_codes(user.courses)
+        courses = await self.course_repository.get_courses_by_ids(user.courses)
         return [c for c in courses if c.is_active]
 
     async def list_all_courses(self) -> list[Course]:
@@ -40,16 +40,16 @@ class CourseService(ICourseService):
             )
 
         course = Course(code=code, name=name, description=description)
-        await self.course_repository.create(course)
+        course.id = await self.course_repository.create(course)
         return course
 
-    async def update_course(self, code: str, update_data: dict) -> Course:
-        course = await self.course_repository.find_by_code(code)
+    async def update_course(self, course_id: str, update_data: dict) -> Course:
+        course = await self.course_repository.find_by_id(course_id)
         if course is None:
             raise NotFoundError(
                 message="Cadeira nao encontrada",
                 code="course_not_found",
-                details={"course_code": code},
+                details={"course_id": course_id},
             )
 
         if not update_data:
@@ -57,26 +57,25 @@ class CourseService(ICourseService):
 
         if "name" in update_data and update_data["name"] != course.name:
             existing = await self.course_repository.find_by_name(update_data["name"])
-            if existing is not None and existing.code != code:
+            if existing is not None and existing.id != course_id:
                 raise ConflictError(
                     message="Ja existe uma cadeira com este nome",
                     code="course_already_exists",
                 )
 
-        await self.course_repository.update(code, update_data)
-        updated = await self.course_repository.find_by_code(code)
-        return updated
+        await self.course_repository.update(course_id, update_data)
+        return await self.course_repository.find_by_id(course_id)
 
-    async def delete_course(self, code: str) -> None:
-        course = await self.course_repository.find_by_code(code)
+    async def delete_course(self, course_id: str) -> None:
+        course = await self.course_repository.find_by_id(course_id)
         if course is None:
             raise NotFoundError(
                 message="Cadeira nao encontrada",
                 code="course_not_found",
-                details={"course_code": code},
+                details={"course_id": course_id},
             )
 
-        associated = await self.user_repository.count_with_course(code)
+        associated = await self.user_repository.count_with_course(course.id)
         if associated > 0:
             raise ConflictError(
                 message=(
@@ -86,4 +85,4 @@ class CourseService(ICourseService):
                 code="course_in_use",
             )
 
-        await self.course_repository.delete(code)
+        await self.course_repository.delete(course_id)

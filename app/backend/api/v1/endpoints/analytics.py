@@ -14,7 +14,6 @@ from app.backend.schemas.analytics.response import (
     CourseOverviewRead,
     CourseSourcesRead,
     CourseTopicsRead,
-    CoursesRead,
     OverviewRead,
     SourcePoint,
     TopicPoint,
@@ -82,33 +81,7 @@ async def get_activity(
 
 
 @router.get(
-    "/analytics/courses",
-    response_model=CoursesRead,
-    summary="List accessible courses",
-    response_description="Course codes the caller is allowed to inspect.",
-    responses={
-        **unauthorized(),
-        **forbidden("Caller is not a teacher or admin."),
-    },
-)
-@limiter.limit("20/minute", key_func=user_key)
-async def list_courses(
-    request: Request,
-    course_filter: list[str] = Depends(analytics_scope()),
-    service: IAnalyticsService = Depends(get_analytics_service),
-):
-    """Return the active course codes available to the caller.
-
-    Admins receive every active course, teachers receive only the active
-    courses assigned to their account. Used to populate the dashboard's course
-    selector.
-    """
-    data = await service.get_courses(course_filter=course_filter)
-    return CoursesRead(data=data)
-
-
-@router.get(
-    "/analytics/courses/{course}/overview",
+    "/analytics/courses/{course_id}/overview",
     response_model=CourseOverviewRead,
     summary="Overview metrics for a single course",
     response_description="Usage totals scoped to one course.",
@@ -121,19 +94,19 @@ async def list_courses(
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_overview(
     request: Request,
-    course: str = Depends(analytics_scope(per_course=True)),
+    course_id: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
     """Return headline metrics for one specific course.
 
-    Mirrors ``/analytics/overview`` but restricted to the given course code.
+    Mirrors ``/analytics/overview`` but restricted to the given course.
     """
-    data = await service.get_course_overview(course)
-    return CourseOverviewRead(course=course, **data)
+    data = await service.get_course_overview(course_id)
+    return CourseOverviewRead(**data)
 
 
 @router.get(
-    "/analytics/courses/{course}/activity",
+    "/analytics/courses/{course_id}/activity",
     response_model=ActivityRead,
     summary="Question activity over time for a single course",
     response_description="Daily count of student questions for one course.",
@@ -146,20 +119,20 @@ async def get_course_overview(
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_activity(
     request: Request,
-    course: str = Depends(analytics_scope(per_course=True)),
+    course_id: str = Depends(analytics_scope(per_course=True)),
     range: Literal["7d", "30d", "90d"] = RANGE_QUERY,
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
     """Return the daily question time series for one specific course.
 
-    Like ``/analytics/activity`` but scoped to the given course code.
+    Like ``/analytics/activity`` but scoped to the given course.
     """
-    data = await service.get_course_activity(course, range)
+    data = await service.get_course_activity(course_id, range)
     return ActivityRead(data=[ActivityPoint(**point) for point in data])
 
 
 @router.get(
-    "/analytics/courses/{course}/topics",
+    "/analytics/courses/{course_id}/topics",
     response_model=CourseTopicsRead,
     summary="Most frequent topics for a course",
     response_description="Top topics ranked by how often students asked about them.",
@@ -172,7 +145,7 @@ async def get_course_activity(
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_topics(
     request: Request,
-    course: str = Depends(analytics_scope(per_course=True)),
+    course_id: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
     """Return the most frequently discussed topics for one course.
@@ -180,12 +153,12 @@ async def get_course_topics(
     Each entry pairs a topic label with the number of times it was raised,
     ordered from most to least frequent.
     """
-    topics = await service.get_course_topics(course)
-    return CourseTopicsRead(course=course, topics=[TopicPoint(**topic) for topic in topics])
+    topics = await service.get_course_topics(course_id)
+    return CourseTopicsRead(topics=[TopicPoint(**topic) for topic in topics])
 
 
 @router.get(
-    "/analytics/courses/{course}/sources",
+    "/analytics/courses/{course_id}/sources",
     response_model=CourseSourcesRead,
     summary="Most referenced sources for a course",
     response_description="Source documents ranked by how often they were cited.",
@@ -198,7 +171,7 @@ async def get_course_topics(
 @limiter.limit("20/minute", key_func=user_key)
 async def get_course_sources(
     request: Request,
-    course: str = Depends(analytics_scope(per_course=True)),
+    course_id: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
     """Return the source documents most often cited in tutor answers.
@@ -206,5 +179,5 @@ async def get_course_sources(
     Each entry pairs a source filename with its reference count, ordered from
     most to least referenced.
     """
-    sources = await service.get_course_sources(course)
-    return CourseSourcesRead(course=course, sources=[SourcePoint(**source) for source in sources])
+    sources = await service.get_course_sources(course_id)
+    return CourseSourcesRead(sources=[SourcePoint(**source) for source in sources])

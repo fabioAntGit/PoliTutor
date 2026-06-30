@@ -91,12 +91,12 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                 name="courses"
                 control={control}
                 render={({ field }) => {
-                  const selectedCodes = new Set(field.value);
-                  const knownSelected = courses.filter((c) => selectedCodes.has(c.code));
+                  const selectedIds = new Set(field.value);
+                  const knownSelected = courses.filter((c) => selectedIds.has(c.id));
                   const unknownSelected = field.value.filter(
-                    (code) => !courses.some((c) => c.code === code),
+                    (id) => !courses.some((c) => c.id === id),
                   );
-                  const available = courses.filter((c) => !selectedCodes.has(c.code));
+                  const available = courses.filter((c) => !selectedIds.has(c.id));
                   return (
                     <div className="space-y-2">
                       <div className="rounded-md border bg-muted/30 p-2 min-h-[2.5rem]">
@@ -108,7 +108,7 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                           <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                             {knownSelected.map((course) => (
                               <span
-                                key={course.code}
+                                key={course.id}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full"
                               >
                                 <span className="font-mono uppercase">{course.code}</span>
@@ -117,7 +117,7 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    field.onChange(field.value.filter((c) => c !== course.code))
+                                    field.onChange(field.value.filter((c) => c !== course.id))
                                   }
                                   className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
                                   aria-label={`Remover ${course.name}`}
@@ -126,20 +126,20 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                                 </button>
                               </span>
                             ))}
-                            {unknownSelected.map((code) => (
+                            {unknownSelected.map((id) => (
                               <span
-                                key={code}
+                                key={id}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full"
                                 title="Cadeira inexistente ou inativa"
                               >
-                                <span className="font-mono uppercase">{code}</span>
+                                <span className="font-mono">{id}</span>
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    field.onChange(field.value.filter((c) => c !== code))
+                                    field.onChange(field.value.filter((c) => c !== id))
                                   }
                                   className="hover:bg-foreground/10 rounded-full p-0.5 transition-colors"
-                                  aria-label={`Remover ${code}`}
+                                  aria-label={`Remover ${id}`}
                                 >
                                   <X className="size-3" />
                                 </button>
@@ -151,9 +151,9 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
 
                       <Select
                         key={field.value.length}
-                        onValueChange={(code) => {
-                          if (code && !selectedCodes.has(code)) {
-                            field.onChange([...field.value, code]);
+                        onValueChange={(id) => {
+                          if (id && !selectedIds.has(id)) {
+                            field.onChange([...field.value, id]);
                           }
                         }}
                         disabled={available.length === 0}
@@ -169,7 +169,7 @@ export default function EditUserDialog({ user, courses, onClose, onSaved }: Edit
                         </SelectTrigger>
                         <SelectContent position="popper" align="start" className="max-h-60">
                           {available.map((course) => (
-                            <SelectItem key={course.code} value={course.code}>
+                            <SelectItem key={course.id} value={course.id}>
                               <span className="font-mono text-xs uppercase mr-1">
                                 {course.code}
                               </span>

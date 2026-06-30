@@ -92,7 +92,6 @@ async def change_password(
         "username": user.username,
         "full_name": user.full_name,
         "role": user.role.value,
-        "courses": user.courses,
         "must_change_password": user.must_change_password,
     }
     access_token = await security_service.create_access_token(new_payload)

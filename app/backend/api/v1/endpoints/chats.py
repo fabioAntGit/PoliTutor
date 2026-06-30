@@ -31,7 +31,7 @@ async def create_chat(
     service: IChatService = Depends(get_chat_service)
 ):
     conversation_id = await service.create_chat(
-        course_code=body.course_code,
+        course_id=body.course_id,
         user_id=payload["id"],
     )
     return ChatCreated(conversation_id=conversation_id)
@@ -85,10 +85,7 @@ async def get_chat(
     )
     return ChatRead(
         conversation_id=str(chat.id),
-        course_code=course.code,
         course_name=course.name,
-        user_id=chat.user_id,
-        summary=chat.summary,
         messages=messages,
     )
 

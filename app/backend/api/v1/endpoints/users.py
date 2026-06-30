@@ -60,7 +60,7 @@ async def list_users(
     service: IUserService = Depends(get_user_service),
 ):
     users = await service.get_users()
-    return [UserResponse.model_validate(u.model_dump()) for u in users]
+    return users
 
 
 @router.post(
@@ -90,7 +90,7 @@ async def create_user(
         role=body.role.value,
         courses=body.courses,
     )
-    return UserResponse.model_validate(user.model_dump())
+    return user
 
 
 @router.get(
@@ -114,7 +114,7 @@ async def get_user(
     user = await service.get_user(username)
     if not user:
         raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
-    return UserResponse.model_validate(user.model_dump())
+    return user
 
 
 @router.put(
@@ -138,11 +138,11 @@ async def update_user(
     body: UserUpdateRequest,
     service: IUserService = Depends(get_user_service),
 ):
-    update_data = body.model_dump(exclude_unset=True)
+    update_data = body.model_dump(exclude_unset=True, mode="json")
     if not update_data:
         raise BadRequestError(message="Nenhum campo para atualizar", code="validation_error")
     user = await service.update_user(username, update_data)
-    return UserResponse.model_validate(user.model_dump())
+    return user
 
 
 @router.delete(

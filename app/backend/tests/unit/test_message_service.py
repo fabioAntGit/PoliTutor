@@ -1,12 +1,15 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from bson import ObjectId
 
 from app.backend.core.exceptions import AccessDeniedError, NotFoundError
 from app.backend.repositories.interfaces.cache_repository import ICacheRepository
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
+from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.schemas.chat.models import Chat
+from app.backend.schemas.course.models import Course
 from app.backend.schemas.message.enums import Role
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
@@ -16,7 +19,9 @@ from contracts.rag.models import TutorResponse, TutorSource
 
 
 CONVERSATION_ID = "60d5ecb8b4259b3a0c4f1a01"
-USER_ID = "user-1"
+USER_ID = str(ObjectId())
+OTHER_USER_ID = str(ObjectId())
+ED_ID = str(ObjectId())
 USER_MESSAGE_ID = "60d5ecb8b4259b3a0c4f1a02"
 ASSISTANT_MESSAGE_ID = "60d5ecb8b4259b3a0c4f1a03"
 
@@ -24,12 +29,18 @@ ASSISTANT_MESSAGE_ID = "60d5ecb8b4259b3a0c4f1a03"
 def _make_chat(**kwargs) -> Chat:
     defaults = dict(
         _id=CONVERSATION_ID,
-        course="ed",
+        course_id=ED_ID,
         user_id=USER_ID,
         summary=None,
     )
     defaults.update(kwargs)
     return Chat(**defaults)
+
+
+def _make_course(**kwargs) -> Course:
+    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", is_active=True)
+    defaults.update(kwargs)
+    return Course(**defaults)
 
 
 @pytest.fixture
@@ -40,6 +51,13 @@ def message_repo():
 @pytest.fixture
 def chat_repo():
     return AsyncMock(spec=IChatRepository)
+
+
+@pytest.fixture
+def course_repo():
+    repo = AsyncMock(spec=ICourseRepository)
+    repo.find_by_id.return_value = _make_course()
+    return repo
 
 
 @pytest.fixture
@@ -63,10 +81,11 @@ def rag_engine():
 
 
 @pytest.fixture
-def service(message_repo, chat_repo, cache_repo, context_service, user_memory_service, rag_engine):
+def service(message_repo, chat_repo, course_repo, cache_repo, context_service, user_memory_service, rag_engine):
     return MessageService(
         message_repository=message_repo,
         chat_repository=chat_repo,
+        course_repository=course_repo,
         cache_repository=cache_repo,
         context_service=context_service,
         user_memory_service=user_memory_service,
@@ -104,7 +123,7 @@ async def test_send_message_persists_user_and_assistant_messages_and_returns_rag
 
     chat_repo.get_chat.assert_awaited_once_with(CONVERSATION_ID)
     context_service.get_or_load_context.assert_awaited_once_with(CONVERSATION_ID)
-    user_memory_service.get_context_for_prompt.assert_awaited_once_with(USER_ID, "ed")
+    user_memory_service.get_context_for_prompt.assert_awaited_once_with(USER_ID, ED_ID)
     rag_engine.ask.assert_called_once_with(
         "ed",
         "O que e uma lista ligada?",
@@ -126,7 +145,7 @@ async def test_send_message_persists_user_and_assistant_messages_and_returns_rag
     cache_repo.add_message.assert_any_await(user_msg)
     cache_repo.add_message.assert_any_await(assistant_msg)
     chat_repo.touch.assert_awaited_once_with(CONVERSATION_ID)
-    context_service.check_and_trigger_summary.assert_awaited_once_with(CONVERSATION_ID, USER_ID, "ed")
+    context_service.check_and_trigger_summary.assert_awaited_once_with(CONVERSATION_ID, USER_ID, ED_ID)
 
 
 async def test_send_message_unknown_chat_raises_not_found(service, chat_repo):
@@ -137,7 +156,7 @@ async def test_send_message_unknown_chat_raises_not_found(service, chat_repo):
 
 
 async def test_send_message_wrong_owner_raises_access_denied(service, chat_repo):
-    chat_repo.get_chat.return_value = _make_chat(user_id="other-user")
+    chat_repo.get_chat.return_value = _make_chat(user_id=OTHER_USER_ID)
 
     with pytest.raises(AccessDeniedError):
         await service.send_message(CONVERSATION_ID, "Pergunta?", USER_ID)

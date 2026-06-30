@@ -50,19 +50,16 @@ class AnalyticsService(IAnalyticsService):
             "avg_questions_per_conversation": avg_questions,
         }
 
-    async def get_courses(self, course_filter: list[str] | None = None) -> list[str]:
-        return await self.repo.get_courses(course_filter=course_filter)
+    async def get_course_overview(self, course_id: str) -> dict:
+        return await self.repo.get_course_overview(course_id)
 
-    async def get_course_overview(self, course: str) -> dict:
-        return await self.repo.get_course_overview(course)
-
-    async def get_course_activity(self, course: str, range_param: Literal["7d", "30d", "90d"]) -> list[dict]:
+    async def get_course_activity(self, course_id: str, range_param: Literal["7d", "30d", "90d"]) -> list[dict]:
         days = _DAYS_MAP[range_param]
-        raw = await self.repo.get_course_activity(course, days)
+        raw = await self.repo.get_course_activity(course_id, days)
         return _fill_activity_dates(raw, days)
 
-    async def get_course_topics(self, course: str) -> list[dict]:
-        concepts = await self.repo.get_course_concepts(course)
+    async def get_course_topics(self, course_id: str) -> list[dict]:
+        concepts = await self.repo.get_course_concepts(course_id)
 
         if not concepts:
             return []
@@ -70,5 +67,5 @@ class AnalyticsService(IAnalyticsService):
         counter = Counter(c.strip().lower() for c in concepts if c)
         return [{"topic": topic, "count": count} for topic, count in counter.most_common(15)]
 
-    async def get_course_sources(self, course: str) -> list[dict]:
-        return await self.repo.get_course_sources(course)
+    async def get_course_sources(self, course_id: str) -> list[dict]:
+        return await self.repo.get_course_sources(course_id)

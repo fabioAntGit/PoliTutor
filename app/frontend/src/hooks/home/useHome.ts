@@ -24,7 +24,7 @@ export function useHome() {
         setCourses(mine);
         setChats(chatsData);
         if (mine.length > 0) {
-          setSelectedCourse(mine[0].code);
+          setSelectedCourse(mine[0].id);
         }
       })
       .catch(() => {
@@ -50,7 +50,7 @@ export function useHome() {
 
     setSubmitting(true);
     try {
-      const chat = await ChatService.createChat({ course_code: selectedCourse });
+      const chat = await ChatService.createChat({ course_id: selectedCourse });
       navigate(`/chat/${chat.conversation_id}`, {
         state: { initialMessage: trimmed },
       });

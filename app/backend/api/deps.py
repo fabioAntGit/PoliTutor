@@ -108,8 +108,9 @@ def get_security_service() -> ISecurityService:
 def get_user_memory_service(
     repo: IUserMemoryRepository = Depends(get_user_memory_repository),
     model_client: IModelClient = Depends(get_model_client),
+    course_repository: ICourseRepository = Depends(get_course_repository),
 ) -> IUserMemoryService:
-    return UserMemoryService(repo=repo, model_client=model_client)
+    return UserMemoryService(repo=repo, model_client=model_client, course_repository=course_repository)
 
 
 def get_analytics_service(
@@ -142,6 +143,7 @@ def get_rag_engine() -> IRagEngine:
 def get_message_service(
     message_repository: IMessageRepository = Depends(get_message_repository),
     chat_repository: IChatRepository = Depends(get_chat_repository),
+    course_repository: ICourseRepository = Depends(get_course_repository),
     cache_repository: ICacheRepository = Depends(get_cache_repository),
     context_service: IContextService = Depends(get_context_service),
     user_memory_service: IUserMemoryService = Depends(get_user_memory_service),
@@ -150,6 +152,7 @@ def get_message_service(
     return MessageService(
         message_repository=message_repository,
         chat_repository=chat_repository,
+        course_repository=course_repository,
         cache_repository=cache_repository,
         context_service=context_service,
         user_memory_service=user_memory_service,
@@ -198,13 +201,11 @@ def get_report_service(
 def get_authentication_service(
     user_repository: IUserRepository = Depends(get_user_repository),
     security_service: ISecurityService = Depends(get_security_service),
-    course_repository: ICourseRepository = Depends(get_course_repository),
     cache_repository: ICacheRepository = Depends(get_cache_repository),
 ) -> IAuthenticationService:
     return AuthenticationService(
         user_repository=user_repository,
         security_service=security_service,
-        course_repository=course_repository,
         cache_repository=cache_repository,
     )
 
@@ -274,32 +275,38 @@ require_teacher_or_admin = require_role(UserRole.TEACHER, UserRole.ADMIN)
 
 
 async def _analytics_course_scope(
-    course: str,
+    course_id: str,
     payload: dict = Depends(require_teacher_or_admin),
     repo: ICourseRepository = Depends(get_course_repository),
+    user_repo: IUserRepository = Depends(get_user_repository),
 ) -> str:
-    found = await repo.find_by_code(course)
+    found = await repo.find_by_id(course_id)
     if found is None or not found.is_active:
         raise NotFoundError(
             message="Cadeira nao encontrada",
             code="course_not_found",
-            details={"course_code": course},
+            details={"course_id": course_id},
         )
     if payload.get("role") != UserRole.ADMIN.value:
-        if course not in (payload.get("courses") or []):
+        user = await user_repo.find_by_id(payload.get("id", ""))
+        if user is None or found.id not in user.courses:
             raise AccessDeniedError(message="Não tens acesso a esta cadeira.")
-    return course
+    return course_id
 
 
 async def _analytics_filter_scope(
     payload: dict = Depends(require_teacher_or_admin),
     repo: ICourseRepository = Depends(get_course_repository),
+    user_repo: IUserRepository = Depends(get_user_repository),
 ) -> list[str]:
-    active_codes = {c.code for c in await repo.get_active_courses()}
+    active = await repo.get_active_courses()
     if payload.get("role") == UserRole.ADMIN.value:
-        return sorted(active_codes)
-    user_courses = set(payload.get("courses") or [])
-    return sorted(user_courses & active_codes)
+        return sorted(c.id for c in active)
+    user = await user_repo.find_by_id(payload.get("id", ""))
+    if user is None:
+        return []
+    active_ids = {c.id for c in active}
+    return sorted(cid for cid in user.courses if cid in active_ids)
 
 
 def analytics_scope(per_course: bool = False):

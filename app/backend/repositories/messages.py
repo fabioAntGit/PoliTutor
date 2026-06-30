@@ -19,29 +19,29 @@ class MessageRepository(IMessageRepository):
 
     async def get_previous_message(self, message_id: str, conversation_id: str) -> Message | None:
         query = {
-            "conversation_id": conversation_id,
+            "conversation_id": ObjectId(conversation_id),
             "_id": {"$lt": ObjectId(message_id)}
         }
         document = await self.collection.find_one(query, sort=[("_id", -1)])
         return Message.model_validate(document) if document else None
 
     async def get_messages(self, conversation_id: str) -> list[Message]:
-        query = self.collection.find({"conversation_id": conversation_id}).sort("_id", 1)
+        query = self.collection.find({"conversation_id": ObjectId(conversation_id)}).sort("_id", 1)
         documents = await query.to_list(length=None)
         return [Message.model_validate(document) for document in documents]
 
     async def get_recent_messages(self, conversation_id: str, limit: int = 16) -> list[Message]:
-        query = self.collection.find({"conversation_id": conversation_id}).sort("_id", -1)
+        query = self.collection.find({"conversation_id": ObjectId(conversation_id)}).sort("_id", -1)
         documents = await query.to_list(length=limit)
         documents.reverse()
         return [Message.model_validate(document) for document in documents]
 
     async def get_number_of_messages_after_summary(self, conversation_id: str, last_summarized_message_id: str | None) -> int:
         if not last_summarized_message_id:
-            return await self.collection.count_documents({"conversation_id": conversation_id})
+            return await self.collection.count_documents({"conversation_id": ObjectId(conversation_id)})
 
         query_filter = {
-            "conversation_id": conversation_id,
+            "conversation_id": ObjectId(conversation_id),
             "_id": {"$gt": ObjectId(last_summarized_message_id)}
         }
         return await self.collection.count_documents(query_filter)
@@ -54,5 +54,5 @@ class MessageRepository(IMessageRepository):
         return result.modified_count > 0
 
     async def delete_by_conversation(self, conversation_id: str) -> int:
-        result = await self.collection.delete_many({"conversation_id": conversation_id})
+        result = await self.collection.delete_many({"conversation_id": ObjectId(conversation_id)})
         return result.deleted_count

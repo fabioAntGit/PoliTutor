@@ -28,6 +28,7 @@ export default function UserList() {
     refresh,
   } = useUsers();
   const [editing, setEditing] = useState<UserResponse | null>(null);
+  const courseCodeById = new Map(courses.map((c) => [c.id, c.code] as const));
 
   return (
     <div className="space-y-4">
@@ -67,7 +68,7 @@ export default function UserList() {
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   {user.courses.length > 0 && (
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono uppercase">
-                      {user.courses.join(" · ")}
+                      {user.courses.map((id) => courseCodeById.get(id)).filter(Boolean).join(" · ")}
                     </p>
                   )}
                 </div>

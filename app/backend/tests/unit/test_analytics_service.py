@@ -30,18 +30,6 @@ async def test_get_overview_maps_repo_values(service, repo):
     assert result["avg_questions_per_conversation"] == 5.0
 
 
-async def test_get_courses_wraps_repo_list(service, repo):
-    repo.get_courses.return_value = ["Math", "Physics"]
-    result = await service.get_courses()
-    assert result == ["Math", "Physics"]
-
-
-async def test_get_courses_empty_list(service, repo):
-    repo.get_courses.return_value = []
-    result = await service.get_courses()
-    assert result == []
-
-
 @pytest.mark.parametrize("range_param,expected_days", [("7d", 7), ("30d", 30), ("90d", 90)])
 async def test_get_activity_translates_range_to_days(service, repo, range_param, expected_days):
     repo.get_activity.return_value = []

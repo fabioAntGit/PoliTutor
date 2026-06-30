@@ -46,7 +46,7 @@ class ContextService(IContextService):
 
         return summary, self._format_history_structured(messages)
 
-    async def check_and_trigger_summary(self, conversation_id: str, user_id: str, course: str) -> None:
+    async def check_and_trigger_summary(self, conversation_id: str, user_id: str, course_id: str) -> None:
         count = await self.cache_repository.get_message_count(conversation_id)
         if count < SUMMARIZATION_THRESHOLD:
             return
@@ -62,13 +62,13 @@ class ContextService(IContextService):
             return
 
         logger.info("Triggering background summary for conversation %s (count=%d)", conversation_id, count)
-        run_in_background(self._summarize(conversation_id, user_id, course, summary_old, messages))
+        run_in_background(self._summarize(conversation_id, user_id, course_id, summary_old, messages))
 
     async def _summarize(
         self,
         conversation_id: str,
         user_id: str,
-        course: str,
+        course_id: str,
         summary_old: str | None,
         messages: list[Message],
     ) -> None:
@@ -94,7 +94,7 @@ class ContextService(IContextService):
             await self.cache_repository.reset_message_count(conversation_id)
             logger.info("Summary updated for conversation %s", conversation_id)
 
-            run_in_background(self.user_memory_service.extract_and_upsert(user_id, course, new_summary))
+            run_in_background(self.user_memory_service.extract_and_upsert(user_id, course_id, new_summary))
         except Exception as e:
             logger.error("Failed to generate summary for conversation %s: %s", conversation_id, e)
         finally:

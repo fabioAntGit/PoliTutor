@@ -53,7 +53,7 @@ export default function CourseList() {
           <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
             {paginatedCourses.map((course) => (
               <div
-                key={course.code}
+                key={course.id}
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
               >
                 <div className="min-w-0 flex-1">

@@ -48,10 +48,13 @@ async def seed() -> None:
     teacher_id = ObjectId()
     student_id = ObjectId()
     admin_id = ObjectId()
+    course_id = ObjectId()
+    second_course_id = ObjectId()
 
     await db["courses"].insert_many(
         [
             {
+                "_id": course_id,
                 "code": COURSE_CODE,
                 "name": COURSE_NAME,
                 "description": "E2E test course.",
@@ -59,6 +62,7 @@ async def seed() -> None:
                 "created_at": now,
             },
             {
+                "_id": second_course_id,
                 "code": SECOND_COURSE_CODE,
                 "name": SECOND_COURSE_NAME,
                 "description": "E2E course nobody is enrolled in.",
@@ -77,7 +81,7 @@ async def seed() -> None:
                 "role": "teacher",
                 "hashed_password": _password_hash.hash(TEACHER_PASSWORD),
                 "full_name": "Professor de Teste",
-                "courses": [COURSE_CODE],
+                "courses": [course_id],
                 "must_change_password": False,
                 "created_at": now,
                 "updated_at": now,
@@ -89,7 +93,7 @@ async def seed() -> None:
                 "role": "student",
                 "hashed_password": _password_hash.hash(STUDENT_PASSWORD),
                 "full_name": "Aluno de Teste",
-                "courses": [COURSE_CODE],
+                "courses": [course_id],
                 "must_change_password": False,
                 "created_at": now,
                 "updated_at": now,
@@ -125,8 +129,8 @@ async def seed() -> None:
         chat_docs.append(
             {
                 "_id": chat_id,
-                "course": COURSE_CODE,
-                "user_id": str(student_id),
+                "course_id": course_id,
+                "user_id": student_id,
                 "summary": json.dumps({"concept_tags": chat_concepts[day_offset]}),
                 "created_at": created,
                 "updated_at": created,
@@ -141,7 +145,7 @@ async def seed() -> None:
                         sources.append({"filename": secondary_source, "pages": [3]})
                 message_docs.append(
                     {
-                        "conversation_id": str(chat_id),
+                        "conversation_id": chat_id,
                         "role": role,
                         "content": f"{role} message {day_offset}-{i}",
                         "sources": sources,
@@ -156,9 +160,9 @@ async def seed() -> None:
     await db["user_memory"].insert_many(
         [
             {
-                "_id": str(ObjectId()),
-                "user_id": str(student_id),
-                "course": COURSE_CODE,
+                "_id": ObjectId(),
+                "user_id": student_id,
+                "course_id": course_id,
                 "type": "difficulty",
                 "topic": "Listas ligadas",
                 "content": "Tem dificuldade em inserir no meio de uma lista ligada.",
@@ -167,9 +171,9 @@ async def seed() -> None:
                 "created_at": now,
             },
             {
-                "_id": str(ObjectId()),
-                "user_id": str(student_id),
-                "course": COURSE_CODE,
+                "_id": ObjectId(),
+                "user_id": student_id,
+                "course_id": course_id,
                 "type": "preference",
                 "topic": "Exemplos",
                 "content": "Prefere explicações com exemplos de código.",
@@ -178,9 +182,9 @@ async def seed() -> None:
                 "created_at": now,
             },
             {
-                "_id": str(ObjectId()),
-                "user_id": str(student_id),
-                "course": COURSE_CODE,
+                "_id": ObjectId(),
+                "user_id": student_id,
+                "course_id": course_id,
                 "type": "preference",
                 "topic": "Descartavel",
                 "content": "Memoria descartavel para o teste de remocao.",

@@ -3,7 +3,7 @@ import { useIsMobile } from "@/hooks/common/useMobile";
 import { AnalyticsService } from "@/services/analytics.service";
 import type { ActivityPoint, Range } from "@/types/analytics";
 
-export function useActivityChart(course?: string) {
+export function useActivityChart(courseId?: string) {
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = useState<Range>("30d");
   const [chartData, setChartData] = useState<ActivityPoint[] | null>(null);
@@ -14,13 +14,13 @@ export function useActivityChart(course?: string) {
 
   useEffect(() => {
     setChartData(null);
-    const request = course
-      ? AnalyticsService.getCourseActivity(course, timeRange)
+    const request = courseId
+      ? AnalyticsService.getCourseActivity(courseId, timeRange)
       : AnalyticsService.getActivity(timeRange);
     request
       .then((json) => setChartData(json.data))
       .catch(() => setChartData([]));
-  }, [timeRange, course]);
+  }, [timeRange, courseId]);
 
   return { timeRange, setTimeRange, chartData };
 }

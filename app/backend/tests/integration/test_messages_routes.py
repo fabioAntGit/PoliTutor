@@ -1,8 +1,14 @@
+from bson import ObjectId
+
 from app.backend.api.deps import get_rag_engine
 from app.backend.main import app
 from contracts.rag.models import TutorResponse, TutorSource
 
-from .factories import insert_chat
+from .factories import insert_chat, insert_course
+
+STUD = str(ObjectId())
+OWNER = str(ObjectId())
+OTHER = str(ObjectId())
 
 
 class StubRagEngine:
@@ -43,12 +49,13 @@ async def test_send_message_student_receives_answer_and_persists_messages(
 ):
     rag = StubRagEngine()
     app.dependency_overrides[get_rag_engine] = lambda: rag
-    chat_id = await insert_chat(db, course="ed", user_id="stud-1")
+    ed_id = await insert_course(db, code="ed")
+    chat_id = await insert_chat(db, course_id=ed_id, user_id=STUD)
 
     resp = await api_client.post(
         f"/api/v1/chat/{chat_id}/messages",
         json={"question": "O que e uma lista ligada?"},
-        headers=auth_header(role="student", id="stud-1"),
+        headers=auth_header(role="student", id=STUD),
     )
 
     assert resp.status_code == 200
@@ -70,7 +77,7 @@ async def test_send_message_student_receives_answer_and_persists_messages(
         }
     ]
 
-    messages = await db["messages"].find({"conversation_id": chat_id}).sort("_id", 1).to_list(length=None)
+    messages = await db["messages"].find({"conversation_id": ObjectId(chat_id)}).sort("_id", 1).to_list(length=None)
     assert [(m["role"], m["content"]) for m in messages] == [
         ("user", "O que e uma lista ligada?"),
         ("assistant", "Resposta de teste."),
@@ -84,13 +91,14 @@ async def test_send_message_cannot_access_another_students_chat(
     auth_header,
 ):
     app.dependency_overrides[get_rag_engine] = lambda: StubRagEngine()
-    chat_id = await insert_chat(db, course="ed", user_id="owner")
+    ed_id = await insert_course(db, code="ed")
+    chat_id = await insert_chat(db, course_id=ed_id, user_id=OWNER)
 
     resp = await api_client.post(
         f"/api/v1/chat/{chat_id}/messages",
         json={"question": "O que e uma lista ligada?"},
-        headers=auth_header(role="student", id="other-student"),
+        headers=auth_header(role="student", id=OTHER),
     )
 
     assert resp.status_code == 403
-    assert await db["messages"].count_documents({"conversation_id": chat_id}) == 0
+    assert await db["messages"].count_documents({"conversation_id": ObjectId(chat_id)}) == 0

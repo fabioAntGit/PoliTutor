@@ -28,27 +28,27 @@ class ChatService(IChatService):
         self.message_repository = message_repository
         self.report_repository = report_repository
 
-    async def create_chat(self, course_code: str, user_id: str) -> str:
-        course = await self.course_repository.find_by_code(course_code)
+    async def create_chat(self, course_id: str, user_id: str) -> str:
+        course = await self.course_repository.find_by_id(course_id)
 
         if course is None or not course.is_active:
             raise NotFoundError(
                 message="Cadeira nao encontrada",
                 code="course_not_found",
-                details={"course_code": course_code},
+                details={"course_id": course_id},
             )
 
         user = await self.user_repository.find_by_id(user_id)
         if user is None:
             raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
-        if course.code not in user.courses:
+        if course.id not in user.courses:
             raise AccessDeniedError(
                 message="Não tens permissão para criar conversas nesta cadeira."
             )
 
         chat = Chat(
-            course=course.code,
+            course_id=course.id,
             user_id=user_id,
         )
 
@@ -69,13 +69,13 @@ class ChatService(IChatService):
         if chat.user_id != requester_user_id:
             raise AccessDeniedError(message="Nao tens permissao para aceder a este chat.")
 
-        course = await self.course_repository.find_by_code(chat.course)
+        course = await self.course_repository.find_by_id(chat.course_id)
 
         if course is None or not course.is_active:
             raise NotFoundError(
                 message="Cadeira nao encontrada",
                 code="course_not_found",
-                details={"course_code": chat.course},
+                details={"course_id": chat.course_id},
             )
 
         messages = await self.message_repository.get_messages(conversation_id)
@@ -102,14 +102,14 @@ class ChatService(IChatService):
     async def list_user_chats(self, user_id: str) -> list[tuple[Chat, Course]]:
         chats = await self.chat_repository.get_chats(user_id)
 
-        course_codes = list({chat.course for chat in chats})
-        courses = await self.course_repository.get_courses_by_codes(course_codes)
-        active_by_code = {course.code: course for course in courses if course.is_active}
+        course_ids = list({chat.course_id for chat in chats})
+        courses = await self.course_repository.get_courses_by_ids(course_ids)
+        active_by_id = {course.id: course for course in courses if course.is_active}
 
         items = [
-            (chat, active_by_code[chat.course])
+            (chat, active_by_id[chat.course_id])
             for chat in chats
-            if chat.course in active_by_code
+            if chat.course_id in active_by_id
         ]
 
         items.sort(key=lambda item: item[0].updated_at, reverse=True)

@@ -20,8 +20,9 @@ test.describe("Teacher dashboard", () => {
   });
 
   test("course page shows the course metrics", async ({ page }) => {
-    await page.goto("/dashboard/courses/ed");
-
+    await page.goto("/dashboard");
+    await page.getByRole("button", { name: "Toggle Sidebar" }).click();
+    await page.getByRole("link", { name: "ed", exact: true }).click();
     await expect(page.getByRole("heading", { name: "ED" })).toBeVisible();
     await expect(page.getByText("Cadeira não encontrada")).toHaveCount(0);
     await expect(card(page, "Total de Conversas")).toContainText("3");
@@ -29,7 +30,9 @@ test.describe("Teacher dashboard", () => {
   });
 
   test("course page highlights top concepts and sources", async ({ page }) => {
-    await page.goto("/dashboard/courses/ed");
+    await page.goto("/dashboard");
+    await page.getByRole("button", { name: "Toggle Sidebar" }).click();
+    await page.getByRole("link", { name: "ed", exact: true }).click();
 
     const concepts = rankedCard(page, "Conceitos em Destaque");
     await expect(concepts).toContainText("listas ligadas");
