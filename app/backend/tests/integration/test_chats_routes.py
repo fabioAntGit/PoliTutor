@@ -94,9 +94,11 @@ async def test_get_chat_returns_own_chat(api_client, db, auth_header):
 
 
 async def test_get_chat_cannot_access_another_users_chat(api_client, db, auth_header):
-    chat_id = await insert_chat(db, course="ed", user_id="someone-else")
+    ed_id = await insert_course(db, code="ed")
+    chat_id = await insert_chat(db, course_id=ed_id, user_id=OTHER)
 
     resp = await api_client.get(
+        f"{CREATE}/{chat_id}", headers=auth_header(role="student", id=STUD_1)
     )
 
     assert resp.status_code == 403
@@ -104,6 +106,7 @@ async def test_get_chat_cannot_access_another_users_chat(api_client, db, auth_he
 
 async def test_get_chat_unknown_returns_404(api_client, auth_header):
     resp = await api_client.get(
+        f"{CREATE}/{UNKNOWN_ID}", headers=auth_header(role="student", id=STUD_1)
     )
 
     assert resp.status_code == 404
