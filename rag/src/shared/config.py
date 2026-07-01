@@ -55,7 +55,11 @@ VALID_SOURCE_TYPES = set(CHUNKING_STRATEGIES.keys()) - {"default"}
 
 # Benchmark-selected embedding model; ingestion and retrieval must match.
 EMBEDDING_MODEL = "BAAI/bge-m3"
-EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+EMBEDDING_DEVICE = (
+    "cuda"
+    if torch.cuda.is_available()
+    else ("mps" if torch.backends.mps.is_available() else "cpu")
+)
 EMBEDDING_NORMALIZE = True
 
 OPENROUTER_MODEL_IMAGE_SUMMARIZATION = "google/gemini-2.5-flash-lite"
