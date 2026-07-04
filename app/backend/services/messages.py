@@ -74,6 +74,7 @@ class MessageService(IMessageService):
             summary,
             history,
             memory_context or "",
+            course.scope,
         )
 
         assistant_msg = Message(

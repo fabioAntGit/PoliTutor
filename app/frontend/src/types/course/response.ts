@@ -2,6 +2,6 @@ export interface CourseResponse {
   id: string;
   code: string;
   name: string;
-  description: string;
+  scope: string;
   is_active: boolean;
 }

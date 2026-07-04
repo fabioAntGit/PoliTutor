@@ -35,7 +35,7 @@ def _memory(**kwargs) -> UserMemory:
 
 
 def _course() -> Course:
-    return Course(_id=COURSE_ID, code=COURSE_CODE, name="Math", is_active=True)
+    return Course(_id=COURSE_ID, code=COURSE_CODE, name="Math", scope="", is_active=True)
 
 
 @pytest.fixture

@@ -10,7 +10,7 @@ export function useCreateCourse() {
 
   const form = useForm<CreateCourseFormValues>({
     resolver: zodResolver(createCourseSchema),
-    defaultValues: { code: "", name: "", description: "" },
+    defaultValues: { code: "", name: "", scope: "" },
   });
 
   const onSubmit = async (data: CreateCourseFormValues) => {

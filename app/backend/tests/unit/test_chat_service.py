@@ -27,7 +27,7 @@ CHAT_ID = "60d5ecb8b4259b3a0c4f1a01"
 
 
 def _make_course(**kwargs) -> Course:
-    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", is_active=True)
+    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", scope="", is_active=True)
     defaults.update(kwargs)
     return Course(**defaults)
 

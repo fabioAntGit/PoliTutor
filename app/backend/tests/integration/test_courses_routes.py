@@ -6,7 +6,7 @@ COURSES = "/api/v1/courses"
 async def test_create_course_requires_admin(api_client, auth_header):
     resp = await api_client.post(
         COURSES,
-        json={"code": "ed", "name": "Estruturas de Dados"},
+        json={"code": "ed", "name": "Estruturas de Dados", "scope": "Listas, pilhas, filas, árvores e grafos."},
         headers=auth_header(role="student"),
     )
     assert resp.status_code == 403
@@ -15,22 +15,33 @@ async def test_create_course_requires_admin(api_client, auth_header):
 async def test_create_course_admin_creates_course(api_client, auth_header):
     resp = await api_client.post(
         COURSES,
-        json={"code": "ed", "name": "Estruturas de Dados"},
+        json={"code": "ed", "name": "Estruturas de Dados", "scope": "Listas, pilhas, filas, árvores e grafos."},
         headers=auth_header(role="admin"),
     )
 
     assert resp.status_code == 201
     body = resp.json()
     assert body["code"] == "ed"
+    assert body["scope"] == "Listas, pilhas, filas, árvores e grafos."
     assert body["is_active"] is True
 
 
+async def test_create_course_empty_scope_returns_422(api_client, auth_header):
+    resp = await api_client.post(
+        COURSES,
+        json={"code": "ed", "name": "Estruturas de Dados", "scope": ""},
+        headers=auth_header(role="admin"),
+    )
+
+    assert resp.status_code == 422
+
+
 async def test_create_course_duplicate_code_returns_409(api_client, db, auth_header):
-    await insert_course(db, code="ed", name="Estruturas de Dados")
+    await insert_course(db, code="ed", name="Estruturas de Dados", scope="Listas e árvores.")
 
     resp = await api_client.post(
         COURSES,
-        json={"code": "ed", "name": "Outro Nome"},
+        json={"code": "ed", "name": "Outro Nome", "scope": "Outro âmbito."},
         headers=auth_header(role="admin"),
     )
 

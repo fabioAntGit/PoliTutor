@@ -34,7 +34,7 @@ def _make_user(**kwargs) -> User:
 
 
 def _make_course() -> Course:
-    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", is_active=True)
+    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", scope="", is_active=True)
     return Course(**defaults)
 
 @pytest.fixture

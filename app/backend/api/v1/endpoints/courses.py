@@ -102,7 +102,7 @@ async def create_course(
     body: CourseCreateRequest,
     service: ICourseService = Depends(get_course_service),
 ):
-    course = await service.create_course(body.code, body.name, body.description)
+    course = await service.create_course(body.code, body.name, body.scope)
     return CourseResponse.model_validate(course.model_dump(mode="json"))
 
 

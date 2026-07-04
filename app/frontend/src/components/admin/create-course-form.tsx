@@ -30,10 +30,11 @@ export default function CreateCourseForm() {
       />
 
       <FormField
-        id="description"
-        label="Descrição (opcional)"
-        placeholder="Breve descrição da cadeira"
-        {...register("description")}
+        id="scope"
+        label="Âmbito"
+        placeholder="Ex: Listas, pilhas, filas, árvores e grafos."
+        error={errors.scope?.message}
+        {...register("scope")}
       />
 
       <FormRootError message={errors.root?.message} />

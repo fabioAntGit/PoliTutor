@@ -47,8 +47,6 @@ def test_naive_datetime_treated_as_utc():
     assert _decayed_importance(5.0, naive_last_seen, _TTL_7D, now) == 5.0
 
 
-
-
 def test_extracted_memory_rejects_invalid_type():
     with pytest.raises(ValidationError):
         ExtractedMemory(type="bogus", topic="x", content="y", importance=5)

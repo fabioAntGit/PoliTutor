@@ -22,6 +22,7 @@ class StubRagEngine:
         summary: str = "",
         history: list[dict] | None = None,
         memory: str = "",
+        course_scope: str = "",
     ) -> TutorResponse:
         self.calls.append(
             {
@@ -30,6 +31,7 @@ class StubRagEngine:
                 "summary": summary,
                 "history": history,
                 "memory": memory,
+                "course_scope": course_scope,
             }
         )
         return TutorResponse(
@@ -73,6 +75,7 @@ async def test_send_message_student_receives_answer_and_persists_messages(
             "summary": None,
             "history": [],
             "memory": "",
+            "course_scope": "",
         }
     ]
 

@@ -55,6 +55,7 @@ def generate(
     history: list[dict] | None = None,
     is_retrieval_fallback: bool = False,
     memory: str = "",
+    course_scope: str = "",
     model_client: IModelClient | None = None,
 ) -> TutorResponse:
     """Generate the final tutor answer and fallback flags."""
@@ -70,6 +71,7 @@ def generate(
     system_content = TUTOR_SYSTEM_PROMPT.format(
         student_memory=memory,
         rag_context=context,
+        course_scope=course_scope,
     )
     messages = build_messages(system_content, summary, history, query)
 

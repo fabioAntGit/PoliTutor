@@ -12,6 +12,7 @@ class IRagEngine(Protocol):
         summary: str = "",
         history: list[dict] | None = None,
         memory: str = "",
+        course_scope: str = "",
     ) -> TutorResponse:
         ...
 

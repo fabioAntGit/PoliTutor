@@ -27,7 +27,7 @@ class CourseService(ICourseService):
     async def list_all_courses(self) -> list[Course]:
         return await self.course_repository.get_all_courses()
 
-    async def create_course(self, code: str, name: str, description: str) -> Course:
+    async def create_course(self, code: str, name: str, scope: str) -> Course:
         if await self.course_repository.find_by_code(code):
             raise ConflictError(
                 message="Ja existe uma cadeira com esta sigla",
@@ -39,7 +39,7 @@ class CourseService(ICourseService):
                 code="course_already_exists",
             )
 
-        course = Course(code=code, name=name, description=description)
+        course = Course(code=code, name=name, scope=scope)
         course.id = await self.course_repository.create(course)
         return course
 

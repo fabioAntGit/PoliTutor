@@ -8,10 +8,10 @@ export function useEditCourse(course: CourseResponse | null, onSaved: () => void
     entity: course,
     onSaved,
     schema: editCourseSchema,
-    defaultValues: { name: "", description: "", is_active: true },
+    defaultValues: { name: "", scope: "", is_active: true },
     toFormValues: (c) => ({
       name: c.name,
-      description: c.description,
+      scope: c.scope,
       is_active: c.is_active,
     }),
     update: (c, data) => CourseService.updateCourse(c.id, data),

@@ -32,6 +32,7 @@ class RagEngine(IRagEngine):
         summary: str = "",
         history: list[dict] | None = None,
         memory: str = "",
+        course_scope: str = "",
     ) -> TutorResponse:
         """Run guardrails, retrieval, generation, and output guardrails."""
         query, blocked = apply_input_guardrails(query)
@@ -47,6 +48,7 @@ class RagEngine(IRagEngine):
             history,
             is_retrieval_fallback=results.is_empty(),
             memory=memory,
+            course_scope=course_scope,
             model_client=self._model_client,
         )
 

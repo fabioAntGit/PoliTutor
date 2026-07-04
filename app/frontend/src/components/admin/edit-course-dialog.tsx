@@ -50,10 +50,10 @@ export default function EditCourseDialog({ course, onClose, onSaved }: EditCours
             />
 
             <FormField
-              id="edit-course-description"
-              label="Descrição"
-              error={errors.description?.message}
-              {...register("description")}
+              id="edit-course-scope"
+              label="Âmbito"
+              error={errors.scope?.message}
+              {...register("scope")}
             />
 
             <Controller

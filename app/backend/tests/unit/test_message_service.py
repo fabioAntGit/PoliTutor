@@ -38,7 +38,9 @@ def _make_chat(**kwargs) -> Chat:
 
 
 def _make_course(**kwargs) -> Course:
-    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", is_active=True)
+    defaults = dict(
+        _id=ED_ID, code="ed", name="Estruturas de Dados", scope="Listas, pilhas, filas, árvores e grafos.", is_active=True
+    )
     defaults.update(kwargs)
     return Course(**defaults)
 
@@ -130,6 +132,7 @@ async def test_send_message_persists_user_and_assistant_messages_and_returns_rag
         "previous summary",
         [{"role": "user", "content": "earlier question"}],
         "student memory",
+        "Listas, pilhas, filas, árvores e grafos.",
     )
 
     assert user_msg.id == USER_MESSAGE_ID

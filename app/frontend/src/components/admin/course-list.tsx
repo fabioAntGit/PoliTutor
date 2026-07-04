@@ -68,9 +68,9 @@ export default function CourseList() {
                       </span>
                     )}
                   </div>
-                  {course.description && (
+                  {course.scope && (
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      {course.description}
+                      {course.scope}
                     </p>
                   )}
                 </div>

@@ -40,11 +40,12 @@ async def insert_course(
     *,
     code: str,
     name: str | None = None,
+    scope: str = "",
     is_active: bool = True,
 ) -> str:
     """Insert a course and return its id as a string."""
     result = await db["courses"].insert_one(
-        {"code": code, "name": name or code.upper(), "description": "", "is_active": is_active}
+        {"code": code, "name": name or code.upper(), "scope": scope, "is_active": is_active}
     )
     return str(result.inserted_id)
 

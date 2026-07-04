@@ -32,6 +32,7 @@ test.describe("Admin dashboard", () => {
 
     await page.getByLabel("Código").fill(code);
     await page.getByLabel("Nome").fill(name);
+    await page.getByLabel("Âmbito").fill("Âmbito de teste");
     await page.locator("form").getByRole("button", { name: "Criar cadeira" }).click();
 
     await expect(page.getByText("Cadeira criada com sucesso")).toBeVisible();
