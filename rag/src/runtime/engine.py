@@ -53,10 +53,14 @@ class RagEngine(IRagEngine):
         return apply_output_guardrail(response)
 
     def preload_models(self) -> None:
+        from ..shared.config import RERANKER_MODEL
         from ..shared.embedding import get_embedder
         from .reranker import get_reranker
         get_embedder()
-        get_reranker()
+        if RERANKER_MODEL:
+            get_reranker(RERANKER_MODEL)
+        else:
+            logger.info("Reranker disabled; skipping reranker preload.")
 
 def get_engine() -> IRagEngine:
     return RagEngine()

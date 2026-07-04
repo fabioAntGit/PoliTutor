@@ -8,6 +8,14 @@ interface ChatBubbleProps {
     message: Message;
 }
 
+function formatTime(isoString?: string) {
+    if (!isoString) return "";
+    return new Intl.DateTimeFormat("pt-PT", {
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(new Date(isoString));
+}
+
 export function ChatBubble({ message }: ChatBubbleProps) {
     const isUser = message.role === "user";
     const hasPersistedId = /^[a-f0-9]{24}$/i.test(message.id);
@@ -16,6 +24,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
     const [showSources, setShowSources] = useState(false);
     const [speaking, setSpeaking] = useState(false);
     const { reported, isReporting, toggleReport } = useReportMessage(message.id, message.is_reported ?? false);
+    const sentAt = formatTime(message.created_at);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
@@ -42,14 +51,6 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         
         setSpeaking(true);
         window.speechSynthesis.speak(utterance);
-    };
-
-    const formatTime = (isoString?: string) => {
-        if (!isoString) return "";
-        return new Intl.DateTimeFormat("pt-PT", {
-            hour: "2-digit",
-            minute: "2-digit",
-        }).format(new Date(isoString));
     };
 
     return (
@@ -105,7 +106,13 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 )}
             </div>
 
-            <div className={`flex gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+            <div className={`flex items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+                {sentAt && (
+                    <span className="px-1.5 text-[11px] tabular-nums text-muted-foreground/70">
+                        {sentAt}
+                    </span>
+                )}
+
                 <button
                     onClick={handleCopy}
                     title="Copiar"
@@ -125,14 +132,14 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 )}
 
                 {canReport && (
-                <button
-                    onClick={toggleReport}
-                    disabled={isReporting}
-                    title={reported ? "Remover report" : "Reportar problema"}
-                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors hover:bg-red-500/10 hover:text-red-500 ${reported ? "text-red-500 bg-red-500/5" : "text-muted-foreground"} ${isReporting ? "opacity-50 cursor-wait" : ""}`}
-                >
-                    <Flag className={`h-3.5 w-3.5 ${reported ? "fill-current" : ""} ${isReporting ? "animate-pulse" : ""}`} />
-                </button>
+                    <button
+                        onClick={toggleReport}
+                        disabled={isReporting}
+                        title={reported ? "Remover report" : "Reportar problema"}
+                        className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors hover:bg-red-500/10 hover:text-red-500 ${reported ? "text-red-500 bg-red-500/5" : "text-muted-foreground"} ${isReporting ? "opacity-50 cursor-wait" : ""}`}
+                    >
+                        <Flag className={`h-3.5 w-3.5 ${reported ? "fill-current" : ""} ${isReporting ? "animate-pulse" : ""}`} />
+                    </button>
                 )}
             </div>
         </div>

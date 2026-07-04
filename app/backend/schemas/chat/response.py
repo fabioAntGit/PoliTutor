@@ -6,7 +6,6 @@ class ChatCreated(BaseModel):
     conversation_id: str
 
 class ChatRead(BaseModel):
-    conversation_id: str
     course_name: str
     messages: list[MessageRead] = Field(default_factory=list)
 

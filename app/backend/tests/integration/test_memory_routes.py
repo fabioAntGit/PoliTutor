@@ -31,14 +31,18 @@ class TestListMemories:
 
         assert resp.status_code == 200
         body = resp.json()
-        assert body["total"] == 2
+        assert len(body["memories"]) == 2
         assert {m["id"] for m in body["memories"]} == {M1, M2}
+        assert all(
+            set(m) == {"id", "type", "content", "last_seen_at"}
+            for m in body["memories"]
+        )
 
     async def test_returns_empty_when_no_memories(self, api_client, auth_header):
         resp = await api_client.get(LIST, params={"course_id": ED_ID}, headers=auth_header(id=CALLER))
 
         assert resp.status_code == 200
-        assert resp.json() == {"memories": [], "total": 0}
+        assert resp.json() == {"memories": []}
 
 
 class TestDeleteMemory:
@@ -53,7 +57,7 @@ class TestDeleteMemory:
         assert resp.status_code == 204
 
         listing = await api_client.get(LIST, params={"course_id": ED_ID}, headers=auth_header(id=CALLER))
-        assert listing.json()["total"] == 0
+        assert listing.json()["memories"] == []
 
     async def test_cannot_delete_another_users_memory(self, api_client, auth_header, db):
         await insert_memory(db, mem_id=M1, user_id=OTHER, course_id=ED_ID)

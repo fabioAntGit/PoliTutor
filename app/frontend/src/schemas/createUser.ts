@@ -7,7 +7,7 @@ export const createUserSchema = z.object({
     .refine((email) => email.endsWith("@ipp.pt") || email.endsWith(".ipp.pt"), {
       message: "O email deve pertencer ao domínio ipp.pt.",
     }),
-  password: z.string().min(8, "Password deve ter pelo menos 8 caracteres."),
+  password: z.string().min(8, "A palavra-passe deve ter pelo menos 8 caracteres."),
   full_name: z.string().min(1, "Nome completo obrigatório."),
   role: z.enum(["student", "teacher"]),
   courses: z.array(z.string()),

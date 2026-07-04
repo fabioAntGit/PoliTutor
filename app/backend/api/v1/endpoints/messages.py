@@ -41,5 +41,4 @@ async def send_message(
         answer=response.answer,
         sources=assistant_msg.sources,
         is_fallback=response.is_fallback,
-        guardrail_triggered=response.is_guardrail or response.is_output_guardrail,
     )

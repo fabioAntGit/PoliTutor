@@ -63,7 +63,6 @@ async def test_send_message_student_receives_answer_and_persists_messages(
     assert body["answer"] == "Resposta de teste."
     assert body["sources"] == [{"filename": "ed.pdf", "pages": [3]}]
     assert body["is_fallback"] is False
-    assert body["guardrail_triggered"] is False
     assert body["user_message_id"]
     assert body["assistant_message_id"]
 

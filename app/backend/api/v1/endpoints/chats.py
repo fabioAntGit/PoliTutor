@@ -84,7 +84,6 @@ async def get_chat(
         conversation_id, requester_user_id=payload["id"]
     )
     return ChatRead(
-        conversation_id=str(chat.id),
         course_name=course.name,
         messages=messages,
     )

@@ -88,9 +88,10 @@ async def test_get_chat_returns_own_chat(api_client, db, auth_header):
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["conversation_id"] == chat_id
-    assert body["course_name"] == "Estruturas de Dados"
-    assert body["messages"] == []
+    assert body == {
+        "course_name": "Estruturas de Dados",
+        "messages": [],
+    }
 
 
 async def test_get_chat_cannot_access_another_users_chat(api_client, db, auth_header):

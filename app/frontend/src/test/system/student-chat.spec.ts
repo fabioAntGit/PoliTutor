@@ -17,7 +17,6 @@ test.describe("Student chat", () => {
           answer: "Resposta de teste.",
           sources: [],
           is_fallback: false,
-          guardrail_triggered: false,
         }),
       });
     });

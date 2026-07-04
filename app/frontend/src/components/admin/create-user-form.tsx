@@ -46,7 +46,7 @@ export default function CreateUserForm() {
 
         <FormPasswordField
           id="password"
-          label="Password"
+          label="Palavra-passe"
           error={errors.password?.message}
           headerEnd={
             <button
@@ -60,7 +60,7 @@ export default function CreateUserForm() {
               className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
             >
               <Sparkles className="size-3" />
-              Gerar password
+              Gerar palavra-passe
             </button>
           }
           {...register("password")}

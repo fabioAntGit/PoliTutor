@@ -10,7 +10,7 @@ test.describe("Admin dashboard", () => {
 
     await page.getByLabel("Nome completo").fill("Fabio Antunes");
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password", { exact: true }).fill("Password123!");
+    await page.getByLabel("Palavra-passe", { exact: true }).fill("Password123!");
     await page.getByRole("button", { name: "Criar utilizador" }).click();
 
     await expect(page.getByText("Utilizador criado com sucesso")).toBeVisible();

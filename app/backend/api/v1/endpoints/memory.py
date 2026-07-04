@@ -32,15 +32,11 @@ async def list_memories(
             UserMemoryRead(
                 id=m.id,
                 type=m.type,
-                topic=m.topic,
                 content=m.content,
-                importance=m.importance,
                 last_seen_at=m.last_seen_at,
-                created_at=m.created_at,
             )
             for m in memories
         ],
-        total=len(memories),
     )
 
 

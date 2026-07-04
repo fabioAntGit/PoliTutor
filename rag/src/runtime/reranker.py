@@ -14,7 +14,9 @@ _reranker_cache: dict[str, CrossEncoder] = {}
 
 def get_reranker(model_name: str | None = None) -> CrossEncoder:
     """Load or reuse a cached reranker."""
-    model_name = model_name or RERANKER_MODEL
+    model_name = model_name if model_name is not None else RERANKER_MODEL
+    if not model_name:
+        raise ValueError("RERANKER_MODEL is not configured.")
 
     if model_name not in _reranker_cache:
         logger.info("Loading reranker model: %s", model_name)
@@ -34,7 +36,11 @@ def rerank(
         logger.warning("Reranker received no documents to score.")
         return results
 
-    model_name = model_name or RERANKER_MODEL
+    model_name = model_name if model_name is not None else RERANKER_MODEL
+    if not model_name:
+        logger.info("Reranker disabled; returning vector search results.")
+        return results
+
     top_k = top_k or RERANKER_TOP_K
 
     reranker = get_reranker(model_name)

@@ -22,7 +22,7 @@ export default function CreatedUserDialog({ user, onClose }: CreatedUserDialogPr
   const copyCredentials = async () => {
     if (!user) return;
     await navigator.clipboard.writeText(
-      `Username: ${user.username}\nPassword: ${user.password}`,
+      `Username: ${user.username}\nPalavra-passe: ${user.password}`,
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -43,7 +43,7 @@ export default function CreatedUserDialog({ user, onClose }: CreatedUserDialogPr
                   Utilizador criado com sucesso
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="text-sm text-muted-foreground">
-                  Comunica estas credenciais ao utilizador. Esta password não será mostrada novamente.
+                  Comunica estas credenciais ao utilizador. Esta palavra-passe não será mostrada novamente.
                 </DialogPrimitive.Description>
               </div>
             </div>
@@ -61,7 +61,7 @@ export default function CreatedUserDialog({ user, onClose }: CreatedUserDialogPr
 
                 <div className="space-y-1">
                   <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Password
+                    Palavra-passe
                   </Label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 font-mono text-sm p-2.5 bg-muted rounded-md border tracking-wider">
@@ -71,7 +71,7 @@ export default function CreatedUserDialog({ user, onClose }: CreatedUserDialogPr
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="p-2.5 border rounded-md hover:bg-muted transition-colors"
-                      aria-label={showPassword ? "Esconder password" : "Mostrar password"}
+                      aria-label={showPassword ? "Esconder palavra-passe" : "Mostrar palavra-passe"}
                     >
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
