@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
@@ -14,7 +13,7 @@ from app.backend.core.config import (
 from app.backend.repositories.courses import CourseRepository
 from app.backend.repositories.user_memory import UserMemoryRepository
 from app.backend.gateways.interfaces.model_client import IModelClient
-from app.backend.schemas.memory.models import UserMemory
+from app.backend.schemas.memory.models import ExtractedMemory, MemoryExtraction, UserMemory
 from app.backend.services.user_memory import UserMemoryService
 
 from .factories import insert_course, insert_memory
@@ -44,14 +43,12 @@ def service(repo, model_client, db) -> UserMemoryService:
     )
 
 
-def _llm_returning(memories: list[dict], *, fenced: bool = False):
-    """Build a fake model_client.call that returns the given memories as JSON."""
-    payload = json.dumps({"memories": memories})
-    if fenced:
-        payload = f"```json\n{payload}\n```"
+def _llm_returning(memories: list[dict]):
+    """Build a fake model_client.call_structured returning the given memories."""
+    extraction = MemoryExtraction(memories=[ExtractedMemory(**m) for m in memories])
 
-    def _fake(prompt, *args, **kwargs) -> str:
-        return payload
+    def _fake(messages, *args, **kwargs) -> MemoryExtraction:
+        return extraction
 
     return _fake
 
@@ -201,7 +198,7 @@ class TestDecay:
 class TestExtractAndUpsert:
     async def test_creates_new_memories(self, service, repo, db, model_client):
         ed_id = await insert_course(db, code="ed")
-        model_client.call.side_effect = _llm_returning([
+        model_client.call_structured.side_effect = _llm_returning([
             {"type": "difficulty", "topic": "Recursion", "content": "struggles", "importance": 7.0},
             {"type": "goal", "topic": "Pointers", "content": "wants to master", "importance": 6.0},
         ])
@@ -213,13 +210,12 @@ class TestExtractAndUpsert:
         assert set(by_topic) == {"recursion", "pointers"}  # topics normalized to lowercase
         assert by_topic["recursion"].importance == 7.0
 
-    async def test_filters_out_invalid_entries(self, service, repo, db, model_client):
+    async def test_filters_out_entries_without_topic_or_content(self, service, repo, db, model_client):
         ed_id = await insert_course(db, code="ed")
-        model_client.call.side_effect = _llm_returning([
+        model_client.call_structured.side_effect = _llm_returning([
             {"type": "difficulty", "topic": "ok", "content": "valid", "importance": 5.0},
-            {"type": "bogus", "topic": "x", "content": "bad type", "importance": 5.0},
             {"type": "goal", "topic": "", "content": "no topic", "importance": 5.0},
-            {"type": "goal", "topic": "y", "content": "out of range", "importance": 99.0},
+            {"type": "goal", "topic": "y", "content": "", "importance": 5.0},
         ])
 
         await service.extract_and_upsert(USER_1, ed_id, summary="...")
@@ -233,7 +229,7 @@ class TestExtractAndUpsert:
             db, user_id=USER_1, course_id=ed_id,
             mem_type="goal", topic="recursion", content="old", importance=4.0,
         )
-        model_client.call.side_effect = _llm_returning([
+        model_client.call_structured.side_effect = _llm_returning([
             {"type": "goal", "topic": "recursion", "content": "new", "importance": 8.0},
         ])
 
@@ -250,7 +246,7 @@ class TestExtractAndUpsert:
                 db, user_id=USER_1, course_id=ed_id,
                 mem_type="preference", topic=f"t{i:02d}", importance=(i + 1) * 0.5,
             )
-        model_client.call.side_effect = _llm_returning([
+        model_client.call_structured.side_effect = _llm_returning([
             {"type": "preference", "topic": "fresh", "content": "new", "importance": 9.0},
         ])
 
@@ -262,40 +258,22 @@ class TestExtractAndUpsert:
         assert "fresh" in topics
         assert "t00" not in topics  # lowest-importance evicted
 
-    async def test_parses_fenced_json(self, service, repo, db, model_client):
-        ed_id = await insert_course(db, code="ed")
-        model_client.call.side_effect = _llm_returning(
-            [{"type": "goal", "topic": "loops", "content": "c", "importance": 5.0}],
-            fenced=True,
-        )
-
-        await service.extract_and_upsert(USER_1, ed_id, summary="...")
-
-        assert await repo.get_by_key(USER_1, ed_id, "goal", "loops") is not None
-
     async def test_llm_failure_is_swallowed(self, service, repo, db, model_client):
         ed_id = await insert_course(db, code="ed")
 
-        def _boom(prompt, *args, **kwargs):
+        def _boom(messages, *args, **kwargs):
             raise RuntimeError("LLM down")
 
-        model_client.call.side_effect = _boom
+        model_client.call_structured.side_effect = _boom
 
         await service.extract_and_upsert(USER_1, ed_id, summary="...")  # must not raise
 
         assert await repo.get_by_user_and_course(USER_1, ed_id) == []
 
-    async def test_empty_response_is_noop(self, service, repo, db, model_client):
+    async def test_none_response_is_noop(self, service, repo, db, model_client):
+        # Covers API failures and unparseable output alike: the client returns None.
         ed_id = await insert_course(db, code="ed")
-        model_client.call.side_effect = lambda *a, **k: ""
-
-        await service.extract_and_upsert(USER_1, ed_id, summary="...")
-
-        assert await repo.get_by_user_and_course(USER_1, ed_id) == []
-
-    async def test_unparseable_json_is_ignored(self, service, repo, db, model_client):
-        ed_id = await insert_course(db, code="ed")
-        model_client.call.side_effect = lambda *a, **k: "this is not valid json {"
+        model_client.call_structured.side_effect = lambda *a, **k: None
 
         await service.extract_and_upsert(USER_1, ed_id, summary="...")
 
@@ -308,7 +286,7 @@ class TestExtractAndUpsert:
             raise RuntimeError("db write failed")
 
         monkeypatch.setattr(service.repo, "create", _boom_create)
-        model_client.call.side_effect = _llm_returning([
+        model_client.call_structured.side_effect = _llm_returning([
             {"type": "goal", "topic": "loops", "content": "c", "importance": 5.0},
         ])
 

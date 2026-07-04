@@ -28,6 +28,7 @@ from ..shared.config import (
 )
 from ..ingestion.extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from ..shared.call_model import OpenRouterClient
+from ..shared.models import BenchmarkQA
 from ..runtime.retrieval import retrieve
 from ..shared.utils import extract_metadata_from_filename
 
@@ -51,14 +52,12 @@ class BenchmarkConfig(BaseModel):
 def create_qa(context: str, page_number: int, filename: str) -> dict | None:
     """Generate one benchmark question for a page."""
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    content = OpenRouterClient().call([{"role": "user", "content": prompt}], model=OPENROUTER_MODEL_BENCHMARK)
-    if content is None:
-        return None
-    try:
-        return json.loads(content)
-    except (json.JSONDecodeError, TypeError):
-        logger.error("Failed to parse OpenRouter response as JSON: %s", content)
-        return None
+    result = OpenRouterClient().call_structured(
+        [{"role": "user", "content": prompt}],
+        schema=BenchmarkQA,
+        model=OPENROUTER_MODEL_BENCHMARK,
+    )
+    return result.model_dump() if result else None
 
 
 def generate_benchmark_dataset() -> None:

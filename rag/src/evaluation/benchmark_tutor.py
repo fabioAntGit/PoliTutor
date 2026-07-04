@@ -4,11 +4,9 @@ import json
 import logging
 import math
 import random
-import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,7 +25,7 @@ from ..shared.config import (
 from ..shared.call_model import OpenRouterClient
 from ..shared.chroma_vector_store import get_collection
 from ..shared.embedding import get_embedder
-from ..shared.models import TutorBenchmarkEntry, TutorEvaluationResult
+from ..shared.models import BenchmarkQuestionSet, JudgeScores, TutorBenchmarkEntry, TutorEvaluationResult
 from ..runtime.engine import RagEngine
 from ..shared.utils import extract_metadata_from_filename
 
@@ -47,12 +45,6 @@ def compute_semantic_similarity(text_a: str, text_b: str, embedder) -> float:
     return float(np.dot(vec_a, vec_b) / (norm_a * norm_b))
 
 
-def parse_json(content: str) -> Any:
-    """Parse JSON, allowing fenced code blocks."""
-    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.MULTILINE)
-    return json.loads(cleaned)
-
-
 def create_questions(context: str, page_number: int, filename: str) -> list[dict] | None:
     """Generate regular and adversarial questions for a page."""
     prompt = TUTOR_BENCHMARK_GENERATION_PROMPT.format(
@@ -61,18 +53,17 @@ def create_questions(context: str, page_number: int, filename: str) -> list[dict
         context=context,
     )
 
-    content = OpenRouterClient().call([{"role": "user", "content": prompt}], max_tokens=800, temperature=0.7, model=OPENROUTER_MODEL_BENCHMARK)
+    result = OpenRouterClient().call_structured(
+        [{"role": "user", "content": prompt}],
+        schema=BenchmarkQuestionSet,
+        max_tokens=800,
+        temperature=0.7,
+        model=OPENROUTER_MODEL_BENCHMARK,
+    )
 
-    if content is None:
+    if result is None:
         return None
-    try:
-        questions = parse_json(content)
-        for q in questions:
-            q["context"] = context
-        return questions
-    except (json.JSONDecodeError, TypeError):
-        logger.error("Failed to parse OpenRouter response as JSON: %s", content)
-        return None
+    return [dict(q.model_dump(), context=context) for q in result.questions]
 
 
 def sample_chunks_from_db(max_questions: int = TUTOR_BENCHMARK_MAX_QUESTIONS) -> list[dict]:
@@ -219,7 +210,7 @@ def generate_tutor_benchmark_dataset() -> None:
     logger.info("Saved %d questions to %s", len(all_questions), output_file.name)
 
 
-def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> dict | None:
+def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> JudgeScores | None:
     """Score a tutor response with the LLM judge."""
     prompt = TUTOR_BENCHMARK_JUDGE_PROMPT.format(
         context=entry.context,
@@ -227,15 +218,13 @@ def judge_response(entry: TutorBenchmarkEntry, actual_response: str) -> dict | N
         actual_response=actual_response,
     )
 
-    content = OpenRouterClient().call([{"role": "user", "content": prompt}], max_tokens=300, temperature=0.1, model=OPENROUTER_MODEL_BENCHMARK)
-
-    if content is None:
-        return None
-    try:
-        return parse_json(content)
-    except (json.JSONDecodeError, TypeError):
-        logger.error("Failed to parse judge response as JSON: %s", content)
-        return None
+    return OpenRouterClient().call_structured(
+        [{"role": "user", "content": prompt}],
+        schema=JudgeScores,
+        max_tokens=300,
+        temperature=0.1,
+        model=OPENROUTER_MODEL_BENCHMARK,
+    )
 
 
 def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult]:
@@ -355,10 +344,10 @@ def evaluate_tutor_benchmark(benchmark_file: Path) -> list[TutorEvaluationResult
             question_type=entry.question_type,
             actual_response=tutor_response.answer,
             expected_answer=entry.expected_answer,
-            faithfulness=int(scores.get("faithfulness", 0)),
-            non_directiveness=int(scores.get("non_directiveness", 0)),
-            scaffolding=int(scores.get("scaffolding", 0)),
-            clarity=int(scores.get("clarity", 0)),
+            faithfulness=scores.faithfulness,
+            non_directiveness=scores.non_directiveness,
+            scaffolding=scores.scaffolding,
+            clarity=scores.clarity,
             semantic_similarity=sim,
             is_fallback=False,
             is_guardrail=False,

@@ -81,6 +81,7 @@ class ContextService(IContextService):
                 self.model_client.call,
                 [{"role": "user", "content": prompt}],
                 model=OPENROUTER_MODEL_SUMMARIZATION,
+                temperature=0.1,
             )
 
             if not new_summary:

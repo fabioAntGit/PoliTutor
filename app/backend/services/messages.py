@@ -1,7 +1,7 @@
 import asyncio
 
 from contracts.rag.interfaces import IRagEngine
-from contracts.rag.models import TutorResponse, TutorSource
+from contracts.rag.models import TutorResponse
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.core.exceptions import AccessDeniedError, NotFoundError
@@ -76,20 +76,11 @@ class MessageService(IMessageService):
             memory_context or "",
         )
 
-        backend_response = TutorResponse(
-            answer=response.answer,
-            sources=[TutorSource(filename=s.filename, pages=s.pages) for s in response.sources],
-            is_fallback=response.is_fallback,
-            is_guardrail=response.is_guardrail,
-            is_output_guardrail=response.is_output_guardrail,
-            is_retrieval_fallback=response.is_retrieval_fallback
-        )
-
         assistant_msg = Message(
             conversation_id=conversation_id,
             role="assistant",
-            content=backend_response.answer,
-            sources=[Source(filename=source.filename, pages=source.pages) for source in backend_response.sources],
+            content=response.answer,
+            sources=[Source(filename=source.filename, pages=source.pages) for source in response.sources],
         )
 
         assistant_msg.id = await self.message_repository.create(assistant_msg)
@@ -103,4 +94,4 @@ class MessageService(IMessageService):
             conversation_id, conversation.user_id, conversation.course_id
         )
 
-        return user_msg, assistant_msg, backend_response
+        return user_msg, assistant_msg, response

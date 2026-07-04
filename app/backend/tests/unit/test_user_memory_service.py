@@ -8,7 +8,7 @@ from app.backend.repositories.interfaces.user_memory_repository import IUserMemo
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
 from app.backend.gateways.interfaces.model_client import IModelClient
 from app.backend.schemas.course.models import Course
-from app.backend.schemas.memory.models import UserMemory
+from app.backend.schemas.memory.models import ExtractedMemory, MemoryExtraction, UserMemory
 from app.backend.services.user_memory import UserMemoryService
 
 USER_ID = str(ObjectId())
@@ -106,7 +106,7 @@ async def test_delete_succeeds_for_owner(service, repo):
 async def test_upsert_blends_importance_and_updates_content(service, repo):
     memory_id = str(ObjectId())
     repo.get_by_key.return_value = _memory(id=memory_id, importance=4.0, content="old")
-    mem = {"type": "goal", "topic": "exam", "content": "new", "importance": 8.0}
+    mem = ExtractedMemory(type="goal", topic="exam", content="new", importance=8.0)
     await service._upsert_one(USER_ID, COURSE_ID, mem)
 
     called_id, updates = repo.update.call_args[0]
@@ -117,7 +117,7 @@ async def test_upsert_blends_importance_and_updates_content(service, repo):
 
 async def test_upsert_keeps_content_when_new_less_important(service, repo):
     repo.get_by_key.return_value = _memory(importance=8.0, content="old")
-    mem = {"type": "goal", "topic": "exam", "content": "new", "importance": 4.0}
+    mem = ExtractedMemory(type="goal", topic="exam", content="new", importance=4.0)
     await service._upsert_one(USER_ID, COURSE_ID, mem)
 
     _, updates = repo.update.call_args[0]
@@ -127,7 +127,7 @@ async def test_upsert_keeps_content_when_new_less_important(service, repo):
 async def test_upsert_creates_new_with_normalized_topic(service, repo):
     repo.get_by_key.return_value = None
     repo.get_by_user_and_course.return_value = []
-    mem = {"type": "goal", "topic": "  Final Exam ", "content": "pass", "importance": 7.0}
+    mem = ExtractedMemory(type="goal", topic="  Final Exam ", content="pass", importance=7.0)
     await service._upsert_one(USER_ID, COURSE_ID, mem)
 
     created = repo.create.call_args[0][0]
@@ -141,7 +141,7 @@ async def test_upsert_evicts_lowest_when_cap_reached(service, repo):
     ids = [str(ObjectId()) for _ in range(20)]
     full = [_memory(id=ids[i], importance=0.5 + i * 0.4, topic=f"t{i}") for i in range(20)]
     repo.get_by_user_and_course.return_value = full
-    mem = {"type": "goal", "topic": "new", "content": "x", "importance": 9.0}
+    mem = ExtractedMemory(type="goal", topic="new", content="x", importance=9.0)
     await service._upsert_one(USER_ID, COURSE_ID, mem)
 
     repo.delete.assert_awaited_once_with(ids[0])  # lowest importance
@@ -180,14 +180,14 @@ async def test_apply_decay_updates_decayed_importance(service, repo):
 
 async def test_extract_and_upsert_swallows_llm_failure(service, repo, model_client):
     repo.get_by_user_and_course.return_value = []
-    model_client.call.side_effect = Exception("LLM down")
+    model_client.call_structured.side_effect = Exception("LLM down")
     await service.extract_and_upsert(USER_ID, COURSE_ID, "conversation summary")
     repo.create.assert_not_awaited()
 
 
 async def test_extract_and_upsert_noop_on_empty_response(service, repo, model_client):
     repo.get_by_user_and_course.return_value = []
-    model_client.call.return_value = ""
+    model_client.call_structured.return_value = None
     await service.extract_and_upsert(USER_ID, COURSE_ID, "conversation summary")
     repo.create.assert_not_awaited()
 
@@ -195,7 +195,9 @@ async def test_extract_and_upsert_noop_on_empty_response(service, repo, model_cl
 async def test_extract_and_upsert_persists_memories_from_llm_output(service, repo, model_client):
     repo.get_by_user_and_course.return_value = []
     repo.get_by_key.return_value = None
-    model_client.call.return_value = '{"memories": [{"type": "goal", "topic": "exam", "content": "pass", "importance": 7}]}'
+    model_client.call_structured.return_value = MemoryExtraction(
+        memories=[ExtractedMemory(type="goal", topic="exam", content="pass", importance=7)]
+    )
     await service.extract_and_upsert(USER_ID, COURSE_ID, "conversation summary")
 
     repo.create.assert_awaited_once()
@@ -204,13 +206,23 @@ async def test_extract_and_upsert_persists_memories_from_llm_output(service, rep
     assert created.importance == 7.0
 
 
+async def test_extract_and_upsert_skips_memories_with_empty_topic_or_content(service, repo, model_client):
+    repo.get_by_user_and_course.return_value = []
+    repo.get_by_key.return_value = None
+    model_client.call_structured.return_value = MemoryExtraction(memories=[
+        ExtractedMemory(type="goal", topic="", content="pass", importance=7),
+        ExtractedMemory(type="goal", topic="exam", content="", importance=7),
+    ])
+    await service.extract_and_upsert(USER_ID, COURSE_ID, "conversation summary")
+    repo.create.assert_not_awaited()
+
+
 async def test_extract_and_upsert_continues_when_one_upsert_fails(service, repo, mocker, model_client):
     repo.get_by_user_and_course.return_value = []
-    model_client.call.return_value = (
-        '{"memories": ['
-        '{"type": "goal", "topic": "a", "content": "x", "importance": 5},'
-        '{"type": "goal", "topic": "b", "content": "y", "importance": 6}]}'
-    )
+    model_client.call_structured.return_value = MemoryExtraction(memories=[
+        ExtractedMemory(type="goal", topic="a", content="x", importance=5),
+        ExtractedMemory(type="goal", topic="b", content="y", importance=6),
+    ])
     upsert = mocker.patch.object(service, "_upsert_one", side_effect=[Exception("fail"), None])
 
     await service.extract_and_upsert(USER_ID, COURSE_ID, "conversation summary")

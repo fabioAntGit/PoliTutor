@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta, timezone
 
-from app.backend.schemas.memory.models import UserMemory
+import pytest
+from pydantic import ValidationError
+
+from app.backend.schemas.memory.models import ExtractedMemory, UserMemory
 from app.backend.services.user_memory import (
     _decayed_importance,
     _format_existing,
-    _parse_extracted,
 )
 
 _TTL_7D = 7 * 24 * 3600
@@ -45,30 +47,21 @@ def test_naive_datetime_treated_as_utc():
     assert _decayed_importance(5.0, naive_last_seen, _TTL_7D, now) == 5.0
 
 
-def test_parse_valid_json_fenced_block():
-    raw = '```json\n{"memories": [{"type": "goal", "topic": "exam", "content": "pass", "importance": 7}]}\n```'
-    result = _parse_extracted(raw)
-    assert len(result) == 1
-    assert result[0]["topic"] == "exam"
 
 
-def test_parse_invalid_json_returns_empty():
-    assert _parse_extracted("this is not json") == []
+def test_extracted_memory_rejects_invalid_type():
+    with pytest.raises(ValidationError):
+        ExtractedMemory(type="bogus", topic="x", content="y", importance=5)
 
 
-def test_parse_filters_invalid_type():
-    raw = '{"memories": [{"type": "bogus", "topic": "x", "content": "y", "importance": 5}]}'
-    assert _parse_extracted(raw) == []
+def test_extracted_memory_clamps_importance_out_of_range():
+    assert ExtractedMemory(type="goal", topic="x", content="y", importance=11).importance == 10.0
+    assert ExtractedMemory(type="goal", topic="x", content="y", importance=-1).importance == 0.0
 
 
-def test_parse_filters_missing_topic_or_content():
-    raw = '{"memories": [{"type": "goal", "topic": "", "content": "y", "importance": 5}]}'
-    assert _parse_extracted(raw) == []
-
-
-def test_parse_filters_importance_out_of_range():
-    raw = '{"memories": [{"type": "goal", "topic": "x", "content": "y", "importance": 11}]}'
-    assert _parse_extracted(raw) == []
+def test_extracted_memory_accepts_importance_boundaries():
+    assert ExtractedMemory(type="goal", topic="x", content="y", importance=0).importance == 0.0
+    assert ExtractedMemory(type="goal", topic="x", content="y", importance=10).importance == 10.0
 
 
 def test_format_existing_empty_list():

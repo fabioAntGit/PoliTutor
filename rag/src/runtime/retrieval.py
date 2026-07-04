@@ -56,6 +56,3 @@ def retrieve(
         results = rerank(query, results, reranker_model, reranker_top_k)
 
     return results
-
-
-

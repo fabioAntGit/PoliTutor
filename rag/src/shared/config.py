@@ -66,6 +66,8 @@ OPENROUTER_MODEL_IMAGE_SUMMARIZATION = "google/gemini-2.5-flash-lite"
 OPENROUTER_MODEL_BENCHMARK = "openai/gpt-4o"
 OPENROUTER_MODEL_GENERATOR = "openai/gpt-4o"
 
+TUTOR_TEMPERATURE = 0.7
+
 MAX_IMAGE_API_CALLS = None  # No limit
 IMAGE_API_DELAY = 1.5
 
@@ -111,7 +113,6 @@ BENCHMARK_PROMPT = (
     "Do NOT use any prior memory, or information outside of the given context. "
     "Generate the question in Portuguese. "
     "The content is from page {page_number} of {filename} "
-    "Reply ONLY with raw JSON, no markdown, no code blocks, no extra text. "
     'Use this exact format: {{"filename": "...", "page": "...", "question": "..."}}'
     "\n\nContext:\n{context}"
 )
