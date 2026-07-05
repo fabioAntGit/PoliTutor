@@ -1,8 +1,10 @@
 import { CheckCircle } from "lucide-react";
 import { FormField } from "@/components/form/form-field";
 import { FormRootError } from "@/components/form/form-root-error";
+import { FormTextarea } from "@/components/form/form-textarea";
 import { SubmitButton } from "@/components/form/submit-button";
 import { useCreateCourse } from "@/hooks/admin/useCreateCourse";
+import { COURSE_CODE_MAX_LENGTH, COURSE_NAME_MAX_LENGTH, COURSE_SCOPE_MAX_LENGTH } from "@/lib/validation";
 
 export default function CreateCourseForm() {
   const { form, success, onSubmit } = useCreateCourse();
@@ -10,6 +12,7 @@ export default function CreateCourseForm() {
     register,
     formState: { errors, isSubmitting },
   } = form;
+  const scopeValue = form.watch("scope");
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -17,6 +20,7 @@ export default function CreateCourseForm() {
         id="code"
         label="Código"
         placeholder="ex: ed"
+        maxLength={COURSE_CODE_MAX_LENGTH}
         error={errors.code?.message}
         {...register("code")}
       />
@@ -25,14 +29,17 @@ export default function CreateCourseForm() {
         id="name"
         label="Nome"
         placeholder="ex: Estruturas de Dados"
+        maxLength={COURSE_NAME_MAX_LENGTH}
         error={errors.name?.message}
         {...register("name")}
       />
 
-      <FormField
+      <FormTextarea
         id="scope"
         label="Âmbito"
         placeholder="Ex: Listas, pilhas, filas, árvores e grafos."
+        autoGrowValue={scopeValue}
+        maxLength={COURSE_SCOPE_MAX_LENGTH}
         error={errors.scope?.message}
         {...register("scope")}
       />

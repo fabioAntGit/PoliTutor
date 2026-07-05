@@ -7,10 +7,10 @@ import time
 
 from ..shared.config import (
     IMAGE_API_DELAY,
-    IMAGE_EMBEDDING_PROMPT,
     MAX_IMAGE_API_CALLS,
     OPENROUTER_MODEL_IMAGE_SUMMARIZATION,
 )
+from ..shared.prompts import IMAGE_EMBEDDING_PROMPT
 from ..shared.call_model import OpenRouterClient
 from ..shared.interfaces.vector_store import IVectorStore
 from ..shared.chroma_vector_store import ChromaVectorStore

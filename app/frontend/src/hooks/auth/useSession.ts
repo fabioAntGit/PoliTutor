@@ -7,7 +7,7 @@ export function useSession() {
   const logout = async () => {
     const accessToken = AuthService.getAccessToken();
     if (accessToken) {
-      await AuthService.logout(accessToken).catch(() => {});
+      await AuthService.logout().catch(() => {});
     }
     AuthService.clearTokens();
     navigate("/login", { replace: true });

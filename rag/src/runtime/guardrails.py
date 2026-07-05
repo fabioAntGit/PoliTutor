@@ -10,8 +10,8 @@ from ..shared.config import (
     INJECTION_PATTERNS,
     QUERY_MAX_LENGTH,
     QUERY_MIN_LENGTH,
-    SOCRATIC_REDIRECT,
 )
+from ..shared.prompts import SOCRATIC_REDIRECT
 from contracts.rag.models import TutorResponse
 
 logger = logging.getLogger(__name__)

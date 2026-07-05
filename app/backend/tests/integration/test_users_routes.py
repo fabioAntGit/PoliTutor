@@ -43,14 +43,14 @@ async def test_create_user_duplicate_email_returns_409(api_client, db, auth_head
     assert resp.status_code == 409
 
 
-async def test_create_user_short_password_returns_400(api_client, auth_header):
+async def test_create_user_short_password_returns_422(api_client, auth_header):
     resp = await api_client.post(
         USERS,
         json=_new_user_payload(password="short"),
         headers=auth_header(role="admin"),
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
 async def test_list_users_requires_admin(api_client, auth_header):

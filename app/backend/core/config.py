@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from app.backend.core.limits import QUERY_MAX_LENGTH, QUERY_MIN_LENGTH
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
@@ -15,10 +16,6 @@ SUMMARY_LOCK_TTL = 60
 JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
-
-# Backend-owned API input limits.
-QUERY_MIN_LENGTH = 2
-QUERY_MAX_LENGTH = 1500
 
 OPENROUTER_MODEL_SUMMARIZATION = "google/gemini-2.5-flash-lite"
 OPENROUTER_MODEL_MEMORY_EXTRACTION = "google/gemini-2.5-flash-lite"

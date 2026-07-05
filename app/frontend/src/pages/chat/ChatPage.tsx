@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { ArrowUp, Square } from "lucide-react";
 import { ChatBubble } from "@/components/ui/chat-bubble";
 import { TypingDots } from "@/components/ui/typing-dots";
@@ -7,6 +6,8 @@ import { PageState } from "@/components/ui/page-state";
 import { UserMenu } from "@/components/account/user-menu";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChatHistorySidebar } from "@/components/home/chat-history-sidebar";
+import { useAutoGrowTextarea } from "@/hooks/chat/useAutoGrowTextarea";
+import { isQuestionReady, QUESTION_MAX_CHARS } from "@/lib/validation";
 
 export default function ChatPage() {
     const {
@@ -29,17 +30,9 @@ export default function ChatPage() {
         handleScroll,
     } = useChat();
 
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const MAX_CHARS = 1500;
-    const canSend = input.trim().length > 0;
-    const nearLimit = input.length >= MAX_CHARS * 0.9;
-
-    useEffect(() => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.style.height = "auto";
-        el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
-    }, [input]);
+    const textareaRef = useAutoGrowTextarea(input, 200);
+    const canSend = isQuestionReady(input);
+    const nearLimit = input.length >= QUESTION_MAX_CHARS * 0.9;
 
     return (
         <PageState loading={loading} error={error}>
@@ -90,7 +83,7 @@ export default function ChatPage() {
                                     <textarea
                                         ref={textareaRef}
                                         value={input}
-                                        maxLength={MAX_CHARS}
+                                        maxLength={QUESTION_MAX_CHARS}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter" && !e.shiftKey) {
@@ -134,7 +127,7 @@ export default function ChatPage() {
                                     <span>O PoliTutor pode cometer erros. Por isso, lembre-se de conferir informações relevantes.</span>
                                     {nearLimit && (
                                         <span className="tabular-nums">
-                                            {input.length}/{MAX_CHARS}
+                                            {input.length}/{QUESTION_MAX_CHARS}
                                         </span>
                                     )}
                                 </div>

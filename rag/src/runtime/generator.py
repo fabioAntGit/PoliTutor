@@ -3,7 +3,8 @@
 import json
 import logging
 
-from ..shared.config import OPENROUTER_MODEL_GENERATOR, TUTOR_API_ERROR_MESSAGE, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT, TUTOR_TEMPERATURE
+from ..shared.config import OPENROUTER_MODEL_GENERATOR, TUTOR_TEMPERATURE
+from ..shared.prompts import TUTOR_API_ERROR_MESSAGE, TUTOR_FALLBACK_MESSAGE, TUTOR_SYSTEM_PROMPT
 
 
 from ..shared.call_model import OpenRouterClient

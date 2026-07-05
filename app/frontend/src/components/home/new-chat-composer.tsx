@@ -9,8 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { CourseResponse } from "@/types/course";
-
-const MAX_CHARS = 1500;
+import { isQuestionReady, QUESTION_MAX_CHARS } from "@/lib/validation";
 
 interface NewChatComposerProps {
   courses: CourseResponse[];
@@ -33,8 +32,8 @@ export function NewChatComposer({
 }: NewChatComposerProps) {
   const textareaRef = useAutoGrowTextarea(input, 160);
   
-  const canSubmit = !submitting && !!input.trim() && !!selectedCourse;
-  const nearLimit = input.length >= MAX_CHARS * 0.9;
+  const canSubmit = !submitting && isQuestionReady(input) && !!selectedCourse;
+  const nearLimit = input.length >= QUESTION_MAX_CHARS * 0.9;
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +46,7 @@ export function NewChatComposer({
         <textarea
           ref={textareaRef}
           value={input}
-          maxLength={MAX_CHARS}
+          maxLength={QUESTION_MAX_CHARS}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -64,7 +63,7 @@ export function NewChatComposer({
         <div className="flex items-center justify-end gap-2">
           {nearLimit && (
             <span className="mr-auto text-[11px] tabular-nums text-muted-foreground/70">
-              {input.length}/{MAX_CHARS}
+              {input.length}/{QUESTION_MAX_CHARS}
             </span>
           )}
 

@@ -26,8 +26,8 @@ export const AuthService = {
     return loginRequest(username, password);
   },
 
-  logout(accessToken: string): Promise<void> {
-    return logoutRequest(accessToken);
+  logout(): Promise<void> {
+    return logoutRequest();
   },
 
   changePassword(currentPassword: string, newPassword: string): Promise<LoginResponse> {

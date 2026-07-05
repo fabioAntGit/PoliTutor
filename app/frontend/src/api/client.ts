@@ -6,6 +6,15 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1",
 });
 
+export function getApiErrorMessage(data: unknown, fallback: string) {
+  if (data && typeof data === "object") {
+    const { detail, message } = data as { detail?: unknown; message?: unknown };
+    if (typeof message === "string" && message) return message;
+    if (typeof detail === "string" && detail) return detail;
+  }
+  return fallback;
+}
+
 api.interceptors.request.use((config) => {
   const token = tokenStore.get();
   if (token) {
@@ -28,11 +37,8 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      const message =
-        error.response?.data?.detail ??
-        error.response?.data?.message ??
-        error.message ??
-        "Erro de comunicação com o servidor.";
+      const fallback = status === 422 ? "Pedido inválido." : error.message ?? "Erro de comunicação com o servidor.";
+      const message = getApiErrorMessage(error.response?.data, fallback);
       return Promise.reject(new ApiError(status, message, error.response?.data));
     }
 

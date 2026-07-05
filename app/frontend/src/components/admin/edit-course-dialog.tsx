@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/form/form-field";
 import { FormRootError } from "@/components/form/form-root-error";
+import { FormTextarea } from "@/components/form/form-textarea";
 import { useEditCourse } from "@/hooks/admin/useEditCourse";
+import { COURSE_NAME_MAX_LENGTH, COURSE_SCOPE_MAX_LENGTH } from "@/lib/validation";
 import type { CourseResponse } from "@/types/course";
 
 interface EditCourseDialogProps {
@@ -24,6 +26,7 @@ export default function EditCourseDialog({ course, onClose, onSaved }: EditCours
     control,
     formState: { errors, isSubmitting },
   } = form;
+  const scopeValue = form.watch("scope");
 
   useEffect(() => {
     if (!course) setConfirmDelete(false);
@@ -45,13 +48,16 @@ export default function EditCourseDialog({ course, onClose, onSaved }: EditCours
             <FormField
               id="edit-course-name"
               label="Nome"
+              maxLength={COURSE_NAME_MAX_LENGTH}
               error={errors.name?.message}
               {...register("name")}
             />
 
-            <FormField
+            <FormTextarea
               id="edit-course-scope"
               label="Âmbito"
+              autoGrowValue={scopeValue}
+              maxLength={COURSE_SCOPE_MAX_LENGTH}
               error={errors.scope?.message}
               {...register("scope")}
             />

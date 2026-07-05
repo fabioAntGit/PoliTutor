@@ -45,11 +45,6 @@ async def get_overview(
     course_filter: list[str] = Depends(analytics_scope()),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
-    """Return headline metrics for every course the caller can access.
-
-    The payload aggregates total conversations, distinct active students, total
-    student messages and the average number of questions per conversation.
-    """
     data = await service.get_overview(course_filter=course_filter)
     return OverviewRead(**data)
 
@@ -71,11 +66,6 @@ async def get_activity(
     course_filter: list[str] = Depends(analytics_scope()),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
-    """Return a continuous daily time series of student questions.
-
-    The series spans the selected window and includes zero-valued days so the
-    dashboard can render an uninterrupted line chart.
-    """
     data = await service.get_activity(range, course_filter=course_filter)
     return ActivityRead(data=[ActivityPoint(**point) for point in data])
 
@@ -97,10 +87,6 @@ async def get_course_overview(
     course_id: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
-    """Return headline metrics for one specific course.
-
-    Mirrors ``/analytics/overview`` but restricted to the given course.
-    """
     data = await service.get_course_overview(course_id)
     return CourseOverviewRead(**data)
 
@@ -123,10 +109,6 @@ async def get_course_activity(
     range: Literal["7d", "30d", "90d"] = RANGE_QUERY,
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
-    """Return the daily question time series for one specific course.
-
-    Like ``/analytics/activity`` but scoped to the given course.
-    """
     data = await service.get_course_activity(course_id, range)
     return ActivityRead(data=[ActivityPoint(**point) for point in data])
 
@@ -148,11 +130,6 @@ async def get_course_topics(
     course_id: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
-    """Return the most frequently discussed topics for one course.
-
-    Each entry pairs a topic label with the number of times it was raised,
-    ordered from most to least frequent.
-    """
     topics = await service.get_course_topics(course_id)
     return CourseTopicsRead(topics=[TopicPoint(**topic) for topic in topics])
 
@@ -174,10 +151,5 @@ async def get_course_sources(
     course_id: str = Depends(analytics_scope(per_course=True)),
     service: IAnalyticsService = Depends(get_analytics_service),
 ):
-    """Return the source documents most often cited in tutor answers.
-
-    Each entry pairs a source filename with its reference count, ordered from
-    most to least referenced.
-    """
     sources = await service.get_course_sources(course_id)
     return CourseSourcesRead(sources=[SourcePoint(**source) for source in sources])

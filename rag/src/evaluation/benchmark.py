@@ -15,7 +15,6 @@ from ..shared.config import (
     BENCHMARK_MIN_CONTEXT_LENGTH,
     BENCHMARK_OUTPUT_DIR,
     BENCHMARK_EVAL_METRICS,
-    BENCHMARK_PROMPT,
     CHROMA_COLLECTION_NAME,
     COURSE_PATH,
     EMBEDDING_MODEL,
@@ -26,6 +25,7 @@ from ..shared.config import (
     SUPPORTED_EXTENSIONS,
     TOP_K_RESULTS,
 )
+from ..shared.prompts import BENCHMARK_PROMPT
 from ..ingestion.extractor import extract_elements_from_file, filter_elements, group_elements_by_page
 from ..shared.call_model import OpenRouterClient
 from ..shared.models import BenchmarkQA

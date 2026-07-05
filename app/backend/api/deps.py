@@ -215,12 +215,14 @@ def get_user_service(
     course_repository: ICourseRepository = Depends(get_course_repository),
     chat_repository: IChatRepository = Depends(get_chat_repository),
     deletion_repository: IDeletionRepository = Depends(get_deletion_repository),
+    security_service: ISecurityService = Depends(get_security_service),
 ) -> IUserService:
     return UserService(
         user_repository=user_repository,
         course_repository=course_repository,
         chat_repository=chat_repository,
         deletion_repository=deletion_repository,
+        security_service=security_service,
     )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")

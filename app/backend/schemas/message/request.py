@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from app.backend.core.config import QUERY_MAX_LENGTH, QUERY_MIN_LENGTH
+from app.backend.core.limits import QUERY_MAX_LENGTH, QUERY_MIN_LENGTH
 
 
 class MessageSend(BaseModel):

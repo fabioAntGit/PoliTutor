@@ -7,7 +7,7 @@ from app.backend.repositories.interfaces.course_repository import ICourseReposit
 from app.backend.core.exceptions import AccessDeniedError, NotFoundError
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.repositories.interfaces.cache_repository import ICacheRepository
-from app.backend.schemas.message.models import Message, Source
+from app.backend.schemas.message.models import Message
 from app.backend.services.interfaces.message_service import IMessageService
 from app.backend.services.interfaces.context_service import IContextService
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
@@ -81,7 +81,7 @@ class MessageService(IMessageService):
             conversation_id=conversation_id,
             role="assistant",
             content=response.answer,
-            sources=[Source(filename=source.filename, pages=source.pages) for source in response.sources],
+            sources=response.sources,
         )
 
         assistant_msg.id = await self.message_repository.create(assistant_msg)

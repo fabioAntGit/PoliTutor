@@ -9,8 +9,8 @@ export async function login(username: string, password: string): Promise<LoginRe
   return res.data;
 }
 
-export async function logout(accessToken: string): Promise<void> {
-  await api.post("/auth/logout", { access_token: accessToken });
+export async function logout(): Promise<void> {
+  await api.post("/auth/logout");
 }
 
 export async function changePassword(

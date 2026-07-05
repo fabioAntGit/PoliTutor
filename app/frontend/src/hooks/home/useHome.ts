@@ -7,6 +7,7 @@ import type { CourseResponse } from "@/types/course";
 import { ApiError } from "@/lib/errors";
 import { toast } from "sonner";
 import { useChatDeletion } from "@/hooks/chat/useChatDeletion";
+import { isQuestionReady, QUESTION_MAX_CHARS, QUESTION_MIN_CHARS } from "@/lib/validation";
 
 export function useHome() {
   const navigate = useNavigate();
@@ -41,6 +42,10 @@ export function useHome() {
     const trimmed = input.trim();
     if (!trimmed) {
       toast.error("Escreve uma mensagem para iniciar a conversa.");
+      return;
+    }
+    if (!isQuestionReady(trimmed)) {
+      toast.error(`A pergunta deve ter entre ${QUESTION_MIN_CHARS} e ${QUESTION_MAX_CHARS} caracteres.`);
       return;
     }
     if (!selectedCourse) {

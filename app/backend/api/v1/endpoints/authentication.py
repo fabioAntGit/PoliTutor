@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.backend.core.rate_limit import limiter
 from app.backend.schemas.auth.response import LoginResponse
-from app.backend.schemas.auth.request import LogoutRequest
 from app.backend.schemas.user.request import ChangePasswordRequest
 from app.backend.services.interfaces.authentication_service import IAuthenticationService
 from app.backend.services.interfaces.user_service import IUserService
@@ -48,10 +47,10 @@ async def login(
 @limiter.limit("10/minute")
 async def logout(
     request: Request,
-    body: LogoutRequest,
+    access_token: str = Depends(oauth2_scheme),
     service: IAuthenticationService = Depends(get_authentication_service),
 ):
-    await service.logout(access_token=body.access_token)
+    await service.logout(access_token=access_token)
     return {"message": "Logout efetuado com sucesso"}
 
 

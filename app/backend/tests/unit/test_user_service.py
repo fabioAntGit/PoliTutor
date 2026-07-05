@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 from bson import ObjectId
-from pwdlib import PasswordHash
 
 from app.backend.core.exceptions import BadRequestError, ConflictError, NotFoundError
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
@@ -56,17 +55,26 @@ def chat_repo():
 def deletion_repo():
     return AsyncMock(spec=IDeletionRepository)
 
+@pytest.fixture
+def security_service():
+    from app.backend.services.interfaces.security_service import ISecurityService
+    svc = AsyncMock(spec=ISecurityService)
+    svc.hash_password.return_value = "hashed_pw"
+    svc.verify_password.return_value = True
+    return svc
+
 
 @pytest.fixture
-def service(user_repo, course_repo, chat_repo, deletion_repo):
+def service(user_repo, course_repo, chat_repo, deletion_repo, security_service):
     return UserService(
         user_repository=user_repo,
         course_repository=course_repo,
         chat_repository=chat_repo,
         deletion_repository=deletion_repo,
+        security_service=security_service,
     )
 
-async def test_create_user_valid_data_returns_user(service, user_repo, course_repo):
+async def test_create_user_valid_data_returns_user(service, user_repo, course_repo, security_service):
     user_repo.find_by_email.return_value = None
     user_repo.find_by_username.return_value = None
     course_repo.get_courses_by_ids.return_value = [_make_course()]
@@ -83,19 +91,9 @@ async def test_create_user_valid_data_returns_user(service, user_repo, course_re
 
     assert result.username == "novo"
     assert result.email == "novo@estg.ipp.pt"
-    assert result.hashed_password != "password123"
+    assert result.hashed_password == "hashed_pw"
     user_repo.create.assert_awaited_once()
-
-
-async def test_create_user_short_password_throws_bad_request(service):
-    with pytest.raises(BadRequestError, match="pelo menos 8 caracteres"):
-        await service.create_user(
-            email="novo@estg.ipp.pt",
-            password="123",
-            full_name="Novo",
-            role="student",
-            courses=[],
-        )
+    security_service.hash_password.assert_awaited_once_with("password123")
 
 
 async def test_create_user_duplicate_email_throws_conflict(service, user_repo):
@@ -173,10 +171,10 @@ async def test_delete_user_cascades_returns_true(service, user_repo, chat_repo, 
     )
 
 
-async def test_change_password_valid_data_returns_user(service, user_repo):
-    ph = PasswordHash.recommended()
-    real_hash = ph.hash("current_pw")
-    user_repo.find_by_username.return_value = _make_user(hashed_password=real_hash)
+async def test_change_password_valid_data_returns_user(service, user_repo, security_service):
+    user_repo.find_by_username.return_value = _make_user(hashed_password="old_hash")
+    security_service.verify_password.return_value = True
+    security_service.hash_password.return_value = "new_hashed_pw"
 
     result = await service.change_password(
         username="fabio",
@@ -184,32 +182,20 @@ async def test_change_password_valid_data_returns_user(service, user_repo):
         new_password="newpassword123",
     )
 
-    assert result.hashed_password != real_hash
+    assert result.hashed_password == "new_hashed_pw"
     assert result.must_change_password is False
     user_repo.update.assert_awaited_once()
+    security_service.verify_password.assert_awaited_once_with("current_pw", "old_hash")
+    security_service.hash_password.assert_awaited_once_with("newpassword123")
 
 
-async def test_change_password_wrong_current_throws_bad_request(service, user_repo):
-    ph = PasswordHash.recommended()
-    real_hash = ph.hash("current_pw")
-    user_repo.find_by_username.return_value = _make_user(hashed_password=real_hash)
+async def test_change_password_wrong_current_throws_bad_request(service, user_repo, security_service):
+    user_repo.find_by_username.return_value = _make_user(hashed_password="old_hash")
+    security_service.verify_password.return_value = False
 
     with pytest.raises(BadRequestError, match="Password atual incorreta"):
         await service.change_password(
             username="fabio",
             current_password="senha_errada_completamente_diferente",
             new_password="newpassword123",
-        )
-
-
-async def test_change_password_new_too_short_throws_bad_request(service, user_repo):
-    ph = PasswordHash.recommended()
-    real_hash = ph.hash("current_pw")
-    user_repo.find_by_username.return_value = _make_user(hashed_password=real_hash)
-
-    with pytest.raises(BadRequestError, match="pelo menos 8 caracteres"):
-        await service.change_password(
-            username="fabio",
-            current_password="current_pw",
-            new_password="123",
         )

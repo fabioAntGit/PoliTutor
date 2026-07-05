@@ -6,6 +6,7 @@ import { MessageService } from "@/services/message.service";
 import { ChatService } from "@/services/chat.service";
 import type { ChatRead, ChatListItem } from "@/types/chat";
 import { useChatDeletion } from "@/hooks/chat/useChatDeletion";
+import { isQuestionReady, QUESTION_MAX_CHARS, QUESTION_MIN_CHARS } from "@/lib/validation";
 
 export function useChat() {
   const { conversationId } = useParams();
@@ -115,11 +116,13 @@ export function useChat() {
   const sendQuestion = useCallback(
     async (question: string) => {
       if (!conversationId) return;
+      const trimmedQuestion = question.trim();
+      if (!isQuestionReady(trimmedQuestion)) return;
 
       const userMsg: Message = {
         id: Date.now().toString(),
         role: "user",
-        content: question,
+        content: trimmedQuestion,
         created_at: new Date().toISOString(),
       };
 
@@ -132,7 +135,7 @@ export function useChat() {
       try {
         const response = await MessageService.sendMessage(
           conversationId,
-          { question },
+          { question: trimmedQuestion },
           controller.signal
         );
 
@@ -159,7 +162,7 @@ export function useChat() {
         let errorMessage = "Erro ao obter resposta.";
         if (err instanceof ApiError) {
           if (err.isValidationError) {
-            errorMessage = "Credenciais invalidas. Verifica o Endpoint, API Key e Channel ID nas definicoes.";
+            errorMessage = `A pergunta deve ter entre ${QUESTION_MIN_CHARS} e ${QUESTION_MAX_CHARS} caracteres.`;
           } else if (err.message) {
             errorMessage = err.message;
           }
@@ -202,6 +205,7 @@ export function useChat() {
 
     const trimmed = input.trim();
     if (!trimmed) return;
+    if (!isQuestionReady(trimmed)) return;
 
     if (!conversationId || !chat) return;
 

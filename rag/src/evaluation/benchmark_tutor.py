@@ -18,10 +18,9 @@ from ..shared.config import (
     EMBEDDING_MODEL,
     OPENROUTER_MODEL_BENCHMARK,
     TUTOR_BENCHMARK_CRITERIA,
-    TUTOR_BENCHMARK_GENERATION_PROMPT,
-    TUTOR_BENCHMARK_JUDGE_PROMPT,
     TUTOR_BENCHMARK_MAX_QUESTIONS,
 )
+from ..shared.prompts import TUTOR_BENCHMARK_GENERATION_PROMPT, TUTOR_BENCHMARK_JUDGE_PROMPT
 from ..shared.call_model import OpenRouterClient
 from ..shared.chroma_vector_store import get_collection
 from ..shared.embedding import get_embedder

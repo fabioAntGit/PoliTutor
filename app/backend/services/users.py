@@ -5,10 +5,10 @@ from app.backend.repositories.interfaces.course_repository import ICourseReposit
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.deletion_repository import IDeletionRepository
 from app.backend.services.interfaces.user_service import IUserService
+from app.backend.services.interfaces.security_service import ISecurityService
 from app.backend.schemas.user.models import User
 from app.backend.core.validators import validate_and_extract_username
 from app.backend.core.exceptions import BadRequestError, ConflictError, NotFoundError
-from pwdlib import PasswordHash
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +20,13 @@ class UserService(IUserService):
         course_repository: ICourseRepository,
         chat_repository: IChatRepository,
         deletion_repository: IDeletionRepository,
+        security_service: ISecurityService,
     ) -> None:
         self.user_repository = user_repository
         self.course_repository = course_repository
         self.chat_repository = chat_repository
         self.deletion_repository = deletion_repository
+        self.security_service = security_service
 
     async def _validate_courses_exist(self, course_ids: list[str]) -> list[str]:
         unique = list(set(course_ids))
@@ -44,12 +46,6 @@ class UserService(IUserService):
         role: str,
         courses: list[str],
     ) -> User:
-        if len(password) < 8:
-            raise BadRequestError(
-                message="A password deve ter pelo menos 8 caracteres",
-                code="validation_error",
-            )
-
         username = validate_and_extract_username(email)
 
         if await self.user_repository.find_by_email(email):
@@ -65,8 +61,7 @@ class UserService(IUserService):
 
         course_ids = await self._validate_courses_exist(courses) if courses else []
 
-        password_hash = PasswordHash.recommended()
-        hashed_password = password_hash.hash(password)
+        hashed_password = await self.security_service.hash_password(password)
 
         user = User(
             email=email,
@@ -140,17 +135,10 @@ class UserService(IUserService):
         if not user:
             raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
 
-        password_hash = PasswordHash.recommended()
-        if not password_hash.verify(current_password, user.hashed_password):
+        if not await self.security_service.verify_password(current_password, user.hashed_password):
             raise BadRequestError(message="Password atual incorreta", code="validation_error")
 
-        if len(new_password) < 8:
-            raise BadRequestError(
-                message="A nova password deve ter pelo menos 8 caracteres",
-                code="validation_error",
-            )
-
-        new_hash = password_hash.hash(new_password)
+        new_hash = await self.security_service.hash_password(new_password)
         await self.user_repository.update(
             username,
             {"hashed_password": new_hash, "must_change_password": False},
