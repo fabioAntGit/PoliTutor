@@ -1,5 +1,5 @@
 import { editUserSchema, type EditUserFormValues } from "@/schemas/editUser";
-import { updateUser, deleteUser } from "@/api/users";
+import { UserService } from "@/services/user.service";
 import type { UserResponse } from "@/types/user";
 import { useEntityEditForm } from "@/hooks/admin/useEntityEditForm";
 
@@ -15,8 +15,8 @@ export function useEditUser(user: UserResponse | null, onSaved: () => void) {
       role: u.role as EditUserFormValues["role"],
       courses: u.courses,
     }),
-    update: (u, data) => updateUser(u.username, data),
-    remove: (u) => deleteUser(u.username),
+    update: (u, data) => UserService.updateUser(u.username, data),
+    remove: (u) => UserService.deleteUser(u.username),
     updateErrorMessage: "Erro ao atualizar utilizador.",
     deleteErrorMessage: "Erro ao eliminar utilizador.",
   });

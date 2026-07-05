@@ -21,8 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SettingsDialog } from "@/components/settings/settings-dialog";
 import { useTheme } from "@/components/theme/theme-provider";
-import { authService } from "@/services/auth.service";
-import { logout } from "@/api/auth";
+import { useSession } from "@/hooks/auth/useSession";
 
 function initialsFor(name: string | null, fallback: string | null): string {
   const source = name?.trim() || fallback?.trim() || "?";
@@ -36,22 +35,11 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
   const { pathname } = useLocation();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
-  const fullName = authService.getFullName();
-  const username = authService.getUsername();
-  const role = authService.getRole();
+  const { fullName, username, role, logout } = useSession();
   const isAdmin = role === "admin";
   const onAdminPage = pathname.startsWith("/admin");
   const onDashboardPage = pathname.startsWith("/dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  const handleLogout = async () => {
-    const accessToken = authService.getAccessToken();
-    if (accessToken) {
-      await logout(accessToken).catch(() => {});
-    }
-    authService.clearTokens();
-    navigate("/login", { replace: true });
-  };
 
   return (
     <>
@@ -134,7 +122,7 @@ export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleLogout}>
+          <DropdownMenuItem onSelect={logout}>
             <LogOut />
             Terminar sessão
           </DropdownMenuItem>

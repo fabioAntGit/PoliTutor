@@ -1,17 +1,27 @@
-"""
-Route-level integration tests for the teacher dashboard (/api/v1/analytics/*).
+import pytest_asyncio
+from bson import ObjectId
 
-These drive the real FastAPI app over HTTP, so they cover what the
-service/repository tests cannot: routing, the auth guards and the role-based
-course scoping (`require_teacher_or_admin`, `analytics_scope`). The DB and Redis
-are pointed at the ephemeral test database.
-"""
-
-import pytest
-
-from .factories import insert_chat, insert_course
+from .factories import insert_chat, insert_course, insert_user
 
 OVERVIEW = "/api/v1/analytics/overview"
+UNKNOWN_ID = "000000000000000000000000"
+
+U1 = str(ObjectId())
+U2 = str(ObjectId())
+U3 = str(ObjectId())
+
+
+@pytest_asyncio.fixture
+async def ed_id(db):
+    """The 'ed' course, returning its ObjectId."""
+    return await insert_course(db, code="ed")
+
+
+@pytest_asyncio.fixture
+async def ed_teacher_header(db, auth_header, ed_id):
+    """A teacher enrolled in the 'ed' course, returning its auth header."""
+    tid = await insert_user(db, username="prof", role="teacher", courses=[ed_id])
+    return auth_header(role="teacher", id=tid)
 
 
 class TestAuthGuards:
@@ -25,14 +35,13 @@ class TestAuthGuards:
 
 
 class TestCourseScoping:
-    async def test_teacher_overview_is_scoped_to_own_courses(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-        await insert_course(db, code="poo")
-        await insert_chat(db, course="ed", user_id="u1")
-        await insert_chat(db, course="ed", user_id="u2")
-        await insert_chat(db, course="poo", user_id="u3")  # outside the teacher's scope
+    async def test_teacher_overview_is_scoped_to_own_courses(self, api_client, ed_teacher_header, ed_id, db):
+        poo_id = await insert_course(db, code="poo")
+        await insert_chat(db, course_id=ed_id, user_id=U1)
+        await insert_chat(db, course_id=ed_id, user_id=U2)
+        await insert_chat(db, course_id=poo_id, user_id=U3)  # outside the teacher's scope
 
-        resp = await api_client.get(OVERVIEW, headers=auth_header(role="teacher", courses=["ed"]))
+        resp = await api_client.get(OVERVIEW, headers=ed_teacher_header)
 
         assert resp.status_code == 200
         body = resp.json()
@@ -40,11 +49,11 @@ class TestCourseScoping:
         assert body["active_students"] == 2
 
     async def test_admin_overview_sees_all_courses(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-        await insert_course(db, code="poo")
-        await insert_chat(db, course="ed", user_id="u1")
-        await insert_chat(db, course="ed", user_id="u2")
-        await insert_chat(db, course="poo", user_id="u3")
+        ed_id = await insert_course(db, code="ed")
+        poo_id = await insert_course(db, code="poo")
+        await insert_chat(db, course_id=ed_id, user_id=U1)
+        await insert_chat(db, course_id=ed_id, user_id=U2)
+        await insert_chat(db, course_id=poo_id, user_id=U3)
 
         resp = await api_client.get(OVERVIEW, headers=auth_header(role="admin"))
 
@@ -53,36 +62,31 @@ class TestCourseScoping:
         assert body["total_conversations"] == 3
         assert body["active_students"] == 3
 
-    async def test_teacher_forbidden_on_course_outside_scope(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-        await insert_course(db, code="poo")
+    async def test_teacher_forbidden_on_course_outside_scope(self, api_client, ed_teacher_header, db):
+        poo_id = await insert_course(db, code="poo")
 
         resp = await api_client.get(
-            "/api/v1/analytics/courses/poo/overview",
-            headers=auth_header(role="teacher", courses=["ed"]),
+            f"/api/v1/analytics/courses/{poo_id}/overview",
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 403
 
-    async def test_unknown_course_returns_404(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-
+    async def test_unknown_course_returns_404(self, api_client, ed_teacher_header):
         resp = await api_client.get(
-            "/api/v1/analytics/courses/xyz/overview",
-            headers=auth_header(role="teacher", courses=["ed"]),
+            f"/api/v1/analytics/courses/{UNKNOWN_ID}/overview",
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 404
 
 
 class TestRequestValidation:
-    async def test_invalid_activity_range_returns_422(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-
+    async def test_invalid_activity_range_returns_422(self, api_client, ed_teacher_header):
         resp = await api_client.get(
             "/api/v1/analytics/activity",
             params={"range": "5d"},  # not one of 7d/30d/90d
-            headers=auth_header(role="teacher", courses=["ed"]),
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 422
@@ -91,71 +95,50 @@ class TestRequestValidation:
 class TestEndpointWiring:
     """Smoke tests: each remaining endpoint routes, authorizes and serializes its response_model."""
 
-    async def test_global_activity(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-
+    async def test_global_activity(self, api_client, ed_teacher_header):
         resp = await api_client.get(
             "/api/v1/analytics/activity",
             params={"range": "7d"},
-            headers=auth_header(role="teacher", courses=["ed"]),
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 200
         assert "data" in resp.json()
 
-    async def test_course_overview(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-        await insert_chat(db, course="ed", user_id="u1")
+    async def test_course_overview(self, api_client, ed_teacher_header, ed_id, db):
+        await insert_chat(db, course_id=ed_id, user_id=U1)
 
         resp = await api_client.get(
-            "/api/v1/analytics/courses/ed/overview",
-            headers=auth_header(role="teacher", courses=["ed"]),
+            f"/api/v1/analytics/courses/{ed_id}/overview",
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 200
-        assert resp.json()["course"] == "ed"
+        assert resp.json()["total_conversations"] == 1
 
-    async def test_courses_list(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-        await insert_chat(db, course="ed", user_id="u1")
-
+    async def test_course_activity(self, api_client, ed_teacher_header, ed_id):
         resp = await api_client.get(
-            "/api/v1/analytics/courses",
-            headers=auth_header(role="teacher", courses=["ed"]),
-        )
-
-        assert resp.status_code == 200
-        assert resp.json() == {"data": ["ed"]}
-
-    async def test_course_activity(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-
-        resp = await api_client.get(
-            "/api/v1/analytics/courses/ed/activity",
-            headers=auth_header(role="teacher", courses=["ed"]),
+            f"/api/v1/analytics/courses/{ed_id}/activity",
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 200
         assert "data" in resp.json()
 
-    async def test_course_topics(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-
+    async def test_course_topics(self, api_client, ed_teacher_header, ed_id):
         resp = await api_client.get(
-            "/api/v1/analytics/courses/ed/topics",
-            headers=auth_header(role="teacher", courses=["ed"]),
+            f"/api/v1/analytics/courses/{ed_id}/topics",
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 200
-        assert resp.json() == {"course": "ed", "topics": []}
+        assert resp.json() == {"topics": []}
 
-    async def test_course_sources(self, api_client, auth_header, db):
-        await insert_course(db, code="ed")
-
+    async def test_course_sources(self, api_client, ed_teacher_header, ed_id):
         resp = await api_client.get(
-            "/api/v1/analytics/courses/ed/sources",
-            headers=auth_header(role="teacher", courses=["ed"]),
+            f"/api/v1/analytics/courses/{ed_id}/sources",
+            headers=ed_teacher_header,
         )
 
         assert resp.status_code == 200
-        assert resp.json() == {"course": "ed", "sources": []}
+        assert resp.json() == {"sources": []}

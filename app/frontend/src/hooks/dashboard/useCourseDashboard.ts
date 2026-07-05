@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AnalyticsService } from "@/services/analytics.service";
-import type { CourseOverview, TopicPoint, SourcePoint } from "@/api/analytics";
+import { CourseService } from "@/services/course.service";
+import type { CourseOverviewRead, TopicPoint, SourcePoint } from "@/types/analytics";
 import type { RankedListItem } from "@/components/dashboard/ranked-list-card";
-
-type Status = "loading" | "valid" | "not_found";
 
 export function useCourseDashboard() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState<Status>("loading");
-  const [overview, setOverview] = useState<CourseOverview | null>(null);
+  const [status, setStatus] = useState<"loading" | "valid" | "not_found">("loading");
+  const [courseCode, setCourseCode] = useState<string | null>(null);
+  const [overview, setOverview] = useState<CourseOverviewRead | null>(null);
   const [topics, setTopics] = useState<TopicPoint[] | null>(null);
   const [sources, setSources] = useState<SourcePoint[] | null>(null);
 
@@ -19,17 +19,19 @@ export function useCourseDashboard() {
     if (!courseId) return;
 
     setStatus("loading");
+    setCourseCode(null);
     setOverview(null);
     setTopics(null);
     setSources(null);
 
-    AnalyticsService.getCourses()
-      .then(({ data: courses }) => {
-        const exists = courses.some((c) => c === courseId);
-        if (!exists) {
+    CourseService.listCourses()
+      .then((courses) => {
+        const match = courses.find((c) => c.id === courseId);
+        if (!match) {
           setStatus("not_found");
           return;
         }
+        setCourseCode(match.code);
 
         return Promise.all([
           AnalyticsService.getCourseOverview(courseId),
@@ -74,6 +76,7 @@ export function useCourseDashboard() {
 
   return {
     courseId,
+    courseCode,
     status,
     isLoading: status === "loading",
     overview,

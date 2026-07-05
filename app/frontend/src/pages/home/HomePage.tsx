@@ -4,7 +4,7 @@ import { ChatHistorySidebar } from "@/components/home/chat-history-sidebar";
 import { NewChatComposer } from "@/components/home/new-chat-composer";
 import { UserMenu } from "@/components/account/user-menu";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 
 function greetingForNow(): string {
   const h = new Date().getHours();
@@ -26,9 +26,10 @@ export default function HomePage() {
     submitting,
     submit,
     openChat,
+    deleteChat,
   } = useHome();
 
-  const firstName = authService.getFullName()?.trim().split(/\s+/)[0];
+  const firstName = AuthService.getFullName()?.trim().split(/\s+/)[0];
   const heading = firstName ? `${greetingForNow()}, ${firstName}` : "Inicie uma nova conversa";
 
   return (
@@ -38,12 +39,11 @@ export default function HomePage() {
       onRetry={() => window.location.reload()}
     >
       <SidebarProvider defaultOpen>
-        <ChatHistorySidebar chats={chats} onSelectChat={openChat} onHome={() => window.location.reload()} />
+        <ChatHistorySidebar chats={chats} onSelectChat={openChat} onDeleteChat={deleteChat} onHome={() => window.location.reload()} />
 
         <SidebarInset>
           <div className="absolute left-4 top-4 z-30 flex items-center gap-2">
             <SidebarTrigger />
-            <span className="text-base font-semibold">PoliTutor</span>
           </div>
           <div className="fixed right-4 top-4 z-30">
             <UserMenu compact />
@@ -55,7 +55,7 @@ export default function HomePage() {
                   {heading}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Escolha a cadeira e faça a sua primeira pergunta.
+                  Escolha a unidade curricular e faça a sua primeira pergunta.
                 </p>
               </div>
 

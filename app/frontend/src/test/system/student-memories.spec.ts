@@ -22,8 +22,8 @@ test.describe("Student memories", () => {
   test("removes a memory", async ({ page }) => {
     await openMemories(page);
 
-    const row = page.locator("li", { hasText: MEMORY_C });
-    await row.getByRole("button", { name: "Remover memória" }).click();
+    const row = page.locator("ul").locator("li", { hasText: MEMORY_C });
+    await row.getByRole("button", { name: "Remover memória" }).click({ force: true });
     await page.getByRole("button", { name: "Remover", exact: true }).click();
 
     await expect(page.getByText(MEMORY_C)).toHaveCount(0);

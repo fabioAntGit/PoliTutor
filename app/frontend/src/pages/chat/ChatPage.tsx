@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { ArrowUp, Square } from "lucide-react";
 import { ChatBubble } from "@/components/ui/chat-bubble";
 import { TypingDots } from "@/components/ui/typing-dots";
@@ -7,6 +6,8 @@ import { PageState } from "@/components/ui/page-state";
 import { UserMenu } from "@/components/account/user-menu";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChatHistorySidebar } from "@/components/home/chat-history-sidebar";
+import { useAutoGrowTextarea } from "@/hooks/chat/useAutoGrowTextarea";
+import { isQuestionReady, QUESTION_MAX_CHARS } from "@/lib/validation";
 
 export default function ChatPage() {
     const {
@@ -23,36 +24,26 @@ export default function ChatPage() {
         chats,
         openChat,
         goHome,
+        deleteChat,
         scrollRef,
         hasScrolled,
         handleScroll,
     } = useChat();
 
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const MAX_CHARS = 1500;
-    const canSend = input.trim().length > 0;
-    const nearLimit = input.length >= MAX_CHARS * 0.9;
-
-    useEffect(() => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.style.height = "auto";
-        el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
-    }, [input]);
+    const textareaRef = useAutoGrowTextarea(input, 200);
+    const canSend = isQuestionReady(input);
+    const nearLimit = input.length >= QUESTION_MAX_CHARS * 0.9;
 
     return (
         <PageState loading={loading} error={error}>
             <SidebarProvider defaultOpen>
-                <ChatHistorySidebar chats={chats} onSelectChat={openChat} onHome={goHome} />
+                <ChatHistorySidebar chats={chats} onSelectChat={openChat} onDeleteChat={deleteChat} onHome={goHome} />
 
                 <SidebarInset>
                     <main className="flex h-screen flex-col overflow-hidden">
                         <header className="relative flex shrink-0 items-center justify-center py-4">
                             <div className="absolute left-4 top-0 bottom-0 my-auto flex items-center gap-2">
                                 <SidebarTrigger />
-                                <span className="text-base font-semibold">
-                                    PoliTutor
-                                </span>
                             </div>
 
                             <h1 className="text-xl font-semibold">{chat?.course_name}</h1>
@@ -88,11 +79,11 @@ export default function ChatPage() {
 
                         <form onSubmit={handleSubmit} className="shrink-0 px-4 pb-5 sm:px-6">
                             <div className="mx-auto w-full max-w-3xl">
-                                <div className="flex items-end gap-2 rounded-[1.75rem] border border-border/70 bg-card/80 p-2 pl-4 shadow-lg backdrop-blur-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20">
+                                <div className="flex flex-col gap-2 rounded-[1.75rem] border border-border/70 bg-card/80 px-4 py-3 shadow-lg backdrop-blur-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20">
                                     <textarea
                                         ref={textareaRef}
                                         value={input}
-                                        maxLength={MAX_CHARS}
+                                        maxLength={QUESTION_MAX_CHARS}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter" && !e.shiftKey) {
@@ -102,9 +93,10 @@ export default function ChatPage() {
                                         }}
                                         placeholder="Pergunte alguma coisa"
                                         rows={1}
-                                        className="max-h-[200px] min-h-[2.25rem] min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
+                                        className="max-h-[200px] min-h-[2.25rem] w-full resize-none bg-transparent py-1 text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
                                     />
 
+                                    <div className="flex items-center justify-end">
                                     {isTyping ? (
                                         <button
                                             key="cancel-btn"
@@ -128,13 +120,14 @@ export default function ChatPage() {
                                             <ArrowUp className="size-5" />
                                         </button>
                                     )}
+                                    </div>
                                 </div>
 
                                 <div className="mt-1.5 flex items-center justify-center gap-2 px-2 text-[11px] text-muted-foreground/70">
                                     <span>O PoliTutor pode cometer erros. Por isso, lembre-se de conferir informações relevantes.</span>
                                     {nearLimit && (
                                         <span className="tabular-nums">
-                                            {input.length}/{MAX_CHARS}
+                                            {input.length}/{QUESTION_MAX_CHARS}
                                         </span>
                                     )}
                                 </div>

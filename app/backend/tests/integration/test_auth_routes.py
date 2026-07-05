@@ -35,10 +35,12 @@ async def test_login_missing_password_field_returns_422(api_client):
 
 
 async def test_logout_succeeds_and_blacklists_the_token(api_client, db, make_token):
-    await insert_user(db, username="aluno", role="student")
-    token = make_token(role="student", username="aluno", id="stud-1")
+    from bson import ObjectId
 
-    resp = await api_client.post(LOGOUT, json={"access_token": token})
+    await insert_user(db, username="aluno", role="student")
+    token = make_token(role="student", username="aluno", id=str(ObjectId()))
+
+    resp = await api_client.post(LOGOUT, headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
 
     protected = await api_client.get(
@@ -48,7 +50,7 @@ async def test_logout_succeeds_and_blacklists_the_token(api_client, db, make_tok
 
 
 async def test_logout_with_invalid_token_still_succeeds(api_client):
-    resp = await api_client.post(LOGOUT, json={"access_token": "not-a-real-token"})
+    resp = await api_client.post(LOGOUT, headers={"Authorization": "Bearer not-a-real-token"})
 
     assert resp.status_code == 200
 
@@ -97,7 +99,7 @@ async def test_change_password_wrong_current_returns_400(api_client, db, auth_he
     assert resp.status_code == 400
 
 
-async def test_change_password_too_short_new_password_returns_400(api_client, db, auth_header):
+async def test_change_password_too_short_new_password_returns_422(api_client, db, auth_header):
     await insert_user(db, username="aluno", password="oldpass12", role="student")
     header = auth_header(role="student", username="aluno")
 
@@ -107,4 +109,4 @@ async def test_change_password_too_short_new_password_returns_400(api_client, db
         headers=header,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == 422

@@ -10,7 +10,7 @@ import {
 import { MemoryList } from "@/components/memories/memory-list";
 import { DeleteMemoryDialog } from "@/components/memories/delete-memory-dialog";
 import { useMemories } from "@/hooks/memories/useMemories";
-import type { UserMemory } from "@/api/memory";
+import type { UserMemory } from "@/types/memory";
 
 export function MemoriesSection() {
   const {
@@ -52,7 +52,7 @@ export function MemoriesSection() {
                 </SelectTrigger>
                 <SelectContent position="popper" side="bottom" align="start">
                   {courses.map((course) => (
-                    <SelectItem key={course.code} value={course.code}>
+                    <SelectItem key={course.id} value={course.id}>
                       {course.name}
                     </SelectItem>
                   ))}

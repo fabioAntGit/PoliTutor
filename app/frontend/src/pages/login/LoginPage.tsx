@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useLogin } from "@/hooks/login/useLogin";
@@ -17,6 +17,16 @@ export default function LoginPage() {
 
   return (
     <main className="relative flex min-h-screen w-full bg-background">
+      <div className="absolute left-4 top-4 z-20 flex items-center gap-2 lg:hidden">
+        <img
+          src="/logo.jpg"
+          alt="Logótipo da ESTG"
+          className="h-9 w-9 rounded-lg object-cover"
+        />
+        <span className="text-base font-semibold text-[#1d1d1d] dark:text-foreground">
+          PoliTutor
+        </span>
+      </div>
       <div className="absolute right-4 top-4 z-20">
         <ThemeToggle />
       </div>
@@ -26,6 +36,17 @@ export default function LoginPage() {
           alt="Poli Tutor"
           className="absolute inset-0 h-full w-full object-cover"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40" />
+        <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.jpg"
+              alt="Logótipo da ESTG"
+              className="h-11 w-11 rounded-xl object-cover"
+            />
+            <span className="text-2xl font-semibold tracking-tight">PoliTutor</span>
+          </div>
+        </div>
       </section>
       <section className="flex w-full flex-col bg-white text-[#1d1d1d] dark:bg-background dark:text-foreground lg:w-1/2">
         <div className="flex flex-1 items-center justify-center px-6 py-10 sm:px-10">

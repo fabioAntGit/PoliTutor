@@ -2,6 +2,6 @@ pytest
 pytest-asyncio
 pytest-mock
 pytest-cov
-testcontainers[mongodb]
+testcontainers[mongodb,redis]
 pymongo
 httpx

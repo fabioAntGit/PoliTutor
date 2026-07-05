@@ -1,19 +1,4 @@
-"""
-Threshold Benchmark Module.
-
-Determines the optimal ChromaDB distance threshold using the elbow method.
-
-Workflow:
-    1. Collect all distances returned by ChromaDB across every benchmark question.
-    2. Sweep N threshold values across the observed distance range.
-    3. For each threshold: filter chunks, rerank, compute IR metrics + fallback rate.
-    4. Suggest T* via two criteria: second-derivative elbow and penalised composite score.
-    5. Save full results to data/benchmark/results/threshold_sweep_<timestamp>.json.
-
-Usage:
-    python -m rag.src.evaluation.benchmark_threshold
-    python -m rag.src.evaluation.benchmark_threshold --thresholds 30
-"""
+"""Threshold sweep benchmark for retrieval distance calibration."""
 
 import json
 import logging
@@ -33,7 +18,7 @@ from ..shared.config import (
     RERANKER_TOP_K,
     TOP_K_RESULTS,
 )
-from ..runtime.retrieval import retrieve_with_config
+from ..runtime.retrieval import retrieve
 from ..shared.utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
@@ -41,24 +26,13 @@ logger = logging.getLogger(__name__)
 RESULTS_DIR = BENCHMARK_OUTPUT_DIR / "results"
 
 
-# ── Distance collection ──────────────────────────────────────────────
-
 def _collect_distances(
     benchmark_files: list[Path],
     embedding_model: str,
     collection_name: str,
     top_k: int,
 ) -> tuple[list[float], list[float]]:
-    """
-    Runs retrieval without reranking or threshold filtering for every question
-    and separates hit distances from miss distances.
-
-    A "hit" distance is the distance of the chunk that covers the expected page.
-    All other distances are "misses".
-
-    Returns:
-        (hit_distances, miss_distances) — flat lists of raw ChromaDB cosine distances.
-    """
+    """Collect raw ChromaDB distances split into hits and misses."""
     hit_distances: list[float] = []
     miss_distances: list[float] = []
 
@@ -78,14 +52,14 @@ def _collect_distances(
             expected_page = str(qa.get("page", "0"))
             expected_file = str(qa.get("filename", ""))
 
-            results = retrieve_with_config(
+            results = retrieve(
                 course_code,
                 question,
                 embedding_model=embedding_model,
                 collection_name=collection_name,
                 top_k=top_k,
-                reranker_model=None,       # no reranking at this stage
-                distance_threshold=None,   # no filtering — collect raw distances
+                reranker_model=None,      
+                distance_threshold=None,  
             )
 
             for meta, dist in zip(results.metadatas, results.distances):
@@ -101,8 +75,6 @@ def _collect_distances(
     return hit_distances, miss_distances
 
 
-# ── Per-threshold evaluation ─────────────────────────────────────────
-
 def _evaluate_threshold(
     benchmark_files: list[Path],
     threshold: float,
@@ -112,10 +84,7 @@ def _evaluate_threshold(
     reranker_model: str | None,
     reranker_top_k: int,
 ) -> dict:
-    """
-    Runs the full retrieve+rerank pipeline with a fixed distance threshold and
-    returns IR metrics and fallback rate for that threshold value.
-    """
+    """Evaluate one fixed distance threshold."""
     qrels_dict: dict = {}
     run_dict: dict = {}
     n_fallbacks = 0
@@ -140,7 +109,7 @@ def _evaluate_threshold(
             qrels_dict[q_id] = {f"{expected_file}_p{expected_page}": 1}
             n_total += 1
 
-            results = retrieve_with_config(
+            results = retrieve(
                 course_code,
                 question,
                 embedding_model=embedding_model,
@@ -181,30 +150,18 @@ def _evaluate_threshold(
     }
 
 
-# ── Elbow detection ──────────────────────────────────────────────────
-
 def _suggest_threshold(rows: list[dict], alpha: float = 0.5) -> dict:
-    """
-    Applies two criteria to suggest the optimal threshold T*:
-
-    1. Second-derivative elbow on hit_rate@5: the threshold just before the
-       curve starts flattening (largest positive second derivative).
-    2. Penalised composite score: argmax(hit_rate@5 - alpha * fallback_rate).
-
-    Returns a dict with both suggestions and their metrics.
-    """
+    """Suggest thresholds using elbow and fallback-penalized score."""
     thresholds = np.array([r["threshold"] for r in rows])
     hit_rates = np.array([r.get("hit_rate@5", 0.0) for r in rows])
     fallback_rates = np.array([r["fallback_rate"] for r in rows])
 
-    # Criterion 1: elbow via second derivative
     if len(hit_rates) >= 3:
         second_deriv = np.gradient(np.gradient(hit_rates, thresholds), thresholds)
         elbow_idx = int(np.argmax(second_deriv))
     else:
         elbow_idx = int(np.argmax(hit_rates))
 
-    # Criterion 2: composite score
     composite = hit_rates - alpha * fallback_rates
     composite_idx = int(np.argmax(composite))
 
@@ -223,8 +180,6 @@ def _suggest_threshold(rows: list[dict], alpha: float = 0.5) -> dict:
     }
 
 
-# ── Main sweep ───────────────────────────────────────────────────────
-
 def run_threshold_sweep(
     benchmark_files: list[Path],
     n_thresholds: int = 20,
@@ -235,23 +190,7 @@ def run_threshold_sweep(
     reranker_top_k: int = RERANKER_TOP_K,
     composite_alpha: float = 0.5,
 ) -> Path:
-    """
-    Full threshold sweep: collect distances, define grid, evaluate each threshold,
-    apply elbow method, and save results.
-
-    Args:
-        benchmark_files:  List of BenchmarkQA-*.json files.
-        n_thresholds:     Number of threshold values to test.
-        embedding_model:  Embedding model identifier.
-        collection_name:  ChromaDB collection name.
-        top_k:            Number of candidates retrieved from ChromaDB.
-        reranker_model:   Reranker model identifier, or None to skip reranking.
-        reranker_top_k:   Number of results kept after reranking.
-        composite_alpha:  Weight of fallback_rate penalty in composite criterion.
-
-    Returns:
-        Path to the saved JSON results file.
-    """
+    """Run threshold sweep and save the JSON report."""
     logger.info("=== Phase 1: Collecting distance distribution ===")
     hit_dists, miss_dists = _collect_distances(
         benchmark_files, embedding_model, collection_name, top_k
@@ -347,9 +286,11 @@ def run_threshold_sweep(
     return output_path
 
 
-# ── CLI ──────────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     import argparse
 
     parser = argparse.ArgumentParser(description="Threshold sweep benchmark for retrieval distance calibration.")

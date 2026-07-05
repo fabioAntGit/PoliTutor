@@ -37,11 +37,10 @@ ENV PYTHONUNBUFFERED=1
 
 # Retrieval models (BAAI/bge-m3, BAAI/bge-reranker-base) are NOT baked into the
 # image. They are downloaded on first start into the huggingface_cache volume
-# (see docker-compose.hub.yml) and reused across restarts. This keeps the image
-# small; the first boot needs network access.
 
 COPY app/ ./app/
 COPY rag/ ./rag/
+COPY contracts/ ./contracts/
 
 RUN find . -name "*.pyc" -delete && \
     find . -name "__pycache__" -delete

@@ -33,24 +33,24 @@ async def test_create_user_admin_creates_with_username_from_email(api_client, au
     assert body["email"] == "novo@estg.ipp.pt"
 
 
-async def test_create_user_duplicate_email_returns_400(api_client, db, auth_header):
+async def test_create_user_duplicate_email_returns_409(api_client, db, auth_header):
     await insert_user(db, username="novo", email="novo@estg.ipp.pt", role="student")
 
     resp = await api_client.post(
         USERS, json=_new_user_payload(), headers=auth_header(role="admin")
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == 409
 
 
-async def test_create_user_short_password_returns_400(api_client, auth_header):
+async def test_create_user_short_password_returns_422(api_client, auth_header):
     resp = await api_client.post(
         USERS,
         json=_new_user_payload(password="short"),
         headers=auth_header(role="admin"),
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
 async def test_list_users_requires_admin(api_client, auth_header):
@@ -66,8 +66,3 @@ async def test_list_users_admin_lists_users(api_client, db, auth_header):
 
     assert resp.status_code == 200
     assert {u["username"] for u in resp.json()} == {"ana", "rui"}
-
-
-async def test_get_user_unknown_returns_404(api_client, auth_header):
-    resp = await api_client.get(f"{USERS}/naoexiste", headers=auth_header(role="admin"))
-    assert resp.status_code == 404

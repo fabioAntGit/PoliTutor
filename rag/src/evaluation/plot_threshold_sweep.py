@@ -1,9 +1,4 @@
-"""
-Plot threshold sweep results from benchmark_threshold.py output.
-
-Usage:
-    python -m src.evaluation.plot_threshold_sweep <path_to_json>
-"""
+"""Plot threshold sweep results."""
 
 import json
 import sys
@@ -14,7 +9,7 @@ import matplotlib.patches as mpatches
 import matplotlib.ticker as mticker
 import numpy as np
 
-RECOMMENDED_T = 0.9301327684210527  # first threshold with fallback ≈ 0 and hit@5 plateaus
+RECOMMENDED_T = 0.9301327684210527  # first stable no-fallback threshold
 
 
 def plot(json_path: Path) -> None:
@@ -41,18 +36,16 @@ def plot(json_path: Path) -> None:
         gridspec_kw={"height_ratios": [2, 1], "hspace": 0.08},
     )
 
-    # ── Plateau shading ───────────────────────────────────────────────
     for ax in (ax1, ax2):
         ax.axvspan(rec_t, thresholds[-1], color="mediumseagreen", alpha=0.08, zorder=0)
 
-    # ── Top: IR metrics ───────────────────────────────────────────────
+    # IR metrics.
     ax1.plot(thresholds, hit_rate * 100, "o-",  color="#1f77b4", lw=2,   ms=5, label="Hit Rate@5", zorder=3)
     ax1.plot(thresholds, ndcg     * 100, "s--", color="#ff7f0e", lw=1.8, ms=4, label="NDCG@5",     zorder=3)
     ax1.plot(thresholds, mrr      * 100, "^:",  color="#2ca02c", lw=1.8, ms=4, label="MRR@5",      zorder=3)
 
     ax1.axvline(rec_t, color="#d62728", lw=2, ls="-", zorder=4, label=f"Threshold recomendado  T = {rec_t:.4f}")
 
-    # Annotation box
     ax1.annotate(
         f"T = {rec_t:.4f}\nHit@5 = {rec_hit:.1%}\nNDCG@5 = {rec_ndcg:.1%}\nFallback = {rec_fb:.1%}",
         xy=(rec_t, rec_hit * 100),
@@ -73,7 +66,7 @@ def plot(json_path: Path) -> None:
         fontsize=11, fontweight="bold", pad=10,
     )
 
-    # ── Bottom: Fallback rate ─────────────────────────────────────────
+    # Fallback rate.
     ax2.plot(thresholds, fallback * 100, "D-", color="#d62728", lw=2, ms=5, label="Taxa de Fallback", zorder=3)
     ax2.fill_between(thresholds, fallback * 100, alpha=0.18, color="#d62728", zorder=2)
     ax2.axvline(rec_t, color="#d62728", lw=2, ls="-", zorder=4)
@@ -84,14 +77,12 @@ def plot(json_path: Path) -> None:
     ax2.yaxis.set_major_formatter(mticker.FormatStrFormatter("%g%%"))
     ax2.legend(loc="upper right", fontsize=9.5, framealpha=0.9)
 
-    # Plateau label
     plateau_patch = mpatches.Patch(color="mediumseagreen", alpha=0.25, label="Zona estável (fallback = 0%)")
     ax2.legend(handles=[
         plt.Line2D([0], [0], color="#d62728", lw=2, marker="D", ms=5, label="Taxa de Fallback"),
         plateau_patch,
     ], loc="upper right", fontsize=9.5, framealpha=0.9)
 
-    # X ticks at every evaluated threshold
     ax2.set_xticks(thresholds)
     ax2.set_xticklabels([f"{t:.3f}" for t in thresholds], rotation=45, ha="right", fontsize=7.5)
 
@@ -103,6 +94,10 @@ def plot(json_path: Path) -> None:
 
 
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     if len(sys.argv) < 2:
         print("Usage: python -m src.evaluation.plot_threshold_sweep <path_to_json>")
         sys.exit(1)

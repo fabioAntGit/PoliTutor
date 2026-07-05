@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { deleteMyAccount } from "@/api/users";
-import { authService } from "@/services/auth.service";
-import { ApiError } from "@/lib/errors";
+import { useDeleteAccount } from "@/hooks/account/useDeleteAccount";
 
 interface DeleteAccountDialogProps {
   open: boolean;
@@ -19,9 +15,8 @@ interface DeleteAccountDialogProps {
 const CONFIRM_PHRASE = "ELIMINAR";
 
 export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogProps) {
-  const navigate = useNavigate();
+  const { deleting, deleteAccount } = useDeleteAccount();
   const [confirmation, setConfirmation] = useState("");
-  const [deleting, setDeleting] = useState(false);
 
   const canDelete = confirmation === CONFIRM_PHRASE && !deleting;
 
@@ -33,18 +28,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
   const handleDelete = async () => {
     if (!canDelete) return;
-    setDeleting(true);
-    try {
-      await deleteMyAccount();
-      authService.clearTokens();
-      toast.success("Conta eliminada. Os teus dados serao apagados permanentemente daqui a 30 dias.");
-      navigate("/login", { replace: true });
-    } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Erro ao eliminar conta.";
-      toast.error(message);
-      setDeleting(false);
-    }
+    await deleteAccount();
   };
 
   return (

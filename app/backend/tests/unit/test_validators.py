@@ -1,6 +1,6 @@
 import pytest
 
-from app.backend.core.exceptions import AppError
+from app.backend.core.exceptions import BadRequestError
 from app.backend.core.validators import validate_and_extract_username
 
 
@@ -9,8 +9,8 @@ def test_validate_email_valid_estg_returns_username():
     assert result == "8230365"
 
 
-def test_validate_email_invalid_domain_throws_app_error():
-    with pytest.raises(AppError, match="dominio"):
+def test_validate_email_invalid_domain_throws_bad_request():
+    with pytest.raises(BadRequestError, match="dominio"):
         validate_and_extract_username("fabio@gmail.com")
 
 
@@ -24,6 +24,6 @@ def test_validate_email_bare_ipp_domain_returns_username():
     assert result == "fabio"
 
 
-def test_validate_email_missing_at_throws_app_error():
-    with pytest.raises(AppError, match="dominio"):
+def test_validate_email_missing_at_throws_bad_request():
+    with pytest.raises(BadRequestError, match="dominio"):
         validate_and_extract_username("estg.ipp.pt")

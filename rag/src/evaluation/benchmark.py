@@ -1,13 +1,4 @@
-"""
-Benchmark Module.
-
-Provides tools to generate question datasets from course documents and evaluate
-retrieval quality using IR metrics (Hit Rate, MRR, Recall) via the ranx library.
-
-Two main workflows:
-    - Dataset generation: calls the IAEdu LLM API to produce questions per page.
-    - Evaluation: runs retrieval for each question and computes ranx metrics.
-"""
+"""Dataset generation and retrieval benchmark utilities."""
 
 import json
 import logging
@@ -24,7 +15,6 @@ from ..shared.config import (
     BENCHMARK_MIN_CONTEXT_LENGTH,
     BENCHMARK_OUTPUT_DIR,
     BENCHMARK_EVAL_METRICS,
-    BENCHMARK_PROMPT,
     CHROMA_COLLECTION_NAME,
     COURSE_PATH,
     EMBEDDING_MODEL,
@@ -35,9 +25,11 @@ from ..shared.config import (
     SUPPORTED_EXTENSIONS,
     TOP_K_RESULTS,
 )
+from ..shared.prompts import BENCHMARK_PROMPT
 from ..ingestion.extractor import extract_elements_from_file, filter_elements, group_elements_by_page
-from ..shared.call_model import call_openrouter
-from ..runtime.retrieval import retrieve_with_config
+from ..shared.call_model import OpenRouterClient
+from ..shared.models import BenchmarkQA
+from ..runtime.retrieval import retrieve
 from ..shared.utils import extract_metadata_from_filename
 
 logger = logging.getLogger(__name__)
@@ -48,7 +40,7 @@ RESULTS_DIR = BENCHMARK_OUTPUT_DIR / "results"
 
 
 class BenchmarkConfig(BaseModel):
-    """Defines a retrieval configuration to evaluate in the comparison benchmark."""
+    """Retrieval config for benchmark comparisons."""
     name: str
     embedding_model: str = EMBEDDING_MODEL
     collection_name: str = CHROMA_COLLECTION_NAME
@@ -58,37 +50,18 @@ class BenchmarkConfig(BaseModel):
 
 
 def create_qa(context: str, page_number: int, filename: str) -> dict | None:
-    """
-    Sends a page context to the IAEdu LLM endpoint and returns a generated Q&A pair.
-
-    Args:
-        context: The page text to use as the generation context.
-        page_number: Page number within the source document.
-        filename: Source document filename, included in the prompt for attribution.
-
-    Returns:
-        A dict with 'filename', 'page', and 'question' keys, or None on failure.
-    """
+    """Generate one benchmark question for a page."""
     prompt = BENCHMARK_PROMPT.format(page_number=page_number, filename=filename, context=context)
-    # content = call_iaedu(prompt)
-    content = call_openrouter(prompt, model=OPENROUTER_MODEL_BENCHMARK)
-    if content is None:
-        return None
-    try:
-        return json.loads(content)
-    except (json.JSONDecodeError, TypeError):
-        logger.error("Failed to parse IAEdu response as JSON: %s", content)
-        return None
+    result = OpenRouterClient().call_structured(
+        [{"role": "user", "content": prompt}],
+        schema=BenchmarkQA,
+        model=OPENROUTER_MODEL_BENCHMARK,
+    )
+    return result.model_dump() if result else None
 
 
 def generate_benchmark_dataset() -> None:
-    """
-    Generates BenchmarkQA JSON files from all course documents in COURSE_PATH.
-
-    For each document, extracts and filters page content, then calls create_qa()
-    on pages with sufficient context. Output files are saved to BENCHMARK_OUTPUT_DIR
-    as 'BenchmarkQA-{filename}.json'.
-    """
+    """Generate BenchmarkQA JSON files from COURSE_PATH documents."""
     docs = [f for ext in SUPPORTED_EXTENSIONS for f in Path(COURSE_PATH).rglob(ext)]
 
     for file_path in docs:
@@ -129,22 +102,12 @@ def generate_benchmark_dataset() -> None:
             logger.info("Saved %d Q&A pairs to %s", len(all_qa), output_file.name)
 
 
-# ── Evaluation Core ─────────────────────────────────────────────────
-
 def build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[dict, dict]:
     """
-    Reads a BenchmarkQA file and runs retrieval for each question.
-
-    Constructs qrels and run dicts for ranx evaluation. Chunks that span multiple
-    pages register the retrieval score for every covered page, so the evaluator
-    can match any of them against the expected page in qrels.
-
-    Args:
-        benchmark_file: Path to a BenchmarkQA-*.json file.
-        config: Retrieval configuration to use for each query.
+    Build ranx qrels/run dicts from a BenchmarkQA file.
 
     Returns:
-        A tuple of (qrels_dict, run_dict) ready for ranx evaluation.
+        Pair of qrels/run dictionaries ready for ranx.
     """
     with open(benchmark_file, encoding="utf-8") as f:
         qa_pairs = json.load(f)
@@ -162,7 +125,7 @@ def build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[
         q_id = f"{file_stem}_q{i}"
         qrels_dict[q_id] = {f"{expected_file}_p{expected_page}": 1}
 
-        results = retrieve_with_config(
+        results = retrieve(
             course_code,
             question,
             embedding_model=config.embedding_model,
@@ -179,8 +142,7 @@ def build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[
             filename = metadata.get("filename", "Unknown")
             if not pages:
                 continue
-            # A chunk may span multiple pages. Register the score for every covered
-            # page so that the evaluator can match any of them against qrels.
+            # A chunk can match through any page it covers.
             for p in pages:
                 page_key = f"{filename}_p{str(p)}"
                 run_dict[q_id][page_key] = max(float(score), run_dict[q_id].get(page_key, float("-inf")))
@@ -189,16 +151,7 @@ def build_qrels_and_run(benchmark_file: Path, config: BenchmarkConfig) -> tuple[
 
 
 def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> dict:
-    """
-    Computes IR metrics using ranx and logs each result.
-
-    Args:
-        qrels_dict: Ground-truth relevance judgements (query_id → {doc_id: grade}).
-        run_dict: Retrieval results (query_id → {doc_id: score}).
-
-    Returns:
-        Dict mapping metric names to their computed float values.
-    """
+    """Compute and log retrieval metrics."""
     qrels = Qrels(qrels_dict)
     run = Run(run_dict)
     metrics = evaluate(qrels, run, BENCHMARK_EVAL_METRICS)
@@ -210,19 +163,8 @@ def evaluate_benchmark_retrieval_metrics(qrels_dict: dict, run_dict: dict) -> di
     return metrics
 
 
-# ── Result Persistence ──────────────────────────────────────────────
-
 def save_results(data: dict, prefix: str) -> Path:
-    """
-    Saves benchmark results to a timestamped JSON file.
-
-    Args:
-        data: The results dict to serialise.
-        prefix: Filename prefix (e.g. 'comparison').
-
-    Returns:
-        Path to the written file.
-    """
+    """Save benchmark results to a timestamped JSON file."""
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     output_file = RESULTS_DIR / f"{prefix}_{timestamp}.json"
@@ -232,10 +174,8 @@ def save_results(data: dict, prefix: str) -> Path:
     return output_file
 
 
-# ── Single File Evaluation ──────────────────────────────────────────
-
 def execute_retrieval_benchmark(benchmark_file: Path) -> None:
-    """Reads a BenchmarkQA JSON and evaluates retrieval using the default config."""
+    """Evaluate one BenchmarkQA JSON with the default config."""
     file_stem = benchmark_file.stem.replace("BenchmarkQA-", "")
     _, course_code, _ = extract_metadata_from_filename(file_stem)
     logger.info("Evaluating: %s | Course: %s", benchmark_file.name, course_code)
@@ -245,18 +185,8 @@ def execute_retrieval_benchmark(benchmark_file: Path) -> None:
     evaluate_benchmark_retrieval_metrics(qrels_dict, run_dict)
 
 
-# ── Multi-Config Comparison ─────────────────────────────────────────
-
 def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
-    """
-    Evaluates all configurations in BENCHMARK_COMPARISON_CONFIGS across the given files.
-
-    Aggregates qrels and runs across all files per config, computes ranx metrics,
-    and saves the combined results to a timestamped JSON in data/benchmark/results/.
-
-    Args:
-        benchmark_files: List of BenchmarkQA-*.json files to evaluate.
-    """
+    """Evaluate configured retrieval variants across benchmark files."""
     configs = [BenchmarkConfig(**c) for c in BENCHMARK_COMPARISON_CONFIGS]
     results_list: list[dict] = []
 
@@ -291,9 +221,11 @@ def run_comparison_benchmark(benchmark_files: list[Path]) -> None:
     else:
         logger.warning("No valid results to save.")
 
-# ── CLI ─────────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
+    from ..shared.logging_config import setup_logging
+
+    setup_logging()
+
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         if arg == "--generate":

@@ -13,4 +13,8 @@ export const ChatService = {
   async listChats(): Promise<ChatListItem[]> {
     return await chatsApi.listChats();
   },
+
+  async deleteChat(conversationId: string): Promise<void> {
+    await chatsApi.deleteChat(conversationId);
+  },
 };

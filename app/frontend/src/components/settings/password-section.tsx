@@ -1,46 +1,19 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
-import { FormPasswordField } from "@/components/form/FormPasswordField";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
-import {
-  changePasswordSchema,
-  type ChangePasswordFormValues,
-} from "@/schemas/changePassword";
-import { changePassword } from "@/api/auth";
-import { authService } from "@/services/auth.service";
-import { ApiError } from "@/lib/errors";
+import { FormPasswordField } from "@/components/form/form-password-field";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
+import { useChangePassword } from "@/hooks/auth/useChangePassword";
 
 export function PasswordSection() {
-  const form = useForm<ChangePasswordFormValues>({
-    resolver: zodResolver(changePasswordSchema),
-    defaultValues: {
-      current_password: "",
-      new_password: "",
-      confirm_password: "",
-    },
+  const { form, onSubmit } = useChangePassword({
+    onSuccess: () => toast.success("Palavra-passe alterada com sucesso."),
   });
 
   const {
     register,
     formState: { errors, isSubmitting },
   } = form;
-
-  const onSubmit = form.handleSubmit(async (data) => {
-    form.clearErrors("root");
-    try {
-      const tokens = await changePassword(data.current_password, data.new_password);
-      authService.setTokens(tokens.access_token);
-      toast.success("Palavra-passe alterada com sucesso.");
-      form.reset();
-    } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Erro ao alterar a palavra-passe.";
-      form.setError("root", { message });
-    }
-  });
 
   return (
     <form onSubmit={onSubmit} className="max-w-sm space-y-4">

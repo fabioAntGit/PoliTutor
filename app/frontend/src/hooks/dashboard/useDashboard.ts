@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { AnalyticsService } from "@/services/analytics.service";
-import type { OverviewData } from "@/api/analytics";
+import type { OverviewRead } from "@/types/analytics";
 
 export function useDashboard() {
-  const [overview, setOverview] = useState<OverviewData | null>(null);
+  const [overview, setOverview] = useState<OverviewRead | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

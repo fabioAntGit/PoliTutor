@@ -1,4 +1,3 @@
-import * as React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import {
   Card,
@@ -23,7 +22,8 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { useActivityChart, type Range } from "@/hooks/dashboard/useActivityChart"
+import { useActivityChart } from "@/hooks/dashboard/useActivityChart"
+import type { Range } from "@/types/analytics"
 
 const chartConfig = {
   questions: {
@@ -32,8 +32,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function ChartAreaInteractive({ course, description }: { course?: string; description?: string } = {}) {
-  const { timeRange, setTimeRange, chartData } = useActivityChart(course)
+export function ChartAreaInteractive({ courseId, description }: { courseId?: string; description?: string } = {}) {
+  const { timeRange, setTimeRange, chartData } = useActivityChart(courseId)
 
   return (
     <Card className="@container/card">

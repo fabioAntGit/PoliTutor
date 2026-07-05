@@ -1,10 +1,10 @@
-import { listAllCourses } from "@/api/courses";
+import { CourseService } from "@/services/course.service";
 import type { CourseResponse } from "@/types/course";
 import { usePaginatedResource } from "@/hooks/common/usePaginatedResource";
 
 export function useCourses() {
   const resource = usePaginatedResource<CourseResponse>(
-    listAllCourses,
+    CourseService.listAllCourses,
     (c, q) =>
       c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q),
   );

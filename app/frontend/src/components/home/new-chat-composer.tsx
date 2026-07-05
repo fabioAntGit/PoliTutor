@@ -9,13 +9,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { CourseResponse } from "@/types/course";
-
-const MAX_CHARS = 1500;
+import { isQuestionReady, QUESTION_MAX_CHARS } from "@/lib/validation";
 
 interface NewChatComposerProps {
   courses: CourseResponse[];
   selectedCourse: string;
-  onCourseChange: (code: string) => void;
+  onCourseChange: (courseId: string) => void;
   input: string;
   onInputChange: (value: string) => void;
   onSubmit: () => void;
@@ -33,8 +32,8 @@ export function NewChatComposer({
 }: NewChatComposerProps) {
   const textareaRef = useAutoGrowTextarea(input, 160);
   
-  const canSubmit = !submitting && !!input.trim() && !!selectedCourse;
-  const nearLimit = input.length >= MAX_CHARS * 0.9;
+  const canSubmit = !submitting && isQuestionReady(input) && !!selectedCourse;
+  const nearLimit = input.length >= QUESTION_MAX_CHARS * 0.9;
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,11 +42,11 @@ export function NewChatComposer({
 
   return (
     <form onSubmit={handleFormSubmit} className="w-full">
-      <div className="flex items-end gap-2 rounded-[1.75rem] border border-border/70 bg-card/80 py-2 pl-4 pr-2 shadow-lg backdrop-blur-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20">
+      <div className="flex flex-col gap-2 rounded-[1.75rem] border border-border/70 bg-card/80 px-4 py-3 shadow-lg backdrop-blur-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20">
         <textarea
           ref={textareaRef}
           value={input}
-          maxLength={MAX_CHARS}
+          maxLength={QUESTION_MAX_CHARS}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -57,14 +56,14 @@ export function NewChatComposer({
           }}
           placeholder="Pergunte alguma coisa"
           rows={1}
-          className="max-h-[160px] min-h-[2.25rem] min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
+          className="max-h-[160px] min-h-[2.25rem] w-full resize-none bg-transparent py-1 text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
           disabled={submitting}
         />
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           {nearLimit && (
-            <span className="text-[11px] tabular-nums text-muted-foreground/70">
-              {input.length}/{MAX_CHARS}
+            <span className="mr-auto text-[11px] tabular-nums text-muted-foreground/70">
+              {input.length}/{QUESTION_MAX_CHARS}
             </span>
           )}
 
@@ -85,7 +84,7 @@ export function NewChatComposer({
             </SelectTrigger>
             <SelectContent position="popper" side="top" align="end">
               {courses.map((course) => (
-                <SelectItem key={course.code} value={course.code}>
+                <SelectItem key={course.id} value={course.id}>
                   {course.name}
                 </SelectItem>
               ))}

@@ -2,22 +2,29 @@ import type { Message } from "@/types/message";
 import { Copy, Check, Flag, BookOpen, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { ReportService } from "@/services/report.service";
-import { toast } from "sonner";
+import { useReportMessage } from "@/hooks/chat/useReportMessage";
 
 interface ChatBubbleProps {
     message: Message;
 }
 
+function formatTime(isoString?: string) {
+    if (!isoString) return "";
+    return new Intl.DateTimeFormat("pt-PT", {
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(new Date(isoString));
+}
+
 export function ChatBubble({ message }: ChatBubbleProps) {
     const isUser = message.role === "user";
     const hasPersistedId = /^[a-f0-9]{24}$/i.test(message.id);
-    const canReport = isUser && hasPersistedId;
+    const canReport = !isUser && hasPersistedId;
     const [copied, setCopied] = useState(false);
-    const [reported, setReported] = useState(message.is_reported || false);
     const [showSources, setShowSources] = useState(false);
     const [speaking, setSpeaking] = useState(false);
-    const [isReporting, setIsReporting] = useState(false);
+    const { reported, isReporting, toggleReport } = useReportMessage(message.id, message.is_reported ?? false);
+    const sentAt = formatTime(message.created_at);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
@@ -46,44 +53,8 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         window.speechSynthesis.speak(utterance);
     };
 
-    const handleReport = async (id: string) => {
-        if (isReporting) return;
-
-        setIsReporting(true);
-        try {
-            if (reported) {
-                const success = await ReportService.unreportMessage(id);
-                if (success) {
-                    setReported(false);
-                }
-            } else {
-                const success = await ReportService.reportMessage(id);
-                if (success) {
-                    setReported(true);
-                } else {
-                    toast.error("Erro ao enviar o report. Certifica-te que a mensagem já tem uma resposta.");
-                }
-            }
-        } catch (error: any) {
-            console.error("Erro ao processar report:", error);
-            const msg = error instanceof Error ? error.message : "Erro ao processar o pedido. Tenta novamente mais tarde.";
-            toast.error(msg);
-        } finally {
-            setIsReporting(false);
-        }
-    };
-
-    const formatTime = (isoString?: string) => {
-        if (!isoString) return "";
-        return new Intl.DateTimeFormat("pt-PT", {
-            hour: "2-digit",
-            minute: "2-digit",
-        }).format(new Date(isoString));
-    };
-
     return (
         <div className={`group flex w-full flex-col gap-1.5 ${isUser ? "items-end" : "items-start"}`}>
-            {/* Bubble */}
             <div
                 className={`max-w-[85%] min-w-0 rounded-2xl border px-5 py-3 shadow-sm transition-all duration-300 ${
                     reported
@@ -108,7 +79,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                     </ReactMarkdown>
                 </div>
 
-                {!isUser && !message.isFallback && message.sources && message.sources.length > 0 && (
+                {!isUser && !message.is_fallback && message.sources && message.sources.length > 0 && (
                     <div className="mt-3 border-t border-border/40 pt-2 text-[11px]">
                         <button
                             onClick={() => setShowSources(!showSources)}
@@ -135,8 +106,13 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 )}
             </div>
 
-            {/* Actions */}
-            <div className={`flex gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+            <div className={`flex items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+                {sentAt && (
+                    <span className="px-1.5 text-[11px] tabular-nums text-muted-foreground/70">
+                        {sentAt}
+                    </span>
+                )}
+
                 <button
                     onClick={handleCopy}
                     title="Copiar"
@@ -156,14 +132,14 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 )}
 
                 {canReport && (
-                <button
-                    onClick={() => handleReport(message.id)}
-                    disabled={isReporting}
-                    title={reported ? "Remover report" : "Reportar problema"}
-                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors hover:bg-red-500/10 hover:text-red-500 ${reported ? "text-red-500 bg-red-500/5" : "text-muted-foreground"} ${isReporting ? "opacity-50 cursor-wait" : ""}`}
-                >
-                    <Flag className={`h-3.5 w-3.5 ${reported ? "fill-current" : ""} ${isReporting ? "animate-pulse" : ""}`} />
-                </button>
+                    <button
+                        onClick={toggleReport}
+                        disabled={isReporting}
+                        title={reported ? "Remover report" : "Reportar problema"}
+                        className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors hover:bg-red-500/10 hover:text-red-500 ${reported ? "text-red-500 bg-red-500/5" : "text-muted-foreground"} ${isReporting ? "opacity-50 cursor-wait" : ""}`}
+                    >
+                        <Flag className={`h-3.5 w-3.5 ${reported ? "fill-current" : ""} ${isReporting ? "animate-pulse" : ""}`} />
+                    </button>
                 )}
             </div>
         </div>

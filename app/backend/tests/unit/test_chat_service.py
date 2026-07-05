@@ -2,12 +2,11 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock
 
 import pytest
+from bson import ObjectId
 
 from app.backend.core.exceptions import (
     AccessDeniedError,
-    ChatNotFoundError,
-    CourseNotFoundError,
-    UserNotFoundError,
+    NotFoundError,
 )
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 from app.backend.repositories.interfaces.course_repository import ICourseRepository
@@ -17,24 +16,31 @@ from app.backend.schemas.course.models import Course
 from app.backend.schemas.message.models import Message
 from app.backend.schemas.user.models import User
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
+from app.backend.repositories.interfaces.report_repository import IReportRepository
 from app.backend.services.chats import ChatService
+
+USER_ID = str(ObjectId())
+OTHER_USER_ID = str(ObjectId())
+ED_ID = str(ObjectId())
+PAW_ID = str(ObjectId())
+CHAT_ID = "60d5ecb8b4259b3a0c4f1a01"
 
 
 def _make_course(**kwargs) -> Course:
-    defaults = dict(code="ed", name="Estruturas de Dados", is_active=True)
+    defaults = dict(_id=ED_ID, code="ed", name="Estruturas de Dados", scope="", is_active=True)
     defaults.update(kwargs)
     return Course(**defaults)
 
 
 def _make_user(**kwargs) -> User:
     defaults = dict(
-        id="user1",
+        id=USER_ID,
         email="fabio@estg.ipp.pt",
         username="fabio",
         full_name="Fabio Silva",
         role="student",
         hashed_password="hashed_pw",
-        courses=["ed"],
+        courses=[ED_ID],
     )
     defaults.update(kwargs)
     return User(**defaults)
@@ -42,9 +48,9 @@ def _make_user(**kwargs) -> User:
 
 def _make_chat(**kwargs) -> Chat:
     defaults = dict(
-        _id="60d5ecb8b4259b3a0c4f1a01",
-        course="ed",
-        user_id="user1",
+        _id=CHAT_ID,
+        course_id=ED_ID,
+        user_id=USER_ID,
         summary=None,
     )
     defaults.update(kwargs)
@@ -53,7 +59,7 @@ def _make_chat(**kwargs) -> Chat:
 
 def _make_message(**kwargs) -> Message:
     defaults = dict(
-        conversation_id="60d5ecb8b4259b3a0c4f1a01",
+        conversation_id=CHAT_ID,
         role="user",
         content="Olá tutor!",
     )
@@ -82,83 +88,89 @@ def message_repo():
 
 
 @pytest.fixture
-def service(chat_repo, course_repo, user_repo, message_repo):
+def report_repo():
+    return AsyncMock(spec=IReportRepository)
+
+
+@pytest.fixture
+def service(chat_repo, course_repo, user_repo, message_repo, report_repo):
     return ChatService(
         chat_repository=chat_repo,
         course_repository=course_repo,
         user_repository=user_repo,
         message_repository=message_repo,
+        report_repository=report_repo,
     )
 
 
 async def test_create_chat_valid_data_returns_conversation_id(service, course_repo, user_repo, chat_repo):
-    course_repo.find_by_code.return_value = _make_course()
+    course_repo.find_by_id.return_value = _make_course()
     user_repo.find_by_id.return_value = _make_user()
     chat_repo.create.return_value = "new_chat_id"
 
-    result = await service.create_chat("ed", "user1")
+    result = await service.create_chat(ED_ID, USER_ID)
 
-    assert result.conversation_id == "new_chat_id"
+    assert result == "new_chat_id"
     chat_repo.create.assert_awaited_once()
 
 
-async def test_create_chat_course_not_found_throws_course_not_found_error(service, course_repo):
-    course_repo.find_by_code.return_value = None
+async def test_create_chat_course_not_found_throws_not_found(service, course_repo):
+    course_repo.find_by_id.return_value = None
 
-    with pytest.raises(CourseNotFoundError):
-        await service.create_chat("cadeira_falsa", "user1")
-
-
-async def test_create_chat_course_inactive_throws_course_not_found_error(service, course_repo):
-    course_repo.find_by_code.return_value = _make_course(is_active=False)
-
-    with pytest.raises(CourseNotFoundError):
-        await service.create_chat("ed", "user1")
+    with pytest.raises(NotFoundError):
+        await service.create_chat(str(ObjectId()), USER_ID)
 
 
-async def test_create_chat_user_not_found_throws_user_not_found_error(service, course_repo, user_repo):
-    course_repo.find_by_code.return_value = _make_course()
+async def test_create_chat_course_inactive_throws_not_found(service, course_repo):
+    course_repo.find_by_id.return_value = _make_course(is_active=False)
+
+    with pytest.raises(NotFoundError):
+        await service.create_chat(ED_ID, USER_ID)
+
+
+async def test_create_chat_user_not_found_throws_not_found(service, course_repo, user_repo):
+    course_repo.find_by_id.return_value = _make_course()
     user_repo.find_by_id.return_value = None
 
-    with pytest.raises(UserNotFoundError):
-        await service.create_chat("ed", "user_invalido")
+    with pytest.raises(NotFoundError):
+        await service.create_chat(ED_ID, USER_ID)
 
 
 async def test_create_chat_user_not_enrolled_throws_access_denied_error(service, course_repo, user_repo):
-    course_repo.find_by_code.return_value = _make_course()
-    # User nao tem a cadeira "ed" na lista de courses
-    user_repo.find_by_id.return_value = _make_user(courses=["paw"])
+    course_repo.find_by_id.return_value = _make_course()
+    # User is not enrolled in course "ed"
+    user_repo.find_by_id.return_value = _make_user(courses=[PAW_ID])
 
     with pytest.raises(AccessDeniedError):
-        await service.create_chat("ed", "user1")
+        await service.create_chat(ED_ID, USER_ID)
 
 
 async def test_get_chat_owner_returns_chat_data(service, chat_repo, course_repo, message_repo):
     chat_repo.get_chat.return_value = _make_chat()
-    course_repo.find_by_code.return_value = _make_course()
+    course_repo.find_by_id.return_value = _make_course()
     message_repo.get_messages.return_value = [_make_message()]
 
-    result = await service.get_chat("60d5ecb8b4259b3a0c4f1a01", "user1")
+    chat, course, messages = await service.get_chat(CHAT_ID, USER_ID)
 
-    assert result.conversation_id == "60d5ecb8b4259b3a0c4f1a01"
-    assert result.course_code == "ed"
-    assert result.course_name == "Estruturas de Dados"
-    assert len(result.messages) == 1
-    assert result.messages[0].content == "Olá tutor!"
+    assert str(chat.id) == CHAT_ID
+    assert course.id == ED_ID
+    assert course.name == "Estruturas de Dados"
+    assert len(messages) == 1
+    assert messages[0].content == "Olá tutor!"
 
 
-async def test_get_chat_not_found_throws_chat_not_found_error(service, chat_repo):
+async def test_get_chat_not_found_throws_not_found(service, chat_repo):
     chat_repo.get_chat.return_value = None
 
-    with pytest.raises(ChatNotFoundError):
-        await service.get_chat("60d5ecb8b4259b3a0c4f1a05", "user1")
+    with pytest.raises(NotFoundError):
+        await service.get_chat("60d5ecb8b4259b3a0c4f1a05", USER_ID)
 
 
 async def test_get_chat_wrong_user_id_throws_access_denied_error(service, chat_repo):
-    chat_repo.get_chat.return_value = _make_chat(user_id="user1")
+    chat_repo.get_chat.return_value = _make_chat(user_id=USER_ID)
 
     with pytest.raises(AccessDeniedError):
-        await service.get_chat("60d5ecb8b4259b3a0c4f1a01", "outro_user")
+        await service.get_chat(CHAT_ID, OTHER_USER_ID)
 
 
 async def test_list_user_chats_returns_sorted_by_most_recent(service, chat_repo, course_repo):
@@ -166,27 +178,65 @@ async def test_list_user_chats_returns_sorted_by_most_recent(service, chat_repo,
     old = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
     chat_repo.get_chats.return_value = [
-        _make_chat(_id="60d5ecb8b4259b3a0c4f1a02", course="ed", updated_at=old),
-        _make_chat(_id="60d5ecb8b4259b3a0c4f1a03", course="ed", updated_at=now),
+        _make_chat(_id="60d5ecb8b4259b3a0c4f1a02", course_id=ED_ID, updated_at=old),
+        _make_chat(_id="60d5ecb8b4259b3a0c4f1a03", course_id=ED_ID, updated_at=now),
     ]
-    course_repo.get_courses_by_codes.return_value = [_make_course()]
+    course_repo.get_courses_by_ids.return_value = [_make_course()]
 
-    result = await service.list_user_chats("user1")
+    result = await service.list_user_chats(USER_ID)
 
     assert len(result) == 2
-    assert result[0].conversation_id == "60d5ecb8b4259b3a0c4f1a03"
-    assert result[1].conversation_id == "60d5ecb8b4259b3a0c4f1a02"
+    assert str(result[0][0].id) == "60d5ecb8b4259b3a0c4f1a03"
+    assert str(result[1][0].id) == "60d5ecb8b4259b3a0c4f1a02"
 
 
 async def test_list_user_chats_inactive_courses_returns_filtered(service, chat_repo, course_repo):
     chat_repo.get_chats.return_value = [
-        _make_chat(_id="60d5ecb8b4259b3a0c4f1a01", course="ed"),
-        _make_chat(_id="60d5ecb8b4259b3a0c4f1a04", course="paw"),
+        _make_chat(_id="60d5ecb8b4259b3a0c4f1a01", course_id=ED_ID),
+        _make_chat(_id="60d5ecb8b4259b3a0c4f1a04", course_id=PAW_ID),
     ]
-    # Se so a cadeira "ed" estiver ativa, "paw" nao deve aparecer
-    course_repo.get_courses_by_codes.return_value = [_make_course(code="ed")]
+    # Only course "ed" is active, so the "paw" chat must not appear.
+    course_repo.get_courses_by_ids.return_value = [_make_course()]
 
-    result = await service.list_user_chats("user1")
+    result = await service.list_user_chats(USER_ID)
 
     assert len(result) == 1
-    assert result[0].conversation_id == "60d5ecb8b4259b3a0c4f1a01"
+    assert str(result[0][0].id) == "60d5ecb8b4259b3a0c4f1a01"
+
+
+async def test_delete_chat_owner_deletes_reports_messages_and_chat(
+    service, chat_repo, message_repo, report_repo
+):
+    chat_repo.get_chat.return_value = _make_chat(user_id=USER_ID)
+
+    await service.delete_chat(CHAT_ID, requester_user_id=USER_ID)
+
+    report_repo.delete_by_conversation.assert_awaited_once_with(CHAT_ID)
+    message_repo.delete_by_conversation.assert_awaited_once_with(CHAT_ID)
+    chat_repo.delete.assert_awaited_once_with(CHAT_ID)
+
+
+async def test_delete_chat_not_found_throws_and_deletes_nothing(
+    service, chat_repo, message_repo, report_repo
+):
+    chat_repo.get_chat.return_value = None
+
+    with pytest.raises(NotFoundError):
+        await service.delete_chat("60d5ecb8b4259b3a0c4f1a05", requester_user_id=USER_ID)
+
+    report_repo.delete_by_conversation.assert_not_awaited()
+    message_repo.delete_by_conversation.assert_not_awaited()
+    chat_repo.delete.assert_not_awaited()
+
+
+async def test_delete_chat_wrong_user_throws_and_deletes_nothing(
+    service, chat_repo, message_repo, report_repo
+):
+    chat_repo.get_chat.return_value = _make_chat(user_id=USER_ID)
+
+    with pytest.raises(AccessDeniedError):
+        await service.delete_chat(CHAT_ID, requester_user_id=OTHER_USER_ID)
+
+    report_repo.delete_by_conversation.assert_not_awaited()
+    message_repo.delete_by_conversation.assert_not_awaited()
+    chat_repo.delete.assert_not_awaited()

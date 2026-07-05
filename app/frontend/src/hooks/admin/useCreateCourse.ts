@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createCourseSchema, type CreateCourseFormValues } from "@/schemas/createCourse";
-import { createCourse } from "@/api/courses";
+import { CourseService } from "@/services/course.service";
 import { setFormRootError } from "@/lib/formErrors";
 
 export function useCreateCourse() {
@@ -10,14 +10,14 @@ export function useCreateCourse() {
 
   const form = useForm<CreateCourseFormValues>({
     resolver: zodResolver(createCourseSchema),
-    defaultValues: { code: "", name: "", description: "" },
+    defaultValues: { code: "", name: "", scope: "" },
   });
 
   const onSubmit = async (data: CreateCourseFormValues) => {
     form.clearErrors("root");
     setSuccess(false);
     try {
-      await createCourse(data);
+      await CourseService.createCourse(data);
       setSuccess(true);
       form.reset();
     } catch (err) {

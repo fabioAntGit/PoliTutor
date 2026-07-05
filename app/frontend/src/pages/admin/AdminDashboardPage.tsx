@@ -1,8 +1,8 @@
 import { useState } from "react";
-import CreateUserForm from "@/components/admin/CreateUserForm";
-import CreateCourseForm from "@/components/admin/CreateCourseForm";
-import UserList from "@/components/admin/UserList";
-import CourseList from "@/components/admin/CourseList";
+import CreateUserForm from "@/components/admin/create-user-form";
+import CreateCourseForm from "@/components/admin/create-course-form";
+import UserList from "@/components/admin/user-list";
+import CourseList from "@/components/admin/course-list";
 import { UserMenu } from "@/components/account/user-menu";
 
 type Tab = "user" | "course" | "users" | "courses";

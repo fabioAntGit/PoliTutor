@@ -5,6 +5,8 @@ import type { Message } from "@/types/message";
 import { MessageService } from "@/services/message.service";
 import { ChatService } from "@/services/chat.service";
 import type { ChatRead, ChatListItem } from "@/types/chat";
+import { useChatDeletion } from "@/hooks/chat/useChatDeletion";
+import { isQuestionReady, QUESTION_MAX_CHARS, QUESTION_MIN_CHARS } from "@/lib/validation";
 
 export function useChat() {
   const { conversationId } = useParams();
@@ -38,6 +40,16 @@ export function useChat() {
       setLoading(false);
       return;
     }
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    setIsTyping(false);
+    setInput("");
+    setError(null);
+    setLoading(true);
 
     let cancelled = false;
 
@@ -82,6 +94,13 @@ export function useChat() {
     navigate("/");
   }, [navigate]);
 
+  const { deleteChat } = useChatDeletion({
+    setChats,
+    onCommitted: (id) => {
+      if (id === conversationId) goHome();
+    },
+  });
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -97,12 +116,14 @@ export function useChat() {
   const sendQuestion = useCallback(
     async (question: string) => {
       if (!conversationId) return;
+      const trimmedQuestion = question.trim();
+      if (!isQuestionReady(trimmedQuestion)) return;
 
       const userMsg: Message = {
         id: Date.now().toString(),
         role: "user",
-        content: question,
-        createdAt: new Date().toISOString(),
+        content: trimmedQuestion,
+        created_at: new Date().toISOString(),
       };
 
       setMessages((prev) => [...prev, userMsg]);
@@ -114,7 +135,7 @@ export function useChat() {
       try {
         const response = await MessageService.sendMessage(
           conversationId,
-          { question },
+          { question: trimmedQuestion },
           controller.signal
         );
 
@@ -123,8 +144,8 @@ export function useChat() {
           role: "assistant",
           content: response.answer,
           sources: response.sources,
-          isFallback: response.is_fallback,
-          createdAt: new Date().toISOString(),
+          is_fallback: response.is_fallback,
+          created_at: new Date().toISOString(),
         };
 
         setMessages((prev) => {
@@ -141,7 +162,7 @@ export function useChat() {
         let errorMessage = "Erro ao obter resposta.";
         if (err instanceof ApiError) {
           if (err.isValidationError) {
-            errorMessage = "Credenciais invalidas. Verifica o Endpoint, API Key e Channel ID nas definicoes.";
+            errorMessage = `A pergunta deve ter entre ${QUESTION_MIN_CHARS} e ${QUESTION_MAX_CHARS} caracteres.`;
           } else if (err.message) {
             errorMessage = err.message;
           }
@@ -151,7 +172,7 @@ export function useChat() {
           id: `${Date.now()}-assistant-error`,
           role: "assistant",
           content: errorMessage,
-          createdAt: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
@@ -184,6 +205,7 @@ export function useChat() {
 
     const trimmed = input.trim();
     if (!trimmed) return;
+    if (!isQuestionReady(trimmed)) return;
 
     if (!conversationId || !chat) return;
 
@@ -206,6 +228,7 @@ export function useChat() {
     chats,
     openChat,
     goHome,
+    deleteChat,
     scrollRef,
     hasScrolled,
     handleScroll,

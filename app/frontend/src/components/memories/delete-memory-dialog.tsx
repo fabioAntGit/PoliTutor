@@ -2,7 +2,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { UserMemory } from "@/api/memory";
+import type { UserMemory } from "@/types/memory";
 
 interface DeleteMemoryDialogProps {
   memory: UserMemory | null;

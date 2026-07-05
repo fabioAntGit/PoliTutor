@@ -21,7 +21,7 @@ class ChatRepository(IChatRepository):
         return Chat.model_validate(document)
 
     async def get_chats(self, user_id: str) -> list[Chat]:
-        query = self.collection.find({"user_id": user_id})
+        query = self.collection.find({"user_id": ObjectId(user_id)})
         documents = await query.to_list(length=None)
         return [Chat.model_validate(document) for document in documents]
 

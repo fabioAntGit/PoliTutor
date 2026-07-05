@@ -1,8 +1,8 @@
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormPasswordField } from "@/components/form/FormPasswordField";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
+import { FormPasswordField } from "@/components/form/form-password-field";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
 import { useChangePassword } from "@/hooks/auth/useChangePassword";
 
 export default function ChangePasswordPage() {

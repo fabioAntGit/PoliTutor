@@ -1,26 +1,9 @@
 import { api } from "@/api/client";
+import type { UserMemoryListRead } from "@/types/memory";
 
-export type MemoryType = "difficulty" | "preference" | "goal" | "progress";
-
-export interface UserMemory {
-  id: string;
-  course: string;
-  type: MemoryType;
-  topic: string;
-  content: string;
-  importance: number;
-  last_seen_at: string;
-  created_at: string;
-}
-
-export interface UserMemoryListResponse {
-  memories: UserMemory[];
-  total: number;
-}
-
-export async function listMemories(course: string): Promise<UserMemoryListResponse> {
-  const { data } = await api.get<UserMemoryListResponse>("/memory", {
-    params: { course },
+export async function listMemories(courseId: string): Promise<UserMemoryListRead> {
+  const { data } = await api.get<UserMemoryListRead>("/memory", {
+    params: { course_id: courseId },
   });
   return data;
 }

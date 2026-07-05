@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { listCourses } from "@/api/courses";
-import { deleteMemory as deleteMemoryRequest, listMemories } from "@/api/memory";
-import type { UserMemory } from "@/api/memory";
-import { authService } from "@/services/auth.service";
+import { CourseService } from "@/services/course.service";
+import { MemoryService } from "@/services/memory.service";
+import type { UserMemory } from "@/types/memory";
 import { ApiError } from "@/lib/errors";
 import type { CourseResponse } from "@/types/course";
 
@@ -18,13 +17,11 @@ export function useMemories() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    listCourses()
-      .then((coursesData) => {
-        const myCourses = new Set(authService.getCourses());
-        const mine = coursesData.filter((c) => myCourses.has(c.code));
+    CourseService.listCourses()
+      .then((mine) => {
         setCourses(mine);
         if (mine.length > 0) {
-          setSelectedCourse(mine[0].code);
+          setSelectedCourse(mine[0].id);
         }
       })
       .catch(() => {
@@ -43,7 +40,7 @@ export function useMemories() {
 
     let active = true;
     setLoadingMemories(true);
-    listMemories(selectedCourse)
+    MemoryService.listMemories(selectedCourse)
       .then((data) => {
         if (active) setMemories(data.memories);
       })
@@ -62,7 +59,7 @@ export function useMemories() {
   const deleteMemory = async (memId: string) => {
     setDeletingId(memId);
     try {
-      await deleteMemoryRequest(memId);
+      await MemoryService.deleteMemory(memId);
       setMemories((prev) => prev.filter((m) => m.id !== memId));
       toast.success("Memória removida.");
     } catch (err) {
