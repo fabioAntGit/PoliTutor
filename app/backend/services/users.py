@@ -74,9 +74,6 @@ class UserService(IUserService):
         await self.user_repository.create(user)
         return user
 
-    async def get_user(self, username: str) -> User | None:
-        return await self.user_repository.find_by_username(username)
-
     async def get_users(self) -> list[User]:
         return await self.user_repository.find_all()
 

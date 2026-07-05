@@ -35,6 +35,11 @@ class AuthenticationService(IAuthenticationService):
 
         return await self.security_service.create_access_token(payload)
 
+    async def verify_token(self, access_token: str) -> dict:
+        if await self.cache_repository.is_token_blacklisted(access_token):
+            raise AuthError(message="Token invalidado")
+        return await self.security_service.decode_token(access_token)
+
     async def logout(self, access_token: str) -> bool:
         now_timestamp = datetime.now(timezone.utc).timestamp()
         try:

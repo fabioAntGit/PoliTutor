@@ -2,7 +2,11 @@ from collections import Counter
 from datetime import date, timedelta
 from typing import Literal
 
+from app.backend.core.exceptions import AccessDeniedError, NotFoundError
 from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
+from app.backend.repositories.interfaces.course_repository import ICourseRepository
+from app.backend.repositories.interfaces.user_repository import IUserRepository
+from app.backend.schemas.user.enums import UserRole
 from app.backend.services.interfaces.analytics_service import IAnalyticsService
 
 _DAYS_MAP = {"7d": 7, "30d": 30, "90d": 90}
@@ -25,8 +29,39 @@ def _fill_activity_dates(raw: list[dict], days: int) -> list[dict]:
     
 
 class AnalyticsService(IAnalyticsService):
-    def __init__(self, analytics_repository: IAnalyticsRepository) -> None:
+    def __init__(
+        self,
+        analytics_repository: IAnalyticsRepository,
+        course_repository: ICourseRepository,
+        user_repository: IUserRepository,
+    ) -> None:
         self.repo = analytics_repository
+        self.course_repository = course_repository
+        self.user_repository = user_repository
+
+    async def resolve_filter_scope(self, payload: dict) -> list[str]:
+        active = await self.course_repository.get_active_courses()
+        if payload.get("role") == UserRole.ADMIN.value:
+            return sorted(c.id for c in active)
+        user = await self.user_repository.find_by_id(payload.get("id", ""))
+        if user is None:
+            return []
+        active_ids = {c.id for c in active}
+        return sorted(cid for cid in user.courses if cid in active_ids)
+
+    async def resolve_course_scope(self, course_id: str, payload: dict) -> str:
+        found = await self.course_repository.find_by_id(course_id)
+        if found is None or not found.is_active:
+            raise NotFoundError(
+                message="Cadeira nao encontrada",
+                code="course_not_found",
+                details={"course_id": course_id},
+            )
+        if payload.get("role") != UserRole.ADMIN.value:
+            user = await self.user_repository.find_by_id(payload.get("id", ""))
+            if user is None or found.id not in user.courses:
+                raise AccessDeniedError(message="Nao tens acesso a esta cadeira.")
+        return course_id
 
     async def get_activity(
         self,

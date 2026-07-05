@@ -6,5 +6,9 @@ class IAuthenticationService(Protocol):
         ...
 
 
+    async def verify_token(self, access_token: str) -> dict:
+        ...
+
+
     async def logout(self, access_token: str) -> bool:
         ...

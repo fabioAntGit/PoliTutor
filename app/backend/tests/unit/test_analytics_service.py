@@ -3,6 +3,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.backend.repositories.interfaces.analytics_repository import IAnalyticsRepository
+from app.backend.repositories.interfaces.course_repository import ICourseRepository
+from app.backend.repositories.interfaces.user_repository import IUserRepository
 from app.backend.services.analytics import AnalyticsService
 
 
@@ -12,8 +14,18 @@ def repo():
 
 
 @pytest.fixture
-def service(repo):
-    return AnalyticsService(repo)
+def course_repo():
+    return AsyncMock(spec=ICourseRepository)
+
+
+@pytest.fixture
+def user_repo():
+    return AsyncMock(spec=IUserRepository)
+
+
+@pytest.fixture
+def service(repo, course_repo, user_repo):
+    return AnalyticsService(repo, course_repo, user_repo)
 
 
 async def test_get_overview_maps_repo_values(service, repo):

@@ -11,7 +11,7 @@ from contracts.rag.interfaces import IRagEngine
 from app.backend.gateways.interfaces.model_client import IModelClient
 
 from app.backend.core.database import get_db, get_deprecated_db, get_redis
-from app.backend.core.exceptions import AuthError, AccessDeniedError, NotFoundError
+from app.backend.core.exceptions import AccessDeniedError
 from app.backend.schemas.user.enums import UserRole
 
 from app.backend.repositories.analytics import AnalyticsRepository
@@ -115,8 +115,14 @@ def get_user_memory_service(
 
 def get_analytics_service(
     analytics_repository: IAnalyticsRepository = Depends(get_analytics_repository),
+    course_repository: ICourseRepository = Depends(get_course_repository),
+    user_repository: IUserRepository = Depends(get_user_repository),
 ) -> IAnalyticsService:
-    return AnalyticsService(analytics_repository=analytics_repository)
+    return AnalyticsService(
+        analytics_repository=analytics_repository,
+        course_repository=course_repository,
+        user_repository=user_repository,
+    )
 
 
 def get_context_service(
@@ -231,16 +237,6 @@ PASSWORD_CHANGE_ALLOWED_PATHS = {
     "/api/v1/auth/change-password",
 }
 
-async def _verify_token(
-    token: str,
-    security_service: ISecurityService,
-    cache_repository: ICacheRepository,
-) -> dict:
-    if await cache_repository.is_token_blacklisted(token):
-        raise AuthError(message="Token invalidado")
-    return await security_service.decode_token(token)
-
-
 def _enforce_password_change(payload: dict, request: Request) -> None:
     if payload.get("must_change_password") and request.url.path not in PASSWORD_CHANGE_ALLOWED_PATHS:
         raise AccessDeniedError(message="Tem de alterar a sua password antes de continuar")
@@ -249,10 +245,9 @@ def _enforce_password_change(payload: dict, request: Request) -> None:
 async def require_authenticated(
     request: Request,
     token: str = Depends(oauth2_scheme),
-    security_service: ISecurityService = Depends(get_security_service),
-    cache_repository: ICacheRepository = Depends(get_cache_repository),
+    authentication_service: IAuthenticationService = Depends(get_authentication_service),
 ) -> dict:
-    payload = await _verify_token(token, security_service, cache_repository)
+    payload = await authentication_service.verify_token(token)
     _enforce_password_change(payload, request)
     return payload
 
@@ -261,10 +256,9 @@ def require_role(*roles: UserRole):
     async def guard(
         request: Request,
         token: str = Depends(oauth2_scheme),
-        security_service: ISecurityService = Depends(get_security_service),
-        cache_repository: ICacheRepository = Depends(get_cache_repository),
+        authentication_service: IAuthenticationService = Depends(get_authentication_service),
     ) -> dict:
-        payload = await _verify_token(token, security_service, cache_repository)
+        payload = await authentication_service.verify_token(token)
         allowed = {r.value for r in roles}
         if payload.get("role") not in allowed:
             raise AccessDeniedError(message="Sem permissoes para aceder a este recurso")
@@ -279,36 +273,16 @@ require_teacher_or_admin = require_role(UserRole.TEACHER, UserRole.ADMIN)
 async def _analytics_course_scope(
     course_id: str,
     payload: dict = Depends(require_teacher_or_admin),
-    repo: ICourseRepository = Depends(get_course_repository),
-    user_repo: IUserRepository = Depends(get_user_repository),
+    service: IAnalyticsService = Depends(get_analytics_service),
 ) -> str:
-    found = await repo.find_by_id(course_id)
-    if found is None or not found.is_active:
-        raise NotFoundError(
-            message="Cadeira nao encontrada",
-            code="course_not_found",
-            details={"course_id": course_id},
-        )
-    if payload.get("role") != UserRole.ADMIN.value:
-        user = await user_repo.find_by_id(payload.get("id", ""))
-        if user is None or found.id not in user.courses:
-            raise AccessDeniedError(message="Não tens acesso a esta cadeira.")
-    return course_id
+    return await service.resolve_course_scope(course_id, payload)
 
 
 async def _analytics_filter_scope(
     payload: dict = Depends(require_teacher_or_admin),
-    repo: ICourseRepository = Depends(get_course_repository),
-    user_repo: IUserRepository = Depends(get_user_repository),
+    service: IAnalyticsService = Depends(get_analytics_service),
 ) -> list[str]:
-    active = await repo.get_active_courses()
-    if payload.get("role") == UserRole.ADMIN.value:
-        return sorted(c.id for c in active)
-    user = await user_repo.find_by_id(payload.get("id", ""))
-    if user is None:
-        return []
-    active_ids = {c.id for c in active}
-    return sorted(cid for cid in user.courses if cid in active_ids)
+    return await service.resolve_filter_scope(payload)
 
 
 def analytics_scope(per_course: bool = False):

@@ -10,7 +10,6 @@ class UserMemoryRepository(IUserMemoryRepository):
         self.collection = db["user_memory"]
 
     async def create(self, memory: UserMemory) -> None:
-        # Honor an explicit _id when provided; otherwise let Mongo generate one.
         await self.collection.insert_one(memory.model_dump(by_alias=True, exclude_none=True))
 
     async def update(self, memory_id: str, fields: dict) -> None:

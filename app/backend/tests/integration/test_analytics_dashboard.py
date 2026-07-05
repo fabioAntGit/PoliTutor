@@ -2,6 +2,8 @@ import pytest
 from bson import ObjectId
 
 from app.backend.repositories.analytics import AnalyticsRepository
+from app.backend.repositories.courses import CourseRepository
+from app.backend.repositories.users import UserRepository
 from app.backend.services.analytics import AnalyticsService
 
 from .factories import insert_chat, insert_message
@@ -19,7 +21,11 @@ ALG_ID = str(ObjectId())
 
 @pytest.fixture
 def service(db) -> AnalyticsService:
-    return AnalyticsService(analytics_repository=AnalyticsRepository(db))
+    return AnalyticsService(
+        analytics_repository=AnalyticsRepository(db),
+        course_repository=CourseRepository(db),
+        user_repository=UserRepository(db),
+    )
 
 
 class TestOverview:

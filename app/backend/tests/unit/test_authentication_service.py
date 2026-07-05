@@ -93,3 +93,19 @@ async def test_logout_expired_token_returns_true(service, security):
     result = await service.logout("expired_token")
 
     assert result is True
+
+
+async def test_verify_token_rejects_blacklisted_token(service, redis_repo):
+    redis_repo.is_token_blacklisted.return_value = True
+
+    with pytest.raises(AuthError):
+        await service.verify_token("revoked")
+
+
+async def test_verify_token_decodes_valid_token(service, security, redis_repo):
+    redis_repo.is_token_blacklisted.return_value = False
+    security.decode_token.return_value = {"username": "fabio"}
+
+    result = await service.verify_token("valid")
+
+    assert result == {"username": "fabio"}

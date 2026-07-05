@@ -3,6 +3,10 @@ from typing import Protocol, runtime_checkable, Literal
 
 @runtime_checkable
 class IAnalyticsService(Protocol):
+    async def resolve_filter_scope(self, payload: dict) -> list[str]: ...
+
+    async def resolve_course_scope(self, course_id: str, payload: dict) -> str: ...
+
     async def get_overview(self, course_filter: list[str] | None = None) -> dict: ...
 
     async def get_activity(

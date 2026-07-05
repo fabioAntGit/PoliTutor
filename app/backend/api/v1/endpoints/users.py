@@ -5,7 +5,7 @@ from app.backend.schemas.user.request import UserCreateRequest, UserUpdateReques
 from app.backend.schemas.user.response import UserResponse
 from app.backend.services.interfaces.authentication_service import IAuthenticationService
 from app.backend.services.interfaces.user_service import IUserService
-from app.backend.core.exceptions import BadRequestError, NotFoundError
+from app.backend.core.exceptions import BadRequestError
 from app.backend.schemas.shared.responses import (
     bad_request,
     conflict,
@@ -90,30 +90,6 @@ async def create_user(
         role=body.role.value,
         courses=body.courses,
     )
-    return user
-
-
-@router.get(
-    "/users/{username}",
-    response_model=UserResponse,
-    dependencies=[Depends(require_admin)],
-    summary="Fetch a user by username",
-    response_description="The requested user.",
-    responses={
-        **unauthorized(),
-        **forbidden("Caller is not an admin."),
-        **not_found("User does not exist."),
-    },
-)
-@limiter.limit("20/minute", key_func=user_key)
-async def get_user(
-    request: Request,
-    username: str,
-    service: IUserService = Depends(get_user_service),
-):
-    user = await service.get_user(username)
-    if not user:
-        raise NotFoundError(message="Utilizador nao encontrado", code="user_not_found")
     return user
 
 

@@ -66,8 +66,3 @@ async def test_list_users_admin_lists_users(api_client, db, auth_header):
 
     assert resp.status_code == 200
     assert {u["username"] for u in resp.json()} == {"ana", "rui"}
-
-
-async def test_get_user_unknown_returns_404(api_client, auth_header):
-    resp = await api_client.get(f"{USERS}/naoexiste", headers=auth_header(role="admin"))
-    assert resp.status_code == 404
