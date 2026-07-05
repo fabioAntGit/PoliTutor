@@ -1,6 +1,12 @@
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
 class IDeletionRepository(Protocol):
-    async def move_docs(self, collection: str, filter: dict[str, Any]) -> int: ...
+    async def move_user_related_docs(
+        self,
+        *,
+        user_id: str,
+        username: str,
+        conversation_ids: list[str],
+    ) -> None: ...

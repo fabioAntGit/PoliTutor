@@ -2,7 +2,7 @@ from app.backend.repositories.interfaces.report_repository import IReportReposit
 from app.backend.repositories.interfaces.message_repository import IMessageRepository
 from app.backend.schemas.report.models import Report
 from app.backend.services.interfaces.report_service import IReportService
-from app.backend.core.exceptions import ReportError, AccessDeniedError
+from app.backend.core.exceptions import AccessDeniedError, BadRequestError
 from app.backend.repositories.interfaces.chat_repository import IChatRepository
 
 class ReportService(IReportService):
@@ -23,31 +23,37 @@ class ReportService(IReportService):
     ) -> bool:
         reported_msg = await self.message_repository.get_message(message_id)
         if not reported_msg:
-            raise ReportError(message="Mensagem nao encontrada")
+            raise BadRequestError(message="Mensagem nao encontrada", code="report_error")
 
         chat = await self.chat_repository.get_chat(reported_msg.conversation_id)
         if not chat or chat.user_id != requester_user_id:
-            raise AccessDeniedError("Nao tens permissao para reportar mensagens deste chat.")
+            raise AccessDeniedError(message="Nao tens permissao para reportar mensagens deste chat.")
             
-        if reported_msg.role != "user":
-            raise ReportError(message="Apenas mensagens de utilizador podem ser reportadas")
+        if reported_msg.role != "assistant":
+            raise BadRequestError(
+                message="Apenas mensagens de assistente podem ser reportadas",
+                code="report_error",
+            )
 
-        next_msg = await self.message_repository.get_next_message(
+        prev_msg = await self.message_repository.get_previous_message(
             message_id, 
             reported_msg.conversation_id
         )
         
-        if not next_msg or next_msg.role != "assistant":
-            raise ReportError(message="Esta mensagem ainda nao tem uma resposta do assistente")
+        if not prev_msg or prev_msg.role != "user":
+            raise BadRequestError(
+                message="Esta resposta não tem uma mensagem de utilizador correspondente",
+                code="report_error",
+            )
 
-        if await self.report_repository.exists_by_message_id(message_id):
+        if await self.report_repository.exists_by_message_id(prev_msg.id):
             return True 
 
         report = Report(
             conversation_id=reported_msg.conversation_id,
-            message_id=reported_msg.id,
-            user_content=reported_msg.content,
-            assistant_content=next_msg.content
+            message_id=prev_msg.id,
+            user_content=prev_msg.content,
+            assistant_content=reported_msg.content
         )
 
         success = await self.report_repository.create(report)
@@ -63,13 +69,20 @@ class ReportService(IReportService):
     ) -> bool:
         msg = await self.message_repository.get_message(message_id)
         if not msg:
-            raise ReportError(message="Mensagem nao encontrada")
+            raise BadRequestError(message="Mensagem nao encontrada", code="report_error")
 
         chat = await self.chat_repository.get_chat(msg.conversation_id)
         if not chat or chat.user_id != requester_user_id:
-            raise AccessDeniedError("Nao tens permissao para remover reports deste chat.")
+            raise AccessDeniedError(message="Nao tens permissao para remover reports deste chat.")
 
-        deleted = await self.report_repository.delete_by_message_id(message_id)
+        prev_msg = await self.message_repository.get_previous_message(
+            message_id, 
+            msg.conversation_id
+        )
+        
+        target_report_id = prev_msg.id if prev_msg else message_id
+
+        deleted = await self.report_repository.delete_by_message_id(target_report_id)
         
         await self.message_repository.update_report_status(message_id, False)
         

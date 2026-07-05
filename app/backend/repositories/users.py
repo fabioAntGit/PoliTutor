@@ -35,11 +35,13 @@ class UserRepository(IUserRepository):
         return users
 
     async def update(self, username: str, fields: dict) -> bool:
+        if "courses" in fields and fields["courses"] is not None:
+            fields = {**fields, "courses": [ObjectId(c) for c in fields["courses"]]}
         result = await self.collection.update_one(
             {"username": username},
             {"$set": fields}
         )
         return result.modified_count > 0
 
-    async def count_with_course(self, course_code: str) -> int:
-        return await self.collection.count_documents({"courses": course_code})
+    async def count_with_course(self, course_id: str) -> int:
+        return await self.collection.count_documents({"courses": ObjectId(course_id)})

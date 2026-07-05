@@ -1,44 +1,24 @@
-from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Protocol, runtime_checkable, Literal
 
-from app.backend.schemas.analytics.response import (
-    ActivityRead,
-    CourseOverviewRead,
-    CourseSourcesRead,
-    CourseTopicsRead,
-    CoursesRead,
-    OverviewRead,
-)
 
-class IAnalyticsService(ABC):
-    @abstractmethod
-    async def get_overview(self, course_filter: list[str] | None = None) -> OverviewRead:
-        ...
+@runtime_checkable
+class IAnalyticsService(Protocol):
+    async def resolve_filter_scope(self, payload: dict) -> list[str]: ...
 
-    @abstractmethod
+    async def resolve_course_scope(self, course_id: str, payload: dict) -> str: ...
+
+    async def get_overview(self, course_filter: list[str] | None = None) -> dict: ...
+
     async def get_activity(
         self,
         range_param: Literal["7d", "30d", "90d"],
         course_filter: list[str] | None = None,
-    ) -> ActivityRead:
-        ...
+    ) -> list[dict]: ...
 
-    @abstractmethod
-    async def get_courses(self, course_filter: list[str] | None = None) -> CoursesRead:
-        ...
+    async def get_course_overview(self, course_id: str) -> dict: ...
 
-    @abstractmethod
-    async def get_course_overview(self, course: str) -> CourseOverviewRead:
-        ...
+    async def get_course_activity(self, course_id: str, range_param: Literal["7d", "30d", "90d"]) -> list[dict]: ...
 
-    @abstractmethod
-    async def get_course_activity(self, course: str, range_param: Literal["7d", "30d", "90d"]) -> ActivityRead:
-        ...
+    async def get_course_topics(self, course_id: str) -> list[dict]: ...
 
-    @abstractmethod
-    async def get_course_topics(self, course: str) -> CourseTopicsRead:
-        ...
-
-    @abstractmethod
-    async def get_course_sources(self, course: str) -> CourseSourcesRead:
-        ...
+    async def get_course_sources(self, course_id: str) -> list[dict]: ...

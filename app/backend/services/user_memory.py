@@ -1,15 +1,13 @@
 import asyncio
-import json
 import logging
-import re
 from datetime import datetime, timezone
-from uuid import uuid4
 
 from app.backend.repositories.interfaces.user_memory_repository import IUserMemoryRepository
-from app.backend.schemas.memory.models import MemoryType, UserMemory
+from app.backend.repositories.interfaces.course_repository import ICourseRepository
+from app.backend.schemas.memory.models import ExtractedMemory, MemoryExtraction, UserMemory
 from app.backend.services.interfaces.user_memory_service import IUserMemoryService
-from rag.src.shared.call_model import call_openrouter
-from rag.src.shared.config import (
+from app.backend.gateways.interfaces.model_client import IModelClient
+from app.backend.core.config import (
     MAX_MEMORIES_PER_COURSE,
     MEMORY_DECAY_RATE_PER_WEEK,
     MEMORY_DELETE_IMPORTANCE_THRESHOLD,
@@ -20,9 +18,6 @@ from rag.src.shared.config import (
 )
 
 logger = logging.getLogger(__name__)
-
-_JSON_BLOCK = re.compile(r"```json\s*(.*?)\s*```", re.DOTALL)
-_VALID_TYPES: set[str] = {"difficulty", "preference", "goal", "progress"}
 
 
 def _decayed_importance(importance: float, last_seen_at: datetime, ttl: int, now: datetime) -> float:
@@ -35,26 +30,6 @@ def _decayed_importance(importance: float, last_seen_at: datetime, ttl: int, now
     return round(importance * ((1 - MEMORY_DECAY_RATE_PER_WEEK) ** weeks_since_expiry), 3)
 
 
-def _parse_extracted(raw: str) -> list[dict]:
-    text = raw.strip()
-    match = _JSON_BLOCK.search(text)
-    if match:
-        text = match.group(1)
-    try:
-        data = json.loads(text)
-        return [
-            m for m in data.get("memories", [])
-            if isinstance(m, dict)
-            and m.get("type") in _VALID_TYPES
-            and m.get("topic")
-            and m.get("content")
-            and 0.0 <= float(m.get("importance", -1)) <= 10.0
-        ]
-    except (json.JSONDecodeError, ValueError):
-        logger.warning("Failed to parse memory extraction response")
-        return []
-
-
 def _format_existing(memories: list[UserMemory]) -> str:
     if not memories:
         return "No existing memories."
@@ -65,24 +40,37 @@ def _format_existing(memories: list[UserMemory]) -> str:
 
 
 class UserMemoryService(IUserMemoryService):
-    def __init__(self, repo: IUserMemoryRepository) -> None:
+    def __init__(
+        self,
+        repo: IUserMemoryRepository,
+        model_client: IModelClient,
+        course_repository: ICourseRepository,
+    ) -> None:
         self.repo = repo
+        self.model_client = model_client
+        self.course_repository = course_repository
 
-    async def extract_and_upsert(self, user_id: str, course: str, summary: str) -> None:
-        await self._apply_decay(user_id, course)
+    async def extract_and_upsert(self, user_id: str, course_id: str, summary: str) -> None:
+        course = await self.course_repository.find_by_id(course_id)
+        if course is None:
+            logger.warning("Skipping memory extraction: unknown course '%s'", course_id)
+            return
 
-        existing = await self.repo.get_by_user_and_course(user_id, course)
+        await self._apply_decay(user_id, course_id)
+
+        existing = await self.repo.get_by_user_and_course(user_id, course_id)
 
         prompt = MEMORY_EXTRACTION_PROMPT.format(
-            course=course,
+            course=course.name,
             summary=summary,
             existing_memories=_format_existing(existing),
         )
 
         try:
-            raw = await asyncio.to_thread(
-                call_openrouter,
-                prompt,
+            extraction = await asyncio.to_thread(
+                self.model_client.call_structured,
+                [{"role": "user", "content": prompt}],
+                MemoryExtraction,
                 model=OPENROUTER_MODEL_MEMORY_EXTRACTION,
                 max_tokens=600,
                 temperature=0.1,
@@ -91,28 +79,28 @@ class UserMemoryService(IUserMemoryService):
             logger.error("Memory extraction LLM call failed for user %s: %s", user_id, e)
             return
 
-        if not raw:
+        if extraction is None:
             return
 
-        extracted = _parse_extracted(raw)
-        logger.info("Extracted %d memories for user %s / course %s", len(extracted), user_id, course)
+        extracted = [m for m in extraction.memories if m.topic and m.content]
+        logger.info("Extracted %d memories for user %s / course %s", len(extracted), user_id, course_id)
 
         for mem in extracted:
             try:
-                await self._upsert_one(user_id, course, mem)
+                await self._upsert_one(user_id, course_id, mem)
             except Exception as e:
-                logger.error("Failed to upsert memory for user %s, topic '%s': %s", user_id, mem.get("topic"), e)
+                logger.error("Failed to upsert memory for user %s, topic '%s': %s", user_id, mem.topic, e)
 
-    async def get_context_for_prompt(self, user_id: str, course: str) -> str | None:
-        memories = await self.repo.get_by_user_and_course(user_id, course)
+    async def get_context_for_prompt(self, user_id: str, course_id: str) -> str | None:
+        memories = await self.repo.get_by_user_and_course(user_id, course_id)
         relevant = [m for m in memories if m.importance >= MEMORY_MIN_IMPORTANCE_FOR_INJECTION]
         if not relevant:
             return None
         lines = [f"• {m.type} | {m.topic}: {m.content}" for m in relevant]
         return "[Student Memory]\n" + "\n".join(lines)
 
-    async def list_memories(self, user_id: str, course: str) -> list[UserMemory]:
-        return await self.repo.get_by_user_and_course(user_id, course)
+    async def list_memories(self, user_id: str, course_id: str) -> list[UserMemory]:
+        return await self.repo.get_by_user_and_course(user_id, course_id)
 
     async def delete_memory(self, user_id: str, mem_id: str) -> bool:
         memory = await self.repo.get_by_id(mem_id)
@@ -122,8 +110,8 @@ class UserMemoryService(IUserMemoryService):
         logger.info("Deleted memory %s for user %s", mem_id, user_id)
         return True
 
-    async def _apply_decay(self, user_id: str, course: str) -> None:
-        memories = await self.repo.get_by_user_and_course(user_id, course)
+    async def _apply_decay(self, user_id: str, course_id: str) -> None:
+        memories = await self.repo.get_by_user_and_course(user_id, course_id)
         now = datetime.now(timezone.utc)
 
         for memory in memories:
@@ -137,14 +125,13 @@ class UserMemoryService(IUserMemoryService):
                 await self.repo.update(memory.id, {"importance": decayed})
                 logger.debug("Decayed memory %s (topic: %s, %.2f → %.2f)", memory.id, memory.topic, memory.importance, decayed)
 
-    async def _upsert_one(self, user_id: str, course: str, mem: dict) -> None:
-        mem_type: MemoryType = mem["type"]
-        topic: str = mem["topic"].strip().lower()
-        content: str = mem["content"]
-        new_importance: float = round(float(mem["importance"]), 2)
+    async def _upsert_one(self, user_id: str, course_id: str, mem: ExtractedMemory) -> None:
+        topic = mem.topic.strip().lower()
+        content = mem.content
+        new_importance = round(mem.importance, 2)
 
         now = datetime.now(timezone.utc)
-        existing = await self.repo.get_by_key(user_id, course, mem_type, topic)
+        existing = await self.repo.get_by_key(user_id, course_id, mem.type, topic)
 
         if existing:
             blended = round(min((existing.importance + new_importance) / 2, 10.0), 2)
@@ -154,17 +141,16 @@ class UserMemoryService(IUserMemoryService):
             await self.repo.update(existing.id, updates)
             logger.debug("Updated memory %s (topic: %s, %.2f → %.2f)", existing.id, topic, existing.importance, blended)
         else:
-            all_memories = await self.repo.get_by_user_and_course(user_id, course)
+            all_memories = await self.repo.get_by_user_and_course(user_id, course_id)
             if len(all_memories) >= MAX_MEMORIES_PER_COURSE:
                 lowest = min(all_memories, key=lambda m: m.importance)
                 await self.repo.delete(lowest.id)
                 logger.info("Cap reached (%d), evicted memory %s (topic: %s, importance: %.2f)", MAX_MEMORIES_PER_COURSE, lowest.id, lowest.topic, lowest.importance)
 
             new_mem = UserMemory(
-                id=f"mem_{uuid4().hex[:16]}",
                 user_id=user_id,
-                course=course,
-                type=mem_type,
+                course_id=course_id,
+                type=mem.type,
                 topic=topic,
                 content=content,
                 importance=new_importance,
@@ -172,4 +158,4 @@ class UserMemoryService(IUserMemoryService):
                 created_at=now,
             )
             await self.repo.create(new_mem)
-            logger.debug("Created memory %s (topic: %s, importance: %.2f)", new_mem.id, topic, new_importance)
+            logger.debug("Created memory (topic: %s, importance: %.2f)", topic, new_importance)

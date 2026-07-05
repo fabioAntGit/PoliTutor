@@ -1,20 +1,22 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from app.backend.core.limits import PASSWORD_MIN_LENGTH, USER_TEXT_MAX_LENGTH
+from app.backend.schemas.shared.mongo import PyObjectId
 from app.backend.schemas.user.enums import UserRole
 
 class UserCreateRequest(BaseModel):
-    email: str
-    password: str
-    full_name: str
+    email: str = Field(min_length=1, max_length=USER_TEXT_MAX_LENGTH)
+    password: str = Field(min_length=PASSWORD_MIN_LENGTH)
+    full_name: str = Field(min_length=1, max_length=USER_TEXT_MAX_LENGTH)
     role: UserRole
-    courses: list[str]
+    courses: list[PyObjectId]
 
 class UserUpdateRequest(BaseModel):
-    email: str | None = None
-    full_name: str | None = None
+    email: str | None = Field(default=None, min_length=1, max_length=USER_TEXT_MAX_LENGTH)
+    full_name: str | None = Field(default=None, min_length=1, max_length=USER_TEXT_MAX_LENGTH)
     role: UserRole | None = None
-    courses: list[str] | None = None
+    courses: list[PyObjectId] | None = None
 
 class ChangePasswordRequest(BaseModel):
-    current_password: str
-    new_password: str
+    current_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=PASSWORD_MIN_LENGTH)

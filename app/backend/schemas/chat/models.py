@@ -5,8 +5,8 @@ from app.backend.schemas.shared.mongo import PyObjectId
 
 class Chat(BaseModel):
     id: PyObjectId | None = Field(alias="_id", default=None)
-    course: str = Field(min_length=1, max_length=64)
-    user_id: str = Field(min_length=1, max_length=64)
+    course_id: PyObjectId
+    user_id: PyObjectId
     summary: str | None = Field(default=None, max_length=5000)
     last_summarized_message_id: PyObjectId | None = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

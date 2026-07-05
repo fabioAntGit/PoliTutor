@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
   ChevronsUpDown,
-  KeyRound,
   LayoutDashboard,
   LogOut,
+  Moon,
+  Settings,
   Shield,
-  Trash2,
+  Sun,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,9 +19,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DeleteAccountDialog } from "@/components/account/delete-account-dialog";
-import { authService } from "@/services/auth.service";
-import { logout } from "@/api/auth";
+import { SettingsDialog } from "@/components/settings/settings-dialog";
+import { useTheme } from "@/components/theme/theme-provider";
+import { useSession } from "@/hooks/auth/useSession";
 
 function initialsFor(name: string | null, fallback: string | null): string {
   const source = name?.trim() || fallback?.trim() || "?";
@@ -29,53 +30,56 @@ function initialsFor(name: string | null, fallback: string | null): string {
   return letters.toUpperCase();
 }
 
-export function UserMenu() {
+export function UserMenu({ compact = false }: { compact?: boolean } = {}) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const fullName = authService.getFullName();
-  const username = authService.getUsername();
-  const role = authService.getRole();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+  const { fullName, username, role, logout } = useSession();
   const isAdmin = role === "admin";
   const onAdminPage = pathname.startsWith("/admin");
   const onDashboardPage = pathname.startsWith("/dashboard");
-  const [deleteOpen, setDeleteOpen] = useState(false);
-
-  const handleLogout = async () => {
-    const accessToken = authService.getAccessToken();
-    if (accessToken) {
-      await logout(accessToken).catch(() => {});
-    }
-    authService.clearTokens();
-    navigate("/login", { replace: true });
-  };
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted aria-expanded:bg-muted"
-          >
-            <Avatar size="sm">
-              <AvatarFallback>{initialsFor(fullName, username)}</AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 leading-tight">
-              <span className="truncate text-sm font-medium">
-                {fullName ?? username ?? "Conta"}
-              </span>
-              {role && (
-                <span className="truncate text-[11px] text-muted-foreground capitalize">
-                  {role}
+          {compact ? (
+            <button
+              type="button"
+              aria-label="Conta"
+              className="flex items-center justify-center rounded-full outline-none transition-shadow ring-ring/50 hover:ring-3 focus-visible:ring-3 aria-expanded:ring-3"
+            >
+              <Avatar size="default">
+                <AvatarFallback>{initialsFor(fullName, username)}</AvatarFallback>
+              </Avatar>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted aria-expanded:bg-muted"
+            >
+              <Avatar size="sm">
+                <AvatarFallback>{initialsFor(fullName, username)}</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 leading-tight">
+                <span className="truncate text-sm font-medium">
+                  {fullName ?? username ?? "Conta"}
                 </span>
-              )}
-            </div>
-            <ChevronsUpDown className="size-4 text-muted-foreground" />
-          </button>
+                {role && (
+                  <span className="truncate text-[11px] text-muted-foreground capitalize">
+                    {role}
+                  </span>
+                )}
+              </div>
+              <ChevronsUpDown className="size-4 text-muted-foreground" />
+            </button>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          side="top"
+          side={compact ? "bottom" : "top"}
           sideOffset={6}
           className="min-w-56"
         >
@@ -92,9 +96,18 @@ export function UserMenu() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => navigate("/change-password")}>
-            <KeyRound />
-            Alterar password
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              toggleTheme();
+            }}
+          >
+            {isDark ? <Sun /> : <Moon />}
+            {isDark ? "Modo claro" : "Modo escuro"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+            <Settings />
+            Definições
           </DropdownMenuItem>
           {isAdmin && !onAdminPage && (
             <DropdownMenuItem onSelect={() => navigate("/admin")}>
@@ -109,21 +122,14 @@ export function UserMenu() {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={() => setDeleteOpen(true)}
-          >
-            <Trash2 />
-            Eliminar conta
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleLogout}>
+          <DropdownMenuItem onSelect={logout}>
             <LogOut />
             Terminar sessão
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import CreateUserForm from "@/components/admin/CreateUserForm";
-import CreateCourseForm from "@/components/admin/CreateCourseForm";
-import UserList from "@/components/admin/UserList";
-import CourseList from "@/components/admin/CourseList";
+import CreateUserForm from "@/components/admin/create-user-form";
+import CreateCourseForm from "@/components/admin/create-course-form";
+import UserList from "@/components/admin/user-list";
+import CourseList from "@/components/admin/course-list";
 import { UserMenu } from "@/components/account/user-menu";
 
 type Tab = "user" | "course" | "users" | "courses";
@@ -44,8 +44,8 @@ export default function AdminDashboardPage() {
         {tab === "courses" && <CourseList />}
       </div>
 
-      <div className="fixed bottom-4 left-4 w-64 rounded-lg border bg-card p-1 shadow-sm">
-        <UserMenu />
+      <div className="fixed right-4 top-2.5 z-30">
+        <UserMenu compact />
       </div>
     </main>
   );

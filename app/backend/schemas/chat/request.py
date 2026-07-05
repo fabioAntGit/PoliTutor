@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
+from app.backend.schemas.shared.mongo import PyObjectId
 
 class ChatCreate(BaseModel):
-    course_code: str = Field(min_length=1, max_length=64)
+    course_id: PyObjectId

@@ -5,15 +5,10 @@ class IAuthenticationService(Protocol):
     async def login(self, username: str, password: str) -> str:
         ...
 
-    async def register(
-        self,
-        email: str,
-        password: str,
-        full_name: str,
-        role: str,
-        courses: list[str],
-    ) -> bool:
+
+    async def verify_token(self, access_token: str) -> dict:
         ...
+
 
     async def logout(self, access_token: str) -> bool:
         ...

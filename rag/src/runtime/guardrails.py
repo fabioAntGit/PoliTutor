@@ -1,58 +1,30 @@
-"""
-Guardrails Module.
-
-Provides input validation, prompt-injection detection, output verification,
-and sanitization functions that protect the Socratic tutor pipeline.
-
-INPUT guardrails (applied before retrieval):
-    sanitize_input          strips XML-like tags that could hijack prompt delimiters.
-    validate_input          checks empty / too-short / too-long queries.
-    detect_prompt_injection blocks attempts to override Socratic rules.
-    detect_code_request     blocks explicit requests for complete code/solutions.
-
-OUTPUT guardrails (applied after generation):
-    detect_direct_answer    flags responses that appear non-Socratic.
-"""
+"""Input and output guardrails for the Socratic tutor."""
 
 import re
 import logging
 
 from ..shared.config import (
     CODE_REQUEST_PATTERNS,
+    DIRECT_ANSWER_MIN_LENGTH,
     DIRECT_ANSWER_SIGNALS,
     INJECTION_PATTERNS,
     QUERY_MAX_LENGTH,
     QUERY_MIN_LENGTH,
 )
+from ..shared.prompts import SOCRATIC_REDIRECT
+from contracts.rag.models import TutorResponse
 
 logger = logging.getLogger(__name__)
 
-def sanitize_input(query: str) -> str:
-    """
-    Removes characters / sequences that could interfere with the prompt
-    template delimiters (``<user_question>``, ``<rag_context>``).
 
-    Returns:
-        The cleaned query string.
-    """
+def _sanitize_input(query: str) -> str:
+    """Remove fake XML tags before prompt construction."""
     sanitized = re.sub(r"</?[a-zA-Z_]+>", "", query)
     return sanitized.strip()
 
 
-def validate_input(query: str) -> tuple[bool, str]:
-    """
-    Validates the student's query before it enters the retrieval pipeline.
-
-    Checks applied (in order):
-        1. Empty / whitespace-only query.
-        2. Too short (< QUERY_MIN_LENGTH meaningful characters).
-        3. Too long (> QUERY_MAX_LENGTH characters).
-
-    Returns:
-        A tuple (is_valid, reason).
-        - is_valid=True  → query is safe; ``reason`` is empty.
-        - is_valid=False → query is blocked; ``reason`` explains why.
-    """
+def _validate_input(query: str) -> tuple[bool, str]:
+    """Check basic query length limits."""
     stripped = query.strip()
 
     if not stripped:
@@ -73,18 +45,8 @@ def validate_input(query: str) -> tuple[bool, str]:
     return True, ""
 
 
-def detect_prompt_injection(query: str) -> tuple[bool, str]:
-    """
-    Detects attempts to override the Socratic system prompt.
-
-    Scans the query against a curated list of injection patterns
-    (Portuguese & English).
-
-    Returns:
-        (is_injection, message).
-        - is_injection=True  → query is blocked.
-        - is_injection=False → query is safe.
-    """
+def _detect_prompt_injection(query: str) -> tuple[bool, str]:
+    """Detect prompt-injection attempts."""
     query_lower = query.lower()
     for pattern in INJECTION_PATTERNS:
         if re.search(pattern, query_lower):
@@ -96,15 +58,8 @@ def detect_prompt_injection(query: str) -> tuple[bool, str]:
     return False, ""
 
 
-def detect_code_request(query: str) -> tuple[bool, str]:
-    """
-    Detects explicit requests for complete code, solutions, or implementations.
-
-    Returns:
-        (is_code_request, message).
-        - is_code_request=True  → query is blocked.
-        - is_code_request=False → query is safe.
-    """
+def _detect_code_request(query: str) -> tuple[bool, str]:
+    """Detect requests for complete code or ready-made solutions."""
     query_lower = query.lower()
     for pattern in CODE_REQUEST_PATTERNS:
         if re.search(pattern, query_lower):
@@ -118,19 +73,27 @@ def detect_code_request(query: str) -> tuple[bool, str]:
     return False, ""
 
 
-def detect_direct_answer(answer: str) -> bool:
-    """
-    Checks whether the LLM response contains signs of a non-Socratic,
-    direct answer.
+def apply_input_guardrails(query: str) -> tuple[str, TutorResponse | None]:
+    """Apply all input guardrails before retrieval."""
+    query = _sanitize_input(query)
 
-    Heuristics:
-        1. Matches against known "direct answer" linguistic patterns.
-        2. Flags responses longer than 100 chars that contain no '?'
-           (Socratic responses should include guiding questions).
+    is_valid, reason = _validate_input(query)
+    if not is_valid:
+        return query, TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
 
-    Returns:
-        True if the answer appears to be a direct/non-Socratic response.
-    """
+    is_injection, reason = _detect_prompt_injection(query)
+    if is_injection:
+        return query, TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
+
+    is_code_req, reason = _detect_code_request(query)
+    if is_code_req:
+        return query, TutorResponse(answer=reason, sources=[], is_fallback=True, is_guardrail=True)
+
+    return query, None
+
+
+def _detect_direct_answer(answer: str) -> bool:
+    """Detect non-Socratic direct answers using simple heuristics."""
     answer_lower = answer.lower()
 
     for pattern in DIRECT_ANSWER_SIGNALS:
@@ -138,7 +101,23 @@ def detect_direct_answer(answer: str) -> bool:
             logger.warning("[GUARDRAIL] Direct answer signal detected in output.")
             return True
 
+    if len(answer.strip()) > DIRECT_ANSWER_MIN_LENGTH and "?" not in answer:
+        logger.warning("[GUARDRAIL] Non-Socratic output: long response without a guiding question.")
+        return True
+
     return False
 
-def where_filter(course: str) -> dict:
-    return {"course": course.strip().lower()}
+
+def apply_output_guardrail(response: TutorResponse) -> TutorResponse:
+    """Replace non-Socratic answers while preserving sources."""
+    if not response.is_fallback and _detect_direct_answer(response.answer):
+        logger.warning("[GUARDRAIL] Output guardrail triggered — replacing with Socratic redirect.")
+        return TutorResponse(
+            answer=SOCRATIC_REDIRECT,
+            sources=response.sources,
+            is_fallback=False,
+            is_output_guardrail=True,
+            is_retrieval_fallback=response.is_retrieval_fallback,
+        )
+
+    return response

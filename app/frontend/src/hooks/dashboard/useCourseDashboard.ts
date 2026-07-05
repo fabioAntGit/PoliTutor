@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 import { AnalyticsService } from "@/services/analytics.service";
-import type { CourseOverview, TopicPoint, SourcePoint } from "@/api/analytics";
-
-type Status = "loading" | "valid" | "not_found";
+import { CourseService } from "@/services/course.service";
+import type { CourseOverviewRead, TopicPoint, SourcePoint } from "@/types/analytics";
+import type { RankedListItem } from "@/components/dashboard/ranked-list-card";
 
 export function useCourseDashboard() {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
 
-  const [status, setStatus] = useState<Status>("loading");
-  const [overview, setOverview] = useState<CourseOverview | null>(null);
+  const [status, setStatus] = useState<"loading" | "valid" | "not_found">("loading");
+  const [courseCode, setCourseCode] = useState<string | null>(null);
+  const [overview, setOverview] = useState<CourseOverviewRead | null>(null);
   const [topics, setTopics] = useState<TopicPoint[] | null>(null);
   const [sources, setSources] = useState<SourcePoint[] | null>(null);
 
@@ -17,17 +19,19 @@ export function useCourseDashboard() {
     if (!courseId) return;
 
     setStatus("loading");
+    setCourseCode(null);
     setOverview(null);
     setTopics(null);
     setSources(null);
 
-    AnalyticsService.getCourses()
-      .then(({ data: courses }) => {
-        const exists = courses.some((c) => c === courseId);
-        if (!exists) {
+    CourseService.listCourses()
+      .then((courses) => {
+        const match = courses.find((c) => c.id === courseId);
+        if (!match) {
           setStatus("not_found");
           return;
         }
+        setCourseCode(match.code);
 
         return Promise.all([
           AnalyticsService.getCourseOverview(courseId),
@@ -43,5 +47,41 @@ export function useCourseDashboard() {
       .catch(() => setStatus("not_found"));
   }, [courseId]);
 
-  return { courseId, status, overview, topics, sources };
+  const topicItems = useMemo<RankedListItem[] | null>(
+    () =>
+      topics
+        ? topics.map(({ topic, count }) => ({
+            key: topic,
+            label: topic,
+            value: count,
+            valueLabel: `${count}×`,
+          }))
+        : null,
+    [topics],
+  );
+
+  const sourceItems = useMemo<RankedListItem[] | null>(
+    () =>
+      sources
+        ? sources.map(({ filename, references }) => ({
+            key: filename,
+            label: filename,
+            rawLabel: filename,
+            value: references,
+            valueLabel: `${references} ref.`,
+          }))
+        : null,
+    [sources],
+  );
+
+  return {
+    courseId,
+    courseCode,
+    status,
+    isLoading: status === "loading",
+    overview,
+    topicItems,
+    sourceItems,
+    goToOverview: () => navigate("/dashboard"),
+  };
 }

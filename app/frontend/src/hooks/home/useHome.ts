@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { ChatService } from "@/services/chat.service";
-import { listCourses } from "@/api/courses";
-import { authService } from "@/services/auth.service";
+import { CourseService } from "@/services/course.service";
 import type { ChatListItem } from "@/types/chat";
 import type { CourseResponse } from "@/types/course";
 import { ApiError } from "@/lib/errors";
 import { toast } from "sonner";
+import { useChatDeletion } from "@/hooks/chat/useChatDeletion";
+import { isQuestionReady, QUESTION_MAX_CHARS, QUESTION_MIN_CHARS } from "@/lib/validation";
 
 export function useHome() {
   const navigate = useNavigate();
@@ -19,18 +20,16 @@ export function useHome() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    Promise.all([listCourses(), ChatService.listChats()])
-      .then(([coursesData, chatsData]) => {
-        const myCourses = new Set(authService.getCourses());
-        const mine = coursesData.filter((c) => myCourses.has(c.code));
+    Promise.all([CourseService.listCourses(), ChatService.listChats()])
+      .then(([mine, chatsData]) => {
         setCourses(mine);
         setChats(chatsData);
         if (mine.length > 0) {
-          setSelectedCourse(mine[0].code);
+          setSelectedCourse(mine[0].id);
         }
       })
       .catch(() => {
-        setError("Nao foi possivel carregar os dados. Tenta novamente mais tarde.");
+        setError("Nao foi possivel carregar os dados. Tente novamente mais tarde.");
       })
       .finally(() => {
         setLoading(false);
@@ -45,6 +44,10 @@ export function useHome() {
       toast.error("Escreve uma mensagem para iniciar a conversa.");
       return;
     }
+    if (!isQuestionReady(trimmed)) {
+      toast.error(`A pergunta deve ter entre ${QUESTION_MIN_CHARS} e ${QUESTION_MAX_CHARS} caracteres.`);
+      return;
+    }
     if (!selectedCourse) {
       toast.error("Seleciona uma cadeira.");
       return;
@@ -52,7 +55,7 @@ export function useHome() {
 
     setSubmitting(true);
     try {
-      const chat = await ChatService.createChat({ course_code: selectedCourse });
+      const chat = await ChatService.createChat({ course_id: selectedCourse });
       navigate(`/chat/${chat.conversation_id}`, {
         state: { initialMessage: trimmed },
       });
@@ -72,6 +75,8 @@ export function useHome() {
     navigate(`/chat/${conversationId}`);
   };
 
+  const { deleteChat } = useChatDeletion({ setChats });
+
   return {
     courses,
     chats,
@@ -84,5 +89,6 @@ export function useHome() {
     submitting,
     submit,
     openChat,
+    deleteChat,
   };
 }

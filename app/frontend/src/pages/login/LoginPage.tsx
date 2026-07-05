@@ -1,48 +1,119 @@
-import { FormField } from "@/components/form/FormField";
-import { FormPasswordField } from "@/components/form/FormPasswordField";
-import { FormRootError } from "@/components/form/FormRootError";
-import { SubmitButton } from "@/components/form/SubmitButton";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { FormRootError } from "@/components/form/form-root-error";
+import { SubmitButton } from "@/components/form/submit-button";
+import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useLogin } from "@/hooks/login/useLogin";
+import poliTutorImg from "/poli_tutor_question.png";
+
+const inputClass =
+  "h-12 rounded-xl bg-white px-4 text-[15px] text-[#1d1d1d] border-[rgba(29,29,29,0.18)] placeholder:text-[rgba(29,29,29,0.45)] focus-visible:border-[#1d1d1d] focus-visible:ring-0 dark:bg-input/30 dark:text-foreground dark:border-input dark:placeholder:text-muted-foreground dark:focus-visible:border-ring";
 
 export default function LoginPage() {
   const { form, onSubmit } = useLogin();
-  const { register, formState: { errors, isSubmitting } } = form;
+  const { register, formState: { errors, isSubmitting, isValid } } = form;
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-center">
-            Poli Tutor
-          </h1>
-          <p className="text-sm text-muted-foreground text-center">
-            Inicia sessão com as tuas credenciais institucionais.
-          </p>
+    <main className="relative flex min-h-screen w-full bg-background">
+      <div className="absolute left-4 top-4 z-20 flex items-center gap-2 lg:hidden">
+        <img
+          src="/logo.jpg"
+          alt="Logótipo da ESTG"
+          className="h-9 w-9 rounded-lg object-cover"
+        />
+        <span className="text-base font-semibold text-[#1d1d1d] dark:text-foreground">
+          PoliTutor
+        </span>
+      </div>
+      <div className="absolute right-4 top-4 z-20">
+        <ThemeToggle />
+      </div>
+      <section className="relative hidden overflow-hidden border-r border-white/5 lg:block lg:w-1/2">
+        <img
+          src={poliTutorImg}
+          alt="Poli Tutor"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40" />
+        <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.jpg"
+              alt="Logótipo da ESTG"
+              className="h-11 w-11 rounded-xl object-cover"
+            />
+            <span className="text-2xl font-semibold tracking-tight">PoliTutor</span>
+          </div>
         </div>
+      </section>
+      <section className="flex w-full flex-col bg-white text-[#1d1d1d] dark:bg-background dark:text-foreground lg:w-1/2">
+        <div className="flex flex-1 items-center justify-center px-6 py-10 sm:px-10">
+          <div className="w-full max-w-[380px]">
+            <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-[#1d1d1d] dark:text-foreground">
+              Aceder à conta
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-[rgba(29,29,29,0.65)] dark:text-muted-foreground">
+              Introduza as suas credenciais institucionais para continuar.
+            </p>
 
-        <div className="space-y-4">
-          <FormField
-            id="username"
-            label="Username"
-            placeholder="ist1234567"
-            autoComplete="username"
-            error={errors.username?.message}
-            {...register("username")}
-          />
+            <form onSubmit={onSubmit} className="mt-6 space-y-3">
+              <div className="space-y-1.5">
+                <Input
+                  id="username"
+                  placeholder="Username"
+                  autoComplete="username"
+                  aria-label="Username"
+                  aria-invalid={!!errors.username}
+                  className={inputClass}
+                  {...register("username")}
+                />
+                {errors.username && (
+                  <p className="px-1 text-xs text-destructive">{errors.username.message}</p>
+                )}
+              </div>
 
-          <FormPasswordField
-            id="password"
-            label="Password"
-            autoComplete="current-password"
-            error={errors.password?.message}
-            {...register("password")}
-          />
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    autoComplete="current-password"
+                    aria-label="Password"
+                    aria-invalid={!!errors.password}
+                    className={`${inputClass} pr-11`}
+                    {...register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Esconder password" : "Mostrar password"}
+                    tabIndex={-1}
+                    className="absolute right-0 top-0 flex h-full items-center justify-center px-3.5 text-[rgba(29,29,29,0.5)] transition-colors hover:text-[#1d1d1d] dark:text-muted-foreground dark:hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="px-1 text-xs text-destructive">{errors.password.message}</p>
+                )}
+              </div>
+
+              <FormRootError message={errors.root?.message} />
+
+              <SubmitButton
+                loading={isSubmitting}
+                disabled={!isValid}
+                className="mt-3 h-12 rounded-xl bg-[#1d1d1d] text-white hover:bg-[#1d1d1d]/90 disabled:bg-[rgba(29,29,29,0.35)] disabled:text-white disabled:opacity-100 dark:bg-foreground dark:text-background dark:hover:bg-foreground/90 dark:disabled:bg-foreground/35 dark:disabled:text-background"
+              >
+                Entrar
+              </SubmitButton>
+            </form>
+          </div>
         </div>
-
-        <FormRootError message={errors.root?.message} />
-
-        <SubmitButton loading={isSubmitting}>Entrar</SubmitButton>
-      </form>
+      </section>
     </main>
   );
 }

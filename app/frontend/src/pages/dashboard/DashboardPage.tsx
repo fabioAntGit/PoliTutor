@@ -17,7 +17,7 @@ export default function DashboardPage() {
   return (
     <PageState loading={loading} error={error}>
       <div className="flex flex-1 flex-col overflow-y-auto">
-        <DashboardPageHeader title="Visão Geral" />
+        <DashboardPageHeader />
 
         <div className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
           <div>

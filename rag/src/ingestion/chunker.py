@@ -1,20 +1,4 @@
-"""
-Document Chunking Service.
-
-Segments processed pages into embedding-ready chunks while preserving
-page provenance and image associations.
-
-Algorithm overview:
-    1. [PAGE:N] markers are injected before each page's text.
-    2. The full marked text is split using RecursiveCharacterTextSplitter.
-    3. After splitting, markers are extracted via regex to determine which
-       pages each chunk covers. Overlap regions that span two pages are
-       handled by prepending the previous page to the chunk's page list.
-    4. Images are associated to chunks by page number.
-    5. Orphaned images — from pages whose text was fully absorbed into
-       other chunks or was too short — are assigned to the nearest chunk
-       by page distance.
-"""
+"""Build embedding chunks while preserving page and image provenance."""
 
 import logging
 import re
@@ -32,21 +16,7 @@ def resolve_page_numbers(
     split: str,
     last_pages: list[int],
 ) -> tuple[list[int], list[int]]:
-    """
-    Determines which pages a raw (pre-cleaned) split covers.
-
-    If there is content before the first [PAGE:N] marker in the split, the chunk
-    overlaps from the previous page, so last_pages is prepended to maintain
-    continuity across the overlap boundary.
-
-    Args:
-        split:      Raw split text, still containing [PAGE:N] markers.
-        last_pages: Page cursor from the previous iteration.
-
-    Returns:
-        page_numbers:  Ordered, deduplicated list of pages this chunk covers.
-        new_last_pages: Updated cursor for the next iteration.
-    """
+    """Return the pages covered by a raw split with [PAGE:N] markers."""
     found = [int(p) for p in _PAGE_MARKER_PATTERN.findall(split)]
 
     if not found:
@@ -67,22 +37,10 @@ def resolve_page_numbers(
 
 def chunk_document(pages: list[dict]) -> list[dict]:
     """
-    Splits a list of pages into embedding-ready chunks with page tracking
-    and image association.
-
-    Args:
-        pages: List of page dicts produced by the extractor, each containing:
-               - 'text':        Page text content.
-               - 'image_paths': List of image file paths on disk.
-               - 'metadata':    Dict with at least 'page_number', 'source',
-                                'filename', 'course', and 'filetype'.
+    Split extracted pages into embedding chunks.
 
     Returns:
-        List of chunk dicts, each with:
-            - 'text':        Cleaned chunk text (page markers removed).
-            - 'image_paths': Images from all pages this chunk covers.
-            - 'metadata':    Document-level metadata with a 'pages' key
-                             (list of page numbers) replacing 'page_number'.
+        Chunk dicts with text, image paths, and covered pages.
     """
     if not pages:
         return []
@@ -136,7 +94,7 @@ def chunk_document(pages: list[dict]) -> list[dict]:
             "metadata": chunk_metadata,
         })
 
-    # Assign orphan images to the nearest chunk by page distance
+    # Keep images from low-text pages by attaching them to the nearest chunk.
     all_chunk_pages = {p for chunk in chunks for p in chunk["metadata"]["pages"]}
     for page_num, img_paths in images_by_page.items():
         if page_num in all_chunk_pages or not img_paths:

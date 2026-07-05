@@ -21,7 +21,7 @@ class ChatRepository(IChatRepository):
         return Chat.model_validate(document)
 
     async def get_chats(self, user_id: str) -> list[Chat]:
-        query = self.collection.find({"user_id": user_id})
+        query = self.collection.find({"user_id": ObjectId(user_id)})
         documents = await query.to_list(length=None)
         return [Chat.model_validate(document) for document in documents]
 
@@ -57,3 +57,7 @@ class ChatRepository(IChatRepository):
             {"_id": ObjectId(conversation_id)},
             {"$set": {"updated_at": datetime.now(timezone.utc)}},
         )
+
+    async def delete(self, conversation_id: str) -> bool:
+        result = await self.collection.delete_one({"_id": ObjectId(conversation_id)})
+        return result.deleted_count > 0

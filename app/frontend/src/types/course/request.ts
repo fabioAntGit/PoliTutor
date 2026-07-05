@@ -1,11 +1,11 @@
 export interface CourseCreateRequest {
   code: string;
   name: string;
-  description: string;
+  scope: string;
 }
 
 export interface CourseUpdateRequest {
   name?: string;
-  description?: string;
+  scope?: string;
   is_active?: boolean;
 }

@@ -5,12 +5,15 @@ import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from "@/schemas/changePassword";
-import { changePassword } from "@/api/auth";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 import { landingForRole } from "@/lib/landing";
 import { ApiError } from "@/lib/errors";
 
-export function useChangePassword() {
+export function useChangePassword({
+  onSuccess,
+}: {
+  onSuccess?: () => void;
+} = {}) {
   const navigate = useNavigate();
 
   const form = useForm<ChangePasswordFormValues>({
@@ -21,9 +24,14 @@ export function useChangePassword() {
   const onSubmit = async (data: ChangePasswordFormValues) => {
     form.clearErrors("root");
     try {
-      const tokens = await changePassword(data.current_password, data.new_password);
-      authService.setTokens(tokens.access_token);
-      navigate(landingForRole(authService.getRole()), { replace: true });
+      const tokens = await AuthService.changePassword(data.current_password, data.new_password);
+      AuthService.setTokens(tokens.access_token);
+      form.reset();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate(landingForRole(AuthService.getRole()), { replace: true });
+      }
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : "Erro ao alterar password.";
@@ -31,5 +39,10 @@ export function useChangePassword() {
     }
   };
 
-  return { form, onSubmit: form.handleSubmit(onSubmit) };
+  return {
+    form,
+    onSubmit: form.handleSubmit(onSubmit),
+    mustChange: AuthService.mustChangePassword(),
+    goBack: () => navigate(-1),
+  };
 }

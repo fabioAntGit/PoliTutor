@@ -1,9 +1,10 @@
 import { Navigate, Outlet } from "react-router";
-import { authService } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 
 export default function PasswordGuard() {
-  if (authService.mustChangePassword()) {
+  if (AuthService.mustChangePassword()) {
     return <Navigate to="/change-password" replace />;
   }
+  
   return <Outlet />;
 }

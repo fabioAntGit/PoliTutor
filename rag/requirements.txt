@@ -11,12 +11,12 @@
 fastapi
 uvicorn[standard]
 python-dotenv
-requests
 
 # Retrieval / models
 langchain-huggingface
+langchain-openai
 sentence-transformers
-transformers>=4.48.0
+transformers>=4.48.0,<5.0.0
 torch
 accelerate
 einops
@@ -32,3 +32,4 @@ pymongo
 PyJWT
 pwdlib[argon2]
 python-multipart
+slowapi
